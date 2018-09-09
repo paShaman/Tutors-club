@@ -3,5 +3,5 @@
 @section('title', $title)
 
 @section('content')
-hi
+<?print_r($cache)?>
 @endsection

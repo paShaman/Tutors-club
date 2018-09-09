@@ -11,6 +11,10 @@
 
     <title>@yield('title')</title>
 
+    @foreach ($styles as $style)
+        <link href="{{ $style }}" rel="stylesheet">
+    @endforeach
+
     @include('layouts.counters')
 </head>
 
