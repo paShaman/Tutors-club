@@ -7,10 +7,18 @@ use Laravel\Lumen\Routing\Controller as BaseController;
 class Controller extends BaseController
 {
     public $page;
-    public $title = ['Tutors club'];
+    public $title = ['Клуб репетиторов'];
+    public $template = [];
 
-    public function render($data)
+    public function render()
     {
+        $data = array_merge(
+            [
+                'title'     => implode(" - ", $this->title)
+            ],
+            $this->template
+        );
+
         return view('pages.' . $this->page, $data);
     }
 }

@@ -18,12 +18,12 @@ class PageController extends Controller
 
     public function page($page = Page::PAGE_DEFAULT)
     {
-        /*Page::where('name', $page)
+        Page::where('name', $page)
             ->where('active', 1)
             ->firstOrFail();
 
         $this->title[] = 'Личный кабинет';
-        $this->page = $page;*/
+        $this->page = $page;
 
         return $this->render();
     }
