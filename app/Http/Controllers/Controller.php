@@ -9,10 +9,8 @@ class Controller extends BaseController
     public $page;
     public $title = ['Tutors club'];
 
-    public function render()
+    public function render($data)
     {
-        $data = [];
-
         return view('pages.' . $this->page, $data);
     }
 }
