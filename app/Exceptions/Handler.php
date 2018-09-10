@@ -3,6 +3,7 @@
 namespace App\Exceptions;
 
 use Exception;
+use Illuminate\Http\Response;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -50,12 +51,7 @@ class Handler extends ExceptionHandler
             $e instanceof NotFoundHttpException ||
             $e instanceof ModelNotFoundException
         ){
-            $data = [
-                'footer'    => false,
-                'title'     => "404 - Not found"
-            ];
-
-            return response(view("errors.404", $data), 404);
+            return response((new \App\Http\Controllers\PageController())->page(404), Response::HTTP_NOT_FOUND);
         }
         return parent::render($request, $e);
     }

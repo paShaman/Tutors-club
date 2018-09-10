@@ -11,4 +11,13 @@
 |
 */
 
-$router->get('/[{page}]', 'PageController@page');
+$router->get('/auth', function () {
+    return (new \App\Http\Controllers\PageController())->page('auth');
+});
+$router->get('/policy', function () {
+    return (new \App\Http\Controllers\PageController())->page('policy');
+});
+$router->get('/[{page}]', ['middleware' => 'auth', 'PageController@page']);
+
+$router->post('/register', 'AuthController@register');
+$router->post('/login',    'AuthController@login');

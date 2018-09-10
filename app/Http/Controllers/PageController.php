@@ -3,11 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Page;
-use Illuminate\Support\Facades\Cache;
-
 
 class PageController extends Controller
 {
+    /**
+     * рендерим страницу
+     *
+     * @param string $page
+     * @return \Illuminate\View\View
+     */
     public function page($page = Page::PAGE_DEFAULT)
     {
         Page::where('name', $page)
@@ -16,7 +20,6 @@ class PageController extends Controller
 
         $this->title[] = 'Личный кабинет';
         $this->page = $page;
-        $this->template['cache'] = Cache::get('test');
 
         return $this->render();
     }

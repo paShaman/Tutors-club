@@ -36,7 +36,15 @@ class Authenticate
     public function handle($request, Closure $next, $guard = null)
     {
         if ($this->auth->guard($guard)->guest()) {
-            return response('Unauthorized.', 401);
+            if ($request->isXmlHttpRequest()) {
+                return response(json_encode([
+                    'success'   => false,
+                    'data'      => [],
+                    'message'   => 'Unauthorized',
+                ]), 401);
+            } else {
+                return redirect('/auth');
+            }
         }
 
         return $next($request);
