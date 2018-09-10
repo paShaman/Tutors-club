@@ -24,6 +24,10 @@ class Controller extends BaseController
             Common::getAssetsPath() . 'css/google-sans.css',
             Common::getAssetsPath() . 'css/style.css',
         ];
+
+        $this->scripts = [
+            '/assets/plugins/jquery-3.3.1.min.js',
+        ];
     }
 
     /**
@@ -67,13 +71,11 @@ class Controller extends BaseController
      */
     protected function _resultJson($success = true, $data = [], $message = '')
     {
-        $status = $success ? Response::HTTP_OK : Response::HTTP_BAD_REQUEST;
-
-        return new Response(json_encode([
+        return new Response([
             'success'   => $success,
             'data'      => $data,
             'message'   => $message,
-        ]), $status);
+        ], Response::HTTP_OK);
     }
 
     protected function _resultSuccess($message = '')
@@ -83,6 +85,11 @@ class Controller extends BaseController
 
     protected function _resultError($message = '')
     {
+        if ($message instanceof \Illuminate\Validation\Validator) {
+            $errors = array_combine($message->errors()->keys(), $message->errors()->all());
+
+            return $this->_resultJson(false, $errors);
+        }
         return $this->_resultJson(false, [], $message);
     }
 }

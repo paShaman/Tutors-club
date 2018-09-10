@@ -16,6 +16,10 @@
         <link href="{{ $style }}" rel="stylesheet">
     @endforeach
 
+    @foreach ($scripts as $script)
+        <script src="{{ $script }}"></script>
+    @endforeach
+
     @include('layouts.counters')
 </head>
 

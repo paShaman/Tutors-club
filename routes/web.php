@@ -14,6 +14,9 @@
 $router->get('/auth', function () {
     return (new \App\Http\Controllers\PageController())->page('auth');
 });
+$router->get('/registration', function () {
+    return (new \App\Http\Controllers\PageController())->page('registration');
+});
 $router->get('/policy', function () {
     return (new \App\Http\Controllers\PageController())->page('policy');
 });

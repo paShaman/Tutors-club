@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-регистрация
+
+    @include('forms.registration')
+
 @endsection
