@@ -9,18 +9,20 @@ class PageController extends Controller
     /**
      * рендерим страницу
      *
-     * @param string $page
+     * @param string $pageName
      * @return \Illuminate\View\View
      */
-    public function page($page = Page::PAGE_DEFAULT)
+    public function page($pageName = Page::PAGE_DEFAULT)
     {
-        Page::where('name', $page)
+        $page = Page::where('name', $pageName)
             ->where('active', 1)
             ->firstOrFail();
 
-        $this->title[] = 'Личный кабинет';
-        $this->page = $page;
+        $this->title[]  = $page->title;
 
-        return $this->render();
+        $this->data['description']  = $page->description;
+        $this->data['keywords']     = $page->keywords;
+
+        return $this->_renderPage($page->name);
     }
 }

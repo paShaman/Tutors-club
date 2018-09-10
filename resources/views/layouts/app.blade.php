@@ -5,12 +5,12 @@
     <meta charset="utf-8">
 
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="keywords" content="">
-    <meta name="description" content="">
+    <meta name="keywords" content="{{ $keywords }}">
+    <meta name="description" content="{{ $description }}">
 
     <link rel="icon" type="image/png" sizes="16x16" href="/images/logo.png">
 
-    <title>@yield('title')</title>
+    <title>{{ $title }}</title>
 
     @foreach ($styles as $style)
         <link href="{{ $style }}" rel="stylesheet">

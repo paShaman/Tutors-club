@@ -8,9 +8,8 @@ use Laravel\Lumen\Routing\Controller as BaseController;
 
 class Controller extends BaseController
 {
-    public $page;
     public $title       = ['Клуб репетиторов'];
-    public $template    = [];
+    public $data        = [];
     public $styles      = [];
     public $scripts     = [];
 
@@ -24,11 +23,23 @@ class Controller extends BaseController
     }
 
     /**
+     * рендер блока
+     *
+     * @param $view
+     * @param $data
+     * @return \Illuminate\View\View
+     */
+    protected function _render($view, $data)
+    {
+        return view($view, $data);
+    }
+
+    /**
      * рендер страницы
      *
      * @return \Illuminate\View\View
      */
-    public function render()
+    protected function _renderPage($page)
     {
         $data = array_merge(
             [
@@ -36,10 +47,10 @@ class Controller extends BaseController
                 'styles'    => $this->styles,
                 'scripts'   => $this->scripts,
             ],
-            $this->template
+            $this->data
         );
 
-        return view('pages.' . $this->page, $data);
+        return $this->_render('pages.' . $page, $data);
     }
 
     /**

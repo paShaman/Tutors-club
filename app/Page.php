@@ -4,18 +4,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class Page extends Model {
 
-    const PAGE_DEFAULT = 'index';
+    const PAGE_DEFAULT = 'cabinet';
 
     protected $fillable = [
-        'active', 'text', 'url', 'name'
+        'active', 'name', 'title', 'description', 'keywords'
     ];
-
-    protected $dates = [];
-
-    public static $rules = [
-        // Validation rules
-    ];
-
-    // Relationships
 
 }
