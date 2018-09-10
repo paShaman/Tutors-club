@@ -8,13 +8,17 @@ use Laravel\Lumen\Routing\Controller as BaseController;
 
 class Controller extends BaseController
 {
-    public $title       = ['Клуб репетиторов'];
+    public $title       = [];
     public $data        = [];
     public $styles      = [];
     public $scripts     = [];
 
     public function __construct()
     {
+        app('translator')->setLocale('ru');
+
+        $this->title[] = lng('title');
+
         $this->styles = [
             '/assets/plugins/bootstrap/scss/bootstrap.css',
             Common::getAssetsPath() . 'css/google-sans.css',

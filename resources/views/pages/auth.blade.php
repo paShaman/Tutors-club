@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-авторизация
+
+    @include('forms.auth')
+
 @endsection
