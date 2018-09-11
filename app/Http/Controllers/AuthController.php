@@ -50,10 +50,14 @@ class AuthController extends Controller
         $user->date_agree   = DB::raw('now()');
 
         try {
+            //create new user
             $user->save();
         } catch (\Exception $e) {
             return $this->_resultError(lng('error.registration'));
         }
+
+        //force auth
+        Auth::loginUsingId($user->id);
 
         return $this->_resultSuccess(lng('success.registration'));
     }

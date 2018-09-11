@@ -10,5 +10,7 @@ return [
         'password_confirm'  => 'Повторите пароль',
         'policy_agree'      => 'Политика конфеденциальности',
     ],
-    'required' => 'Обязательное поле ":attribute"'
+    'required'  => 'Обязательное поле ":attribute"',
+    'email'     => 'Некорректный email',
+    'same'      => 'Поля ":attribute" и ":other" не совпадают',
 ];

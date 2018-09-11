@@ -40,7 +40,7 @@ class Authenticate
                 return response(json_encode([
                     'success'   => false,
                     'data'      => [],
-                    'message'   => 'Unauthorized',
+                    'message'   => lng('unauthorized'),
                 ]), 401);
             } else {
                 return redirect('/auth');

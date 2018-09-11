@@ -4,6 +4,10 @@
   font-family: Google Sans;
 }
 
+.transition(@param: all, @time: 0.3s, @type:ease){
+  transition: @param @time @type;
+}
+
 .jGrowl{
   &-notification{
     &.success{
@@ -26,4 +30,29 @@
   &-close{
     padding: 0;
   }
+}
+
+.label-inside {
+  position: relative;
+
+  input{
+    padding-bottom: 2px;
+    &:focus, &:valid{
+      + label{
+        font-size: 70%; padding-top: 2px; opacity: 0.7;
+      }
+    }
+  }
+
+  label{
+    padding: .5rem 2rem;
+    font-size: 1.25rem;
+    line-height: 1.5;
+    position: absolute; top: 2px; left: 1px; margin: 0;
+    .transition();
+  }
+}
+
+.mw-500{
+  max-width: 500px;
 }
