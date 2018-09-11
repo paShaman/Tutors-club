@@ -32,6 +32,13 @@
 
     @include('layouts.footer')
 </div>
+
+<script>
+    @foreach ($localization as $key => $value)
+        localization['{{ $key }}'] = '{{ $value }}';
+    @endforeach
+</script>
+
 </body>
 
 </html>

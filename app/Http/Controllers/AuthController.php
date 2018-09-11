@@ -14,8 +14,6 @@ class AuthController extends Controller
      *
      * @param Request $request
      * @return \Illuminate\Http\Response
-     *
-     * todo translation
      */
     public function register(Request $request)
     {
@@ -40,7 +38,7 @@ class AuthController extends Controller
         $user = User::where('email', $input['email'])->first();
 
         if (!empty($user)) {
-            return $this->_resultError('Duplicate email');
+            return $this->_resultError(lng('duplicate_email'));
         }
 
         $user = new User();
@@ -54,10 +52,10 @@ class AuthController extends Controller
         try {
             $user->save();
         } catch (\Exception $e) {
-            return $this->_resultError('Ошибка регистрации');
+            return $this->_resultError(lng('error.registration'));
         }
 
-        return $this->_resultSuccess('Register successful');
+        return $this->_resultSuccess(lng('success.registration'));
     }
 
     /**

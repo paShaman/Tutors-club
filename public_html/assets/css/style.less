@@ -1,3 +1,29 @@
+@import "colors.less";
+
 * {
   font-family: Google Sans;
+}
+
+.jGrowl{
+  &-notification{
+    &.success{
+      background: lighten(@success, 35%);
+      color: darken(@success, 30%)
+    }
+    &.error{
+      background: lighten(@danger, 30%);
+      color: darken(@danger, 30%)
+    }
+    &.warning{
+      background: lighten(@warning, 30%);
+      color: darken(@warning, 30%)
+    }
+    &.info{
+      background: lighten(@info, 40%);
+      color: darken(@info, 20%)
+    }
+  }
+  &-close{
+    padding: 0;
+  }
 }

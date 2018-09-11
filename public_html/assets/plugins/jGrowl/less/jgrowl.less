@@ -1,0 +1,104 @@
+@jgrowl-width: 250px;
+@jgrowl-height: 40px;
+@jgrowl-backgroundColor: #fff;
+@jgrowl-color: #000;
+@jgrowl-fontSize: 14px;
+@jgrowl-opacity: 1;
+@jgrowl-borderRadius: 8px;
+
+.jGrowl {
+  z-index: 9999;
+  color: @jgrowl-color;
+  font-size: @jgrowl-fontSize;
+  position: fixed;
+
+  &.top-left {
+    left: 0;
+    top: 0;
+  }
+
+  &.top-right {
+    right: 0;
+    top: 0;
+  }
+
+  &.bottom-left {
+    left: 0;
+    bottom: 0;
+  }
+
+  &.bottom-right {
+    right: 0;
+    bottom: 0;
+  }
+
+  &.center {
+    top: 0;
+    width: 50%;
+    left: 25%;
+
+    .jGrowl-notification,
+    .jGrowl-closer {
+      margin-left: auto;
+      margin-right: auto;
+    }
+  }
+}
+
+.notification() {
+  background-color: @jgrowl-backgroundColor;
+  opacity: @jgrowl-opacity;
+  zoom: 1;
+  width: @jgrowl-width;
+  padding: 20px 24px;
+  margin: 20px;
+  text-align: left;
+  display: none;
+  border-radius: @jgrowl-borderRadius;
+
+  .ui-state-highlight,
+  .ui-widget-content .ui-state-highlight,
+  .ui-widget-header .ui-state-highlight {
+    border: 1px solid #000;
+    background: #000;
+    color: #fff;
+  }
+}
+
+.jGrowl-notification {
+  .notification;
+  min-height: @jgrowl-height;
+
+  .jGrowl-header {
+    font-size: 18px; margin-bottom: 4px;
+  }
+
+  .jGrowl-close {
+    background-color: transparent;
+    color: inherit;
+    border: none;
+    z-index: 99;
+    float: right;
+    font-weight: bold;
+    font-size: 1em;
+    cursor: pointer;
+  }
+}
+
+.jGrowl-closer {
+  .notification;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  cursor: pointer;
+  font-size: .9em;
+  font-weight: bold;
+  text-align: center;
+  background: none;
+}
+
+/** Hide jGrowl when printing **/
+@media print {
+  .jGrowl {
+    display: none;
+  }
+}

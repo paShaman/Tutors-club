@@ -15,4 +15,11 @@ return [
     'btn' => [
         'send' => 'Отправить'
     ],
+    'duplicate_email' => 'Данный email уже зарегистрирован',
+    'error' => [
+        'registration' => 'Ошибка регистрации'
+    ],
+    'success' => [
+        'registration' => 'Успешная регистрация'
+    ]
 ];

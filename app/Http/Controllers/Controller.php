@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Common;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Lang;
 use Laravel\Lumen\Routing\Controller as BaseController;
 
 class Controller extends BaseController
@@ -21,12 +22,16 @@ class Controller extends BaseController
 
         $this->styles = [
             '/assets/plugins/bootstrap/scss/bootstrap.css',
+            '/assets/plugins/jGrowl/less/jgrowl.css',
             Common::getAssetsPath() . 'css/google-sans.css',
             Common::getAssetsPath() . 'css/style.css',
         ];
 
         $this->scripts = [
             '/assets/plugins/jquery-3.3.1.min.js',
+            '/assets/plugins/jGrowl/jquery.jgrowl.min.js',
+            '/assets/plugins/fontawesome/js/all.min.js',
+            Common::getAssetsPath() . 'js/main.js',
         ];
     }
 
@@ -51,9 +56,10 @@ class Controller extends BaseController
     {
         $data = array_merge(
             [
-                'title'     => implode(" - ", $this->title),
-                'styles'    => $this->styles,
-                'scripts'   => $this->scripts,
+                'title'         => implode(" - ", $this->title),
+                'styles'        => $this->styles,
+                'scripts'       => $this->scripts,
+                'localization'  => Lang::get('js')
             ],
             $this->data
         );
