@@ -35,7 +35,7 @@
     </form>
 
     <div class="mt-4">
-        <a href="/auth">{{ lng('auth_do') }}</a> &nbsp;&nbsp;&nbsp; <a href="/password-recovery">{{ lng('password_forgot') }}</a>
+        <a href="/login">{{ lng('login_do') }}</a> &nbsp;&nbsp;&nbsp; <a href="/password-recovery">{{ lng('password_forgot') }}</a>
     </div>
 </div>
 
@@ -48,7 +48,9 @@
             if (data.success) {
                 message(true, data.message);
 
-                window.location.href = '/';
+                setTimeout(function () {
+                    window.location.href = '/';
+                }, 1000);
             } else {
                 if (data.data) {
                     for (var i in data.data) {

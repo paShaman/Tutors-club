@@ -1,9 +1,11 @@
 <?php namespace App\Http\Controllers;
 
+use App\Mail\PasswordRecovery;
 use App\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -13,6 +15,8 @@ class AuthController extends Controller
     public function __construct()
     {
         parent::__construct();
+
+        $this->middleware('guest')->except('logout');
     }
 
     /**
@@ -59,13 +63,13 @@ class AuthController extends Controller
             //create new user
             $user->save();
         } catch (\Exception $e) {
-            return $this->_resultError(lng('error.registration'));
+            return $this->_resultError(lng('error.register'));
         }
 
         //force auth
         Auth::loginUsingId($user->id, true);
 
-        return $this->_resultSuccess(lng('success.registration'));
+        return $this->_resultSuccess(lng('success.register'));
     }
 
     /**
@@ -90,19 +94,65 @@ class AuthController extends Controller
         }
 
         if (Auth::attempt(['email' => $input['email'], 'password' => $input['password']], true)) {
-            return $this->_resultSuccess(lng('success.auth'));
+            return $this->_resultSuccess(lng('success.login'));
         }
 
-        return $this->_resultError(lng('error.auth'));
+        return $this->_resultError(lng('error.login'));
     }
 
     /**
      * выход
+     *
+     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
      */
     public function logout()
     {
         Auth::logout();
 
         return redirect(route('login'));
+    }
+
+    /**
+     * Восстановление пароля
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function recovery(Request $request)
+    {
+        $rules = [
+            'email'             => 'required|email',
+        ];
+
+        $input = $request->post();
+
+        $validator = Validator::make($input, $rules);
+
+        if ($validator->fails()) {
+            return $this->_resultError($validator);
+        }
+
+        $user = User::where('email', $input['email'])->first();
+
+        if (empty($user)) {
+            return $this->_resultError(lng('error.no_user_with_this_email'));
+        }
+
+        $newPassword = str_random(8);
+
+        $message = new PasswordRecovery([
+            'password' => $newPassword
+        ]);
+
+        Mail::to($user->email)->send($message);
+
+        if (empty(Mail::failures())) {
+            $user->password = Hash::make($newPassword);
+            $user->save();
+
+            return $this->_resultSuccess(lng('success.recovery'));
+        }
+
+        return $this->_resultError(lng('error.recovery'));
     }
 }

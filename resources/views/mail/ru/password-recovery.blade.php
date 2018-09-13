@@ -1,0 +1,1 @@
+{{ lng('password_new') }}: {{ $password }}
