@@ -15,11 +15,12 @@ class CreatePagesTable extends Migration
     {
         Schema::create('pages', function (Blueprint $table) {
             $table->increments('id');
-            $table->boolean('active');
+            $table->boolean('active')->default(1);
             $table->string('name');
             $table->string('title');
             $table->string('description');
             $table->string('keywords');
+            $table->boolean('need_auth')->default(0);
             $table->index('name');
             $table->timestamps();
         });

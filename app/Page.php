@@ -9,7 +9,7 @@ class Page extends Model {
     const PAGE_DEFAULT = 'cabinet';
 
     protected $fillable = [
-        'active', 'name', 'title', 'description', 'keywords'
+        'active', 'name', 'title', 'description', 'keywords', 'need_auth'
     ];
 
 }

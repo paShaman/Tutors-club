@@ -11,7 +11,12 @@
 |
 */
 
-Route::get('/[{page}]', 'PageController@page');//->middleware('auth');
+Auth::routes();
 
-Route::post('/register', 'AuthController@register');
-Route::post('/login',    'AuthController@login');
+Route::get('/{page}', 'PageController@page')
+    ->where('page', '[A-Za-z\-]*')
+;
+
+/*Route::post('/register', 'AuthController@register');
+/*Route::post('/register', 'AuthController@register');
+Route::post('/login',    'LoginController@login');*/

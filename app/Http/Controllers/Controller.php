@@ -20,25 +20,7 @@ class Controller extends BaseController
 
     public function __construct()
     {
-        //$this->middleware('auth');
-
         app('translator')->setLocale('ru');
-
-        $this->title[] = lng('title');
-
-        $this->styles = [
-            '/assets/plugins/bootstrap/scss/bootstrap.css',
-            '/assets/plugins/jGrowl/less/jgrowl.css',
-            Common::getAssetsPath() . 'css/google-sans.css',
-            Common::getAssetsPath() . 'css/style.css',
-        ];
-
-        $this->scripts = [
-            '/assets/plugins/jquery-3.3.1.min.js',
-            '/assets/plugins/jGrowl/jquery.jgrowl.min.js',
-            '/assets/plugins/fontawesome/js/all.min.js',
-            Common::getAssetsPath() . 'js/main.js',
-        ];
     }
 
     /**
