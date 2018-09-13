@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Common;
-use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Lang;
 use Laravel\Lumen\Routing\Controller as BaseController;
 
@@ -73,15 +72,16 @@ class Controller extends BaseController
      * @param bool $success
      * @param array $data
      * @param string $message
-     * @return Response
+     * @return \Illuminate\Http\JsonResponse
      */
     protected function _resultJson($success = true, $data = [], $message = '')
     {
-        return new Response([
+
+        return response()->json([
             'success'   => $success,
             'data'      => $data,
             'message'   => $message,
-        ], Response::HTTP_OK);
+        ]);
     }
 
     protected function _resultSuccess($message = '')

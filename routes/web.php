@@ -23,6 +23,7 @@ $router->get('/policy', function () {
 $router->get('/password-recovery', function () {
     return (new \App\Http\Controllers\PageController())->page('password-recovery');
 });
+
 $router->get('/[{page}]', ['middleware' => 'auth', 'PageController@page']);
 
 $router->post('/register', 'AuthController@register');

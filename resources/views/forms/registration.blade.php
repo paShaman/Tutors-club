@@ -50,9 +50,13 @@
 
                 window.location.href = '/';
             } else {
-                for (var i in data.data) {
-                    $('[name='+ i +']', form).addClass('is-invalid');
-                    message(false, data.data[i]);
+                if (data.data) {
+                    for (var i in data.data) {
+                        $('[name=' + i + ']', form).addClass('is-invalid');
+                        message(false, data.data[i]);
+                    }
+                } else {
+                    message(false, data.message);
                 }
             }
         });

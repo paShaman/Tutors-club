@@ -37,11 +37,11 @@ class Authenticate
     {
         if ($this->auth->guard($guard)->guest()) {
             if ($request->isXmlHttpRequest()) {
-                return response(json_encode([
+                return response()->json([
                     'success'   => false,
                     'data'      => [],
                     'message'   => lng('unauthorized'),
-                ]), 401);
+                ]);
             } else {
                 return redirect('/auth');
             }

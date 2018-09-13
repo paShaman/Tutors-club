@@ -28,7 +28,7 @@ class AuthController extends Controller
 
         $input = $request->post();
 
-        $validator = Validator::make($request->post(), $rules);
+        $validator = Validator::make($input, $rules);
 
         if ($validator->fails()) {
             return $this->_resultError($validator);
@@ -57,7 +57,7 @@ class AuthController extends Controller
         }
 
         //force auth
-        Auth::loginUsingId($user->id);
+        Auth::loginUsingId($user->id, true);
 
         return $this->_resultSuccess(lng('success.registration'));
     }
@@ -65,26 +65,28 @@ class AuthController extends Controller
     /**
      * авторизация пользователя
      *
-     * @return mixed
+     * @param Request $request
+     * @return \Illuminate\Http\Response
      */
-    public function login()
+    public function login(Request $request)
     {
         $rules = [
-            'email' => 'required|email',
-            'password' => 'required',
+            'email'             => 'required|email',
+            'password'          => 'required',
         ];
 
-        $input = $_POST;
+        $input = $request->post();
 
-        /*$validator = Validator::make($input, $rules);
+        $validator = Validator::make($input, $rules);
+
         if ($validator->fails()) {
-            return $this->respondWithFailedValidation($validator);
-        }*/
-
-        if (Auth::attempt(['email' => $input['email'], 'password' => $input['password']], true)) {
-            return $this->_resultSuccess('Login successful');
+            return $this->_resultError($validator);
         }
 
-        return $this->_resultError(['Invalid Email/Password pair']);
+        if (Auth::attempt(['email' => $input['email'], 'password' => $input['password']], true)) {
+            return $this->_resultSuccess(lng('success.auth'));
+        }
+
+        return $this->_resultError(lng('error.auth'));
     }
 }

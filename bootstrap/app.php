@@ -48,6 +48,10 @@ $app->singleton(
     App\Console\Kernel::class
 );
 
+$app->singleton('cookie', function () use ($app) {
+    return $app->loadComponent('session', 'Illuminate\Cookie\CookieServiceProvider', 'cookie');
+});
+
 /*
 |--------------------------------------------------------------------------
 | Register Middleware
@@ -67,6 +71,16 @@ $app->routeMiddleware([
     'auth' => App\Http\Middleware\Authenticate::class,
 ]);
 
+$app->middleware([
+    \Illuminate\Session\Middleware\StartSession::class,
+]);
+
+$app->bind(\Illuminate\Session\SessionManager::class, function () use ($app) {
+    return new \Illuminate\Session\SessionManager($app);
+});
+
+$app->configure('session');
+
 /*
 |--------------------------------------------------------------------------
 | Register Service Providers
@@ -82,6 +96,7 @@ $app->register(App\Providers\AppServiceProvider::class);
 $app->register(App\Providers\AuthServiceProvider::class);
 // $app->register(App\Providers\EventServiceProvider::class);
 $app->register(Illuminate\Redis\RedisServiceProvider::class);
+$app->register(Illuminate\Session\SessionServiceProvider::class);
 
 /*
 |--------------------------------------------------------------------------
