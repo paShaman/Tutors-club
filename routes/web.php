@@ -2,29 +2,29 @@
 
 /*
 |--------------------------------------------------------------------------
-| Application Routes
+| Web Routes
 |--------------------------------------------------------------------------
 |
-| Here is where you can register all of the routes for an application.
-| It is a breeze. Simply tell Lumen the URIs it should respond to
-| and give it the Closure to call when that URI is requested.
+| Here is where you can register web routes for your application. These
+| routes are loaded by the RouteServiceProvider within a group which
+| contains the "web" middleware group. Now create something great!
 |
 */
 
-$router->get('/auth', function () {
+Route::get('/auth', function () {
     return (new \App\Http\Controllers\PageController())->page('auth');
 });
-$router->get('/registration', function () {
+Route::get('/registration', function () {
     return (new \App\Http\Controllers\PageController())->page('registration');
 });
-$router->get('/policy', function () {
+Route::get('/policy', function () {
     return (new \App\Http\Controllers\PageController())->page('policy');
 });
-$router->get('/password-recovery', function () {
+Route::get('/password-recovery', function () {
     return (new \App\Http\Controllers\PageController())->page('password-recovery');
 });
 
-$router->get('/[{page}]', ['middleware' => 'auth', 'PageController@page']);
+Route::get('/[{page}]', ['middleware' => 'auth', 'PageController@page']);
 
-$router->post('/register', 'AuthController@register');
-$router->post('/login',    'AuthController@login');
+Route::post('/register', 'AuthController@register');
+Route::post('/login',    'AuthController@login');

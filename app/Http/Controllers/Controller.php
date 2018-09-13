@@ -3,11 +3,16 @@
 namespace App\Http\Controllers;
 
 use App\Common;
+use Illuminate\Foundation\Bus\DispatchesJobs;
+use Illuminate\Routing\Controller as BaseController;
+use Illuminate\Foundation\Validation\ValidatesRequests;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\Lang;
-use Laravel\Lumen\Routing\Controller as BaseController;
 
 class Controller extends BaseController
 {
+    use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
+
     public $title       = [];
     public $data        = [];
     public $styles      = [];
