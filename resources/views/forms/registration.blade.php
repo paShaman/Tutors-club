@@ -10,8 +10,8 @@
             <label for="form_password">{{ lng('password') }}</label>
         </div>
         <div class="form-group label-inside">
-            <input type="password" class="form-control form-control-lg" name="password_confirm" id="form_password_confirm" required>
-            <label for="form_password_confirm">{{ lng('password_confirm') }}</label>
+            <input type="password" class="form-control form-control-lg" name="password_confirmation" id="form_password_confirm" required>
+            <label for="form_password_confirm">{{ lng('password_confirmation') }}</label>
         </div>
         <div class="form-group label-inside">
             <input type="text" class="form-control form-control-lg" name="first_name" id="form_first_name" required>

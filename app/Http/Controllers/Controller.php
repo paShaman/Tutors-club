@@ -20,6 +20,8 @@ class Controller extends BaseController
 
     public function __construct()
     {
+        //$this->middleware('auth');
+
         app('translator')->setLocale('ru');
 
         $this->title[] = lng('title');
