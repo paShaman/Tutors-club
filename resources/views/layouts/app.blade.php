@@ -4,6 +4,8 @@
 <head>
     <meta charset="utf-8">
 
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="keywords" content="{{ $keywords }}">
     <meta name="description" content="{{ $description }}">
@@ -20,7 +22,9 @@
         <script src="{{ $script }}"></script>
     @endforeach
 
-    @include('layouts.counters')
+    @if (!app()->isLocal())
+        @include('layouts.counters')
+    @endif
 </head>
 
 <body>

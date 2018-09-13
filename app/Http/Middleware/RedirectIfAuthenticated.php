@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use Closure;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 
 class RedirectIfAuthenticated
@@ -18,7 +19,11 @@ class RedirectIfAuthenticated
     public function handle($request, Closure $next, $guard = null)
     {
         if (Auth::guard($guard)->check()) {
-            return redirect('/');
+            if (request()->isXmlHttpRequest()) {
+                return response()->json(['message' => lng('only_for_guest')], Response::HTTP_METHOD_NOT_ALLOWED);
+            } else {
+                return redirect(route('home'));
+            }
         }
 
         return $next($request);

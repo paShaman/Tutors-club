@@ -10,13 +10,16 @@
 | contains the "web" middleware group. Now create something great!
 |
 */
+Route::post('/register', 'AuthController@register')->middleware('guest');
+Route::post('/login',    'AuthController@login')->middleware('guest');
+Route::get('/logout',    'AuthController@logout')->middleware('auth');
 
-Auth::routes();
+Route::get('/', function () {
+    return (new \App\Http\Controllers\PageController())->page();
+})->name('home');
 
-Route::get('/{page}', 'PageController@page')
-    ->where('page', '[A-Za-z\-]*')
-;
+Route::get('/auth', function () {
+    return (new \App\Http\Controllers\PageController())->page('auth');
+})->name('login');
 
-/*Route::post('/register', 'AuthController@register');
-/*Route::post('/register', 'AuthController@register');
-Route::post('/login',    'LoginController@login');*/
+Route::get('/{page}', 'PageController@page')->where('page', '[A-Za-z\-]+');

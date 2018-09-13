@@ -33,7 +33,9 @@
                         $('[name=' + i + ']', form).addClass('is-invalid');
                         message(false, data.data[i]);
                     }
-                } else {
+                }
+
+                if (data.message) {
                     message(false, data.message);
                 }
             }

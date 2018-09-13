@@ -5,10 +5,16 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
-use Validator;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
 {
+    public function __construct()
+    {
+        parent::__construct();
+    }
+
     /**
      * регистрация пользователя
      *
@@ -18,12 +24,12 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         $rules = [
-            'email'             => 'required|email',
-            'first_name'        => 'required',
-            'last_name'         => 'required',
-            'password'          => 'required',
-            'password_confirm'  => 'required|same:password',
-            'policy_agree'      => ['required', Rule::in(['on'])], //checkbox
+            'email'                 => 'required|email',
+            'first_name'            => 'required',
+            'last_name'             => 'required',
+            'password'              => 'required',
+            'password_confirmation' => 'required|same:password',
+            'policy_agree'          => ['required', Rule::in(['on'])], //checkbox
         ];
 
         $input = $request->post();
@@ -43,10 +49,10 @@ class AuthController extends Controller
 
         $user = new User();
         $user->email        = $input['email'];
-        $user->password     = password_hash($input['password'], PASSWORD_DEFAULT);
-        $user->first_name   = $input['first_name'];
-        $user->last_name    = $input['last_name'];
-        $user->middle_name  = $input['middle_name'];
+        $user->password     = Hash::make($input['password']);
+        $user->first_name   = $input['first_name'] ?? '';
+        $user->last_name    = $input['last_name'] ?? '';
+        $user->middle_name  = $input['middle_name'] ?? '';
         $user->date_agree   = DB::raw('now()');
 
         try {
@@ -88,5 +94,15 @@ class AuthController extends Controller
         }
 
         return $this->_resultError(lng('error.auth'));
+    }
+
+    /**
+     * выход
+     */
+    public function logout()
+    {
+        Auth::logout();
+
+        return redirect(route('login'));
     }
 }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Common;
 use App\Page;
+use Illuminate\Support\Facades\Auth;
 
 class PageController extends Controller
 {
@@ -41,8 +42,12 @@ class PageController extends Controller
             ->where('active', 1)
             ->firstOrFail();
 
-        if ($page->need_auth == 1) {
-            $this->middleware('auth');
+        //без middleware проверяем авторизацию и доступность страницы гостю
+        if ($page->need_auth == Page::NEED_AUTH && !Auth::check()) {
+            return redirect(route('login'));
+        }
+        if ($page->need_auth == Page::NO_NEED_AUTH && Auth::check()) {
+            return redirect(route('home'));
         }
 
         $this->title[]  = $page->title;
