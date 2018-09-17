@@ -9,3 +9,4 @@ composer.phar
 /public_html/assets/css/*.css.map
 /public_html/assets/plugins/bootstrap/scss/*.css
 /public_html/assets/plugins/bootstrap/scss/*.css.map
+/resources/views/layouts/counters.blade.php
