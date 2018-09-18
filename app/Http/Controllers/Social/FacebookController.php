@@ -2,16 +2,11 @@
 
 namespace App\Http\Controllers\Social;
 
-use App\Common;
-use App\Http\Controllers\Controller;
 use App\Model\Social;
-use App\User;
-use Illuminate\Support\Facades\Auth;
 use Laravel\Socialite\Facades\Socialite;
-use Intervention\Image\ImageManagerStatic as Image;
 
 
-class FacebookController extends Controller
+class FacebookController extends SocialController
 {
     /**
      * Redirect the user to the FaceBook authentication page.
@@ -36,52 +31,14 @@ class FacebookController extends Controller
             $create = [
                 'first_name'    => $socialUser->getName(),
                 'email'         => $socialUser->getEmail(),
+                'avatar'        => [
+                    'url'       => $socialUser->getAvatar(),
+                    'filename'  => $socialUser->getId(),
+                    'extension' => 'jpg'
+                ]
             ];
 
-            if (empty($create['email'])) {
-                //пользователь не предоставил доступ к email
-                $user = User::has('social', '=', Social::SOCIAL_FACEBOOK)->first();
-            } else {
-                //проверка на существование пользователя по email
-                $user = User::where('email', $create['email'])->first();
-            }
-
-            if (is_null($user)) {
-                $user = User::create($create);
-            } else {
-                $imgUrl = $socialUser->getAvatar();
-
-                if ($imgUrl) {
-                    $avatar = Image::make($imgUrl);
-
-                    $avatar->fit(300);
-
-                    list($filePath, $dir) = Common::generateFilePath($socialUser->getId(), 'jpg', true);
-
-                    $avatar = $avatar->save($filePath);
-
-                    $user->avatar = $dir . $avatar->filename . '.' . $avatar->extension;
-                }
-
-                $user->first_name = !empty($create['first_name']) ? $create['first_name'] : $user->first_name;
-                $user->save();
-            }
-
-            $socials = $user->social()->get()->toArray();
-
-            if (!in_array(Social::SOCIAL_FACEBOOK, array_column($socials, 'social'))) {
-                $social = new Social([
-                    'user_id' => $user->id,
-                    'social' => Social::SOCIAL_FACEBOOK,
-                    'social_id' => $socialUser->getId(),
-                ]);
-
-                $user->social()->save($social);
-            }
-
-            Auth::loginUsingId($user->id);
-
-            return redirect()->route('home');
+             return $this->_handleProviderCallback(Social::SOCIAL_FACEBOOK, $create);
 
         } catch (\Exception $e) {
             return redirect()->route('login');
