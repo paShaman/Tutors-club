@@ -17,9 +17,9 @@
     </div>
 
     <div class="mt-4">
-        <a href="/login/facebook">{{ lng('facebook_login') }}</a> &nbsp;&nbsp;&nbsp;
-        <a href="/login/vkontakte">{{ lng('vkontakte_login') }}</a> &nbsp;&nbsp;&nbsp;
-        <a href="/login/google">{{ lng('google_login') }}</a>
+        <a href="/login/facebook"><i class="fab fa-facebook-f"></i></a> &nbsp;&nbsp;&nbsp;
+        <a href="/login/vkontakte"><i class="fab fa-vk"></i></a> &nbsp;&nbsp;&nbsp;
+        <a href="/login/google"><i class="fab fa-google"></i></a>
     </div>
 </div>
 
