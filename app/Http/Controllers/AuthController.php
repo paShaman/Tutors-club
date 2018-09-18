@@ -1,5 +1,6 @@
 <?php namespace App\Http\Controllers;
 
+use App\Common;
 use App\Mail\PasswordRecovery;
 use App\User;
 use Illuminate\Http\Request;
@@ -37,6 +38,10 @@ class AuthController extends Controller
         ];
 
         $input = $request->post();
+
+        if (empty(Common::checkRecaptcha($input))) {
+            return $this->_resultError(lng('error.recaptcha'));
+        }
 
         $validator = Validator::make($input, $rules);
 

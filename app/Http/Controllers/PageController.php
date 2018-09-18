@@ -55,6 +55,20 @@ class PageController extends Controller
         $this->data['description']  = $page->description;
         $this->data['keywords']     = $page->keywords;
 
+        $pageFuncName = '_page' . studly_case($page->name);
+
+        if (method_exists($this, $pageFuncName)) {
+            $this->$pageFuncName();
+        }
+
         return $this->_renderPage($page->name);
+    }
+
+    /**
+     * доп функции для страницы регистрации
+     */
+    protected function _pageRegister()
+    {
+        $this->_initReCaptcha();
     }
 }

@@ -31,6 +31,9 @@
                 <label class="custom-control-label" for="form_policy_agree">{!!  lng('policy_agree') !!}</label>
             </div>
         </div>
+        <div class="form-group">
+            <div class="g-recaptcha" data-sitekey="{{ env('RECAPTCHA_KEY') }}"></div>
+        </div>
         <button type="submit" class="btn btn-primary btn-lg">{{ lng('btn.register') }}</button>
     </form>
 
@@ -52,6 +55,8 @@
                     window.location.href = '/';
                 }, 1000);
             } else {
+                grecaptcha.reset();
+
                 if (data.data) {
                     for (var i in data.data) {
                         $('[name=' + i + ']', form).addClass('is-invalid');

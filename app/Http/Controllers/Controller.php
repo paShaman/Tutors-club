@@ -86,4 +86,12 @@ class Controller extends BaseController
         }
         return $this->_resultJson(false, [], $message);
     }
+
+    /**
+     * init Google ReCaptcha
+     */
+    protected function _initReCaptcha()
+    {
+        $this->scripts[] = 'https://www.google.com/recaptcha/api.js';
+    }
 }

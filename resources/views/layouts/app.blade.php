@@ -22,7 +22,7 @@
         <script src="{{ $script }}"></script>
     @endforeach
 
-    @if (!app()->isLocal())
+    @if (env('COUNTERS'))
         @include('layouts.counters')
     @endif
 </head>
