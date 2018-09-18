@@ -74,7 +74,7 @@ class Common
         }
 
         if ($returnWithDir) {
-            return [$path . $dir1 .  $dir2 .  $md5 . '.' . $extension, $dir1 . $dir2];
+            return [$path . $dir1 .  $dir2 .  $md5 . '.' . $extension, 'upload' . DIRECTORY_SEPARATOR . $dir1 . $dir2];
         }
         return $path . $dir1 .  $dir2 .  $md5 . '.' . $extension;
     }

@@ -59,8 +59,7 @@ class VkontakteController extends Controller
 
                     $avatar->setFileInfoFromPath($imgUrl);
 
-                    // resize only the width of the image
-                    $avatar->resize(300, null);
+                    $avatar->fit(300);
 
                     list($filePath, $dir) = Common::generateFilePath($avatar->filename, $avatar->extension, true);
 
