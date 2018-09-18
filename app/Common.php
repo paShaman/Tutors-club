@@ -47,4 +47,35 @@ class Common
         }
         return true;
     }
+
+    /**
+     * генерим корректный путь к файлу
+     *
+     * @param $filename
+     * @param $extension
+     * @param $returnWithDir
+     * @return string|array
+     */
+    public static function generateFilePath($filename, $extension, $returnWithDir = false)
+    {
+        $md5 = md5($filename);
+
+        $dir1 = substr($md5, 0, 2) . DIRECTORY_SEPARATOR;
+        $dir2 = substr($md5, 2, 2) . DIRECTORY_SEPARATOR;
+
+        $path = $_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'upload' . DIRECTORY_SEPARATOR;
+
+        if (!is_dir($path . $dir1)) {
+            mkdir($path . $dir1);
+        }
+
+        if (!is_dir($path . $dir1 . $dir2)) {
+            mkdir($path . $dir1 . $dir2);
+        }
+
+        if ($returnWithDir) {
+            return [$path . $dir1 .  $dir2 .  $md5 . '.' . $extension, $dir1 . $dir2];
+        }
+        return $path . $dir1 .  $dir2 .  $md5 . '.' . $extension;
+    }
 }

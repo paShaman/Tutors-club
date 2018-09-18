@@ -27,11 +27,11 @@
     @endif
 </head>
 
-<body>
+<body class="header-fixed">
+
+@include('layouts.header')
 
 <div class="container-fluid">
-    @include('layouts.header')
-
     @yield('content')
 
     @include('layouts.footer')

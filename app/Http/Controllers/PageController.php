@@ -23,6 +23,7 @@ class PageController extends Controller
 
         $this->scripts = [
             '/assets/plugins/jquery-3.3.1.min.js',
+            '/assets/plugins/bootstrap/bootstrap.min.js',
             '/assets/plugins/jGrowl/jquery.jgrowl.min.js',
             '/assets/plugins/fontawesome/js/all.min.js',
             Common::getAssetsPath() . 'js/main.js',

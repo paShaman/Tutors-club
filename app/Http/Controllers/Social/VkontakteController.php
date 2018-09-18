@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers\Social;
 
+use App\Common;
 use App\Http\Controllers\Controller;
 use App\Model\Social;
 use App\User;
 use Illuminate\Support\Facades\Auth;
+use Intervention\Image\ImageManagerStatic as Image;
 use Laravel\Socialite\Facades\Socialite;
 
 
@@ -48,11 +50,28 @@ class VkontakteController extends Controller
             if (is_null($user)) {
                 $user = User::create($create);
             } else {
-                if (!$user->first_name) {
-                    $user->first_name = $create['first_name'];
-                    $user->last_name = $create['last_name'];
-                    $user->save();
+                $imgUrl = $socialUser->getAvatar();
+
+                if ($imgUrl) {
+                    $imgUrl = preg_replace("/(.*)\?(.*)/", '$1', $imgUrl);
+
+                    $avatar = Image::make($imgUrl);
+
+                    $avatar->setFileInfoFromPath($imgUrl);
+
+                    // resize only the width of the image
+                    $avatar->resize(300, null);
+
+                    list($filePath, $dir) = Common::generateFilePath($avatar->filename, $avatar->extension, true);
+
+                    $avatar = $avatar->save($filePath);
+
+                    $user->avatar = $dir . $avatar->filename . '.' . $avatar->extension;
                 }
+
+                $user->first_name = !empty($create['first_name']) ? $create['first_name'] : $user->first_name;
+                $user->last_name = !empty($create['last_name']) ? $create['last_name'] : $user->last_name;
+                $user->save();
             }
 
             $socials = $user->social()->get()->toArray();
