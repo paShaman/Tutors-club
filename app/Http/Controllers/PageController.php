@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Common;
-use App\Page;
+use App\Model\Page;
 use Illuminate\Support\Facades\Auth;
 
 class PageController extends Controller

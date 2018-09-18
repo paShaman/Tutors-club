@@ -10,6 +10,13 @@
 | contains the "web" middleware group. Now create something great!
 |
 */
+Route::get('/login/vkontakte',          'Social\VkontakteController@redirectToProvider');
+Route::get('/login/vkontakte/callback', 'Social\VkontakteController@handleProviderCallback');
+Route::get('/login/facebook',           'Social\FacebookController@redirectToProvider');
+Route::get('/login/facebook/callback',  'Social\FacebookController@handleProviderCallback');
+Route::get('/login/google',             'Social\GoogleController@redirectToProvider');
+Route::get('/login/google/callback',    'Social\GoogleController@handleProviderCallback');
+
 Route::post('/register',            'AuthController@register');
 Route::post('/login',               'AuthController@login');
 Route::post('/password-recovery',   'AuthController@recovery');

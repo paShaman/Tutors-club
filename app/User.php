@@ -27,4 +27,12 @@ class User extends Authenticatable
     protected $hidden = [
         'password', 'remember_token'
     ];
+
+    /**
+     * Get the social connects for the user.
+     */
+    public function social()
+    {
+        return $this->hasMany('App\Model\Social');
+    }
 }

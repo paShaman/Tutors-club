@@ -15,6 +15,12 @@
     <div class="mt-4">
         <a href="/register">{{ lng('register_do') }}</a> &nbsp;&nbsp;&nbsp; <a href="/password-recovery">{{ lng('password_forgot') }}</a>
     </div>
+
+    <div class="mt-4">
+        <a href="/login/facebook">{{ lng('facebook_login') }}</a> &nbsp;&nbsp;&nbsp;
+        <a href="/login/vkontakte">{{ lng('vkontakte_login') }}</a> &nbsp;&nbsp;&nbsp;
+        <a href="/login/google">{{ lng('google_login') }}</a>
+    </div>
 </div>
 
 <script>
