@@ -54,7 +54,7 @@ class Handler extends ExceptionHandler
             $e instanceof NotFoundHttpException ||
             $e instanceof ModelNotFoundException
         ){
-            return response((new \App\Http\Controllers\PageController())->page(404), Response::HTTP_OK);
+            return response((new \App\Http\Controllers\PageController())->page(404));
         }
         return parent::render($request, $e);
     }

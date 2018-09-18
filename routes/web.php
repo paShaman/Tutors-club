@@ -10,6 +10,11 @@
 | contains the "web" middleware group. Now create something great!
 |
 */
+Route::get('/',                     'PageController@page')->name('home');
+Route::get('/login',                'PageController@login')->name('login');
+Route::get('/register',             'PageController@register');
+Route::get('/password-recovery',    'PageController@passwordRecovery');
+
 Route::get('/login/vkontakte',          'Social\VkontakteController@redirectToProvider');
 Route::get('/login/vkontakte/callback', 'Social\VkontakteController@handleProviderCallback');
 Route::get('/login/facebook',           'Social\FacebookController@redirectToProvider');
@@ -22,12 +27,4 @@ Route::post('/login',               'AuthController@login');
 Route::post('/password-recovery',   'AuthController@recovery');
 Route::get('/logout',               'AuthController@logout');
 
-Route::get('/', function () {
-    return (new \App\Http\Controllers\PageController())->page();
-})->name('home');
-
-Route::get('/login', function () {
-    return (new \App\Http\Controllers\PageController())->page('login');
-})->name('login');
-
-Route::get('/{page}', 'PageController@page')->where('page', '[A-Za-z\-]+');
+Route::get('/info/{page}', 'PageController@page')->where('page', '[A-Za-z\-]+');

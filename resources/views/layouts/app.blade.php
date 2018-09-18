@@ -7,8 +7,8 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="keywords" content="{{ $keywords }}">
-    <meta name="description" content="{{ $description }}">
+    <meta name="keywords" content="{{ $page['keywords'] }}">
+    <meta name="description" content="{{ $page['description'] }}">
 
     <link rel="icon" type="image/png" sizes="16x16" href="/images/logo.png">
 

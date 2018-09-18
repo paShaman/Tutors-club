@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Common;
+use App\Model\Page;
 use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Lang;
+
 
 class Controller extends BaseController
 {
@@ -21,6 +24,35 @@ class Controller extends BaseController
     public function __construct()
     {
         app('translator')->setLocale('ru');
+
+        if (request()->isXmlHttpRequest()) {
+            //ajax
+        } else {
+            $this->title[] = lng('title');
+
+            $this->_initFilesBefore();
+        }
+    }
+
+    /**
+     * базовые скрипты и стили
+     */
+    protected function _initFilesBefore()
+    {
+        $this->styles = [
+            '/assets/plugins/bootstrap/scss/bootstrap.css',
+            '/assets/plugins/jGrowl/less/jgrowl.css',
+            Common::getAssetsPath() . 'css/google-sans.css',
+            Common::getAssetsPath() . 'css/style.css',
+        ];
+
+        $this->scripts = [
+            '/assets/plugins/jquery-3.3.1.min.js',
+            '/assets/plugins/bootstrap/bootstrap.min.js',
+            '/assets/plugins/jGrowl/jquery.jgrowl.min.js',
+            '/assets/plugins/fontawesome/js/all.min.js',
+            Common::getAssetsPath() . 'js/main.js',
+        ];
     }
 
     /**
@@ -40,8 +72,24 @@ class Controller extends BaseController
      *
      * @return \Illuminate\View\View
      */
-    protected function _renderPage($page)
+    protected function _renderPage($pageName)
     {
+        $page = Page::where('name', $pageName)
+            ->where('active', 1)
+            ->firstOrFail();
+
+        //без middleware проверяем авторизацию и доступность страницы гостю
+        if ($page->need_auth == Page::NEED_AUTH && !Auth::check()) {
+            return redirect(route('login'));
+        }
+        if ($page->need_auth == Page::NO_NEED_AUTH && Auth::check()) {
+            return redirect(route('home'));
+        }
+
+        $this->title[]  = $page->title;
+
+        $this->data['page']  = $page->toArray();
+
         $data = array_merge(
             [
                 'titleFull'     => implode(" - ", $this->title),

@@ -13,7 +13,7 @@ return [
     'first_name'            => 'Имя',
     'last_name'             => 'Фамилия',
     'middle_name'           => 'Отчество',
-    'policy_agree'          => 'Я согласен с <a href="/policy">политикой конфеденциальности</a>',
+    'policy_agree'          => 'Я согласен с <a href="/info/policy">политикой конфеденциальности</a>',
     'btn' => [
         'send'              => 'Отправить',
         'login'             => 'Войти',

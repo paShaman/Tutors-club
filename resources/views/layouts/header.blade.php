@@ -7,7 +7,6 @@
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
         <ul class="navbar-nav ml-auto">
             @if (Auth::check())
-
                 @if ($user->avatar)
                     <span class="avatar mr-2" style="background-image: url({{ $user->avatar }})"></span>
                 @endif
