@@ -44,7 +44,7 @@ class Controller extends BaseController
     {
         $data = array_merge(
             [
-                'title'         => implode(" - ", $this->title),
+                'titleFull'     => implode(" - ", $this->title),
                 'styles'        => $this->styles,
                 'scripts'       => $this->scripts,
                 'localization'  => Lang::get('js'),

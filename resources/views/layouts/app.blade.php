@@ -12,7 +12,7 @@
 
     <link rel="icon" type="image/png" sizes="16x16" href="/images/logo.png">
 
-    <title>{{ $title }}</title>
+    <title>{{ $titleFull }}</title>
 
     @foreach ($styles as $style)
         <link href="{{ $style }}" rel="stylesheet">
@@ -27,15 +27,15 @@
     @endif
 </head>
 
-<body class="header-fixed">
+<body class="header-fixed footer-fixed">
 
-@include('layouts.header')
+    @include('layouts.header')
 
-<div class="container-fluid">
-    @yield('content')
+    <main class="container-fluid">
+        @yield('content')
+    </main>
 
     @include('layouts.footer')
-</div>
 
 <script>
     @foreach ($localization as $key => $value)

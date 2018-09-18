@@ -55,6 +55,7 @@ class PageController extends Controller
 
         $this->data['description']  = $page->description;
         $this->data['keywords']     = $page->keywords;
+        $this->data['title']        = $page->title;
 
         $pageFuncName = '_page' . studly_case($page->name);
 

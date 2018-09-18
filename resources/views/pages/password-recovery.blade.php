@@ -2,10 +2,14 @@
 
 @section('content')
 
-    <div class="row">
+    <div class="row mt-5">
         <div class="col-2"></div>
         <div class="col-8">
-            @include('forms.password-recovery')
+            <div class="mw-500 ml-auto mr-auto">
+                <h1>{{ $title }}</h1>
+
+                @include('forms.password-recovery')
+            </div>
         </div>
         <div class="col-2"></div>
     </div>
