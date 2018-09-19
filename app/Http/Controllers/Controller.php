@@ -97,11 +97,12 @@ class Controller extends BaseController
                 'scripts'       => $this->scripts,
                 'localization'  => Lang::get('js'),
                 'user'          => Auth::user(),
+                'userId'        => Auth::id(),
             ],
             $this->data
         );
 
-        return $this->_render('pages.' . $page, $data);
+        return $this->_render('pages.' . $pageName, $data);
     }
 
     /**

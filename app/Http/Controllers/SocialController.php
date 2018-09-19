@@ -1,14 +1,12 @@
 <?php
 
-namespace App\Http\Controllers\Social;
+namespace App\Http\Controllers;
 
 use App\Common;
-use App\Http\Controllers\Controller;
 use App\Model\Social;
 use App\User;
 use Illuminate\Support\Facades\Auth;
 use Intervention\Image\ImageManagerStatic as Image;
-use Laravel\Socialite\Facades\Socialite;
 
 
 class SocialController extends Controller

@@ -10,6 +10,8 @@
     <meta name="keywords" content="{{ $page['keywords'] }}">
     <meta name="description" content="{{ $page['description'] }}">
 
+    <link rel="manifest" href="/manifest.json" />
+
     <link rel="icon" type="image/png" sizes="16x16" href="/images/logo.png">
 
     <title>{{ $titleFull }}</title>
@@ -42,6 +44,8 @@
         localization['{{ $key }}'] = '{{ $value }}';
     @endforeach
 </script>
+
+    @include('layouts.webpush')
 
 </body>
 

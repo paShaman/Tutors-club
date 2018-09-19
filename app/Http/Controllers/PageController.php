@@ -36,7 +36,7 @@ class PageController extends Controller
     {
         $this->_initReCaptcha();
 
-        return $this->_renderPage('login');
+        return $this->_renderPage('register');
     }
 
     /**

@@ -35,4 +35,9 @@ class User extends Authenticatable
     {
         return $this->hasMany('App\Model\Social');
     }
+
+    public function getId()
+    {
+        return $this->id;
+    }
 }
