@@ -22,7 +22,7 @@ function message(type, message, sticky)
         theme = 'info';
     }
 
-    $.jGrowl(message, { header: header, sticky: sticky === true ? true : false, theme: theme });
+    $.jGrowl(message, { header: header, sticky: sticky ? true : false, theme: theme });
 }
 
 function lng(word)
@@ -142,5 +142,9 @@ function submitForm(btn, callback)
     submitFormInAction = true;
 
     callback(btn);
+}
+
+function endSubmitForm() {
+    submitFormInAction = false;
 }
 

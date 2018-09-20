@@ -1,4 +1,4 @@
-<form class="form">
+<form class="form" novalidate>
     <div class="form-group label-inside">
         <input type="text" class="form-control form-control-lg" name="email" id="form_email" required>
         <label for="form_email">{{ lng('email') }}</label>
@@ -8,11 +8,11 @@
         <input type="password" class="form-control form-control-lg" name="password" id="form_password" required>
         <label for="form_password">{{ lng('password') }}</label>
     </div>
-    <button type="submit" class="btn waves-effect waves-light btn-primary btn-lg" onclick="submitForm($(this), submitAuthForm)">{{ lng('btn.login') }}</button>
+    <span class="btn waves-effect waves-light btn-primary btn-lg" onclick="submitForm($(this), submitAuthForm)">{{ lng('btn.login') }}</span>
 </form>
 
 <div class="mt-4">
-    <a href="/register">{{ lng('register_do') }}</a> &nbsp;&nbsp;&nbsp; <a href="/password-recovery">{{ lng('password_forgot') }}</a>
+    <a href="/register">{{ lng('register_do') }}</a> &nbsp;&nbsp;&nbsp; <nobr><a href="/password-recovery">{{ lng('password_forgot') }}</a></nobr>
 </div>
 
 <div class="mt-4">
@@ -28,6 +28,8 @@
         form.find('.is-invalid').removeClass('is-invalid');
 
         $.post('/login', form.serialize(), function (data) {
+            endSubmitForm();
+
             if (data.success) {
                 message(true, data.message);
 
@@ -47,7 +49,5 @@
                 }
             }
         });
-
-        return false;
     }
 </script>

@@ -20,7 +20,6 @@ class CreatePagesTable extends Migration
             $table->string('title');
             $table->string('description');
             $table->string('keywords');
-            $table->boolean('need_auth')->default(0);
             $table->index('name');
             $table->timestamps();
         });

@@ -1,8 +1,11 @@
 <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top">
     <a class="navbar-brand font-weight-bold" href="/">Tutors club</a>
+
+    @if (Auth::check())
     <a href="#" class="navbar-toggler waves-effect" data-toggle="collapse" data-target="#navbarSupportedContent">
         <i class="fa fa-bars"></i>
     </a>
+    @endif
 
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
         <ul class="navbar-nav ml-auto">

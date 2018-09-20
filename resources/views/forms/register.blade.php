@@ -1,4 +1,4 @@
-<form class="form">
+<form class="form" novalidate>
     <div class="form-group label-inside">
         <input type="text" class="form-control form-control-lg" name="email" id="form_email" required>
         <label for="form_email">{{ lng('email') }}</label>
@@ -37,7 +37,7 @@
 </form>
 
 <div class="mt-4">
-    <a href="/login">{{ lng('login_do') }}</a> &nbsp;&nbsp;&nbsp; <a href="/password-recovery">{{ lng('password_forgot') }}</a>
+    <a href="/login">{{ lng('login_do') }}</a> &nbsp;&nbsp;&nbsp; <nobr><a href="/password-recovery">{{ lng('password_forgot') }}</a></nobr>
 </div>
 
 <script>
@@ -47,6 +47,8 @@
         form.find('.is-invalid').removeClass('is-invalid');
 
         $.post('/register', form.serialize(), function (data) {
+            endSubmitForm();
+
             if (data.success) {
                 message(true, data.message);
 
@@ -68,7 +70,5 @@
                 }
             }
         });
-
-        return false;
     }
 </script>

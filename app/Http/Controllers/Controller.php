@@ -81,14 +81,6 @@ class Controller extends BaseController
             ->where('active', 1)
             ->firstOrFail();
 
-        //без middleware проверяем авторизацию и доступность страницы гостю
-        if ($page->need_auth == Page::NEED_AUTH && !Auth::check()) {
-            return redirect(route('login'));
-        }
-        if ($page->need_auth == Page::NO_NEED_AUTH && Auth::check()) {
-            return redirect(route('home'));
-        }
-
         $this->title[]  = $page->title;
 
         $this->tpl['page']  = $page->toArray();

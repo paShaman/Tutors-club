@@ -3,15 +3,15 @@
 @section('content')
 
     <div class="row mt-5">
-        <div class="col-2"></div>
-        <div class="col-8">
+        <div class="col-sm-2 col-auto"></div>
+        <div class="col-sm-8 col-12">
             <div class="mw-500 ml-auto mr-auto">
                 <h1>{{ $page['title'] }}</h1>
 
                 @include('forms.login')
             </div>
         </div>
-        <div class="col-2"></div>
+        <div class="col-sm-2 col-auto"></div>
     </div>
 
 @endsection

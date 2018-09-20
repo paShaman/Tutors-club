@@ -1,4 +1,4 @@
-<form class="form">
+<form class="form" novalidate>
     <div class="form-group label-inside">
         <input type="text" class="form-control form-control-lg" name="email" id="form_email" required>
         <label for="form_email">{{ lng('email') }}</label>
@@ -18,6 +18,8 @@
         form.find('.is-invalid').removeClass('is-invalid');
 
         $.post('/password-recovery', form.serialize(), function (data) {
+            endSubmitForm();
+
             if (data.success) {
                 message(true, data.message);
 
@@ -37,7 +39,5 @@
                 }
             }
         });
-
-        return false;
     }
 </script>

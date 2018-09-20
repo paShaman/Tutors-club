@@ -1,4 +1,4 @@
-<form class="form">
+<form class="form" novalidate>
     <div class="form-group label-inside">
         <input type="text" class="form-control form-control-lg" name="first_name" id="form_first_name" required>
         <label for="form_first_name">{{ lng('first_name') }}</label>
@@ -21,6 +21,8 @@
         form.find('.is-invalid').removeClass('is-invalid');
 
         $.post('/settings', form.serialize(), function (data) {
+            endSubmitForm();
+
             if (data.success) {
                 message(true, data.message);
 
@@ -40,7 +42,5 @@
                 }
             }
         });
-
-        return false;
     }
 </script>

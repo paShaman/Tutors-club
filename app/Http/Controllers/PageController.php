@@ -8,6 +8,16 @@ use Illuminate\Support\Facades\Auth;
 
 class PageController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth')->except([
+            'login',
+            'register',
+            'passwordRecovery'
+        ]);
+
+        parent::__construct();
+    }
     /**
      * рендерим страницу
      *
