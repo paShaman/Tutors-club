@@ -28,3 +28,9 @@ Route::post('/password-recovery',   'AuthController@recovery');
 Route::get('/logout',               'AuthController@logout');
 
 Route::get('/info/{page}', 'PageController@page')->where('page', '[A-Za-z\-]+');
+
+Route::post('/sender/subscribe',   'SenderController@subscribe');
+Route::post('/sender/unsubscribe', 'SenderController@unsubscribe');
+
+//test urls
+Route::get('/sender/test', 'SenderController@test');

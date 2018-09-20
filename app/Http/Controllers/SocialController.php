@@ -25,7 +25,9 @@ class SocialController extends Controller
 
             if (empty($socialUser['email'])) {
                 //пользователь не предоставил доступ к email
-                $user = User::has('social', '=', $provider)->first();
+                $user = User::whereHas('social', function ($query, $provider) {
+                    $query->where('social', $provider);
+                })->first();
             } else {
                 //проверка на существование пользователя по email
                 $user = User::where('email', $socialUser['email'])->first();

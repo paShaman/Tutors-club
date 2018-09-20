@@ -51,6 +51,7 @@ class Controller extends BaseController
             '/assets/plugins/bootstrap/bootstrap.min.js',
             '/assets/plugins/jGrowl/jquery.jgrowl.min.js',
             '/assets/plugins/fontawesome/js/all.min.js',
+            Common::getAssetsPath() . 'js/functions.js',
             Common::getAssetsPath() . 'js/main.js',
         ];
     }

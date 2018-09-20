@@ -36,6 +36,19 @@ class User extends Authenticatable
         return $this->hasMany('App\Model\Social');
     }
 
+    /**
+     * Get the senders connects for the user.
+     */
+    public function senders()
+    {
+        return $this->hasMany('App\Model\Sender');
+    }
+
+    /**
+     * get protected param
+     *
+     * @return mixed
+     */
     public function getId()
     {
         return $this->id;
