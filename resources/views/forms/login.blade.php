@@ -1,4 +1,4 @@
-<form method="post" onsubmit="return submitAuthForm($(this))" novalidate>
+<form class="form">
     <div class="form-group label-inside">
         <input type="text" class="form-control form-control-lg" name="email" id="form_email" required>
         <label for="form_email">{{ lng('email') }}</label>
@@ -8,7 +8,7 @@
         <input type="password" class="form-control form-control-lg" name="password" id="form_password" required>
         <label for="form_password">{{ lng('password') }}</label>
     </div>
-    <button type="submit" class="btn btn-primary btn-lg">{{ lng('btn.login') }}</button>
+    <button type="submit" class="btn waves-effect waves-light btn-primary btn-lg" onclick="submitForm($(this), submitAuthForm)">{{ lng('btn.login') }}</button>
 </form>
 
 <div class="mt-4">
@@ -22,8 +22,9 @@
 </div>
 
 <script>
-    function submitAuthForm(form)
+    function submitAuthForm(btn)
     {
+        var form = btn.closest('.form');
         form.find('.is-invalid').removeClass('is-invalid');
 
         $.post('/login', form.serialize(), function (data) {

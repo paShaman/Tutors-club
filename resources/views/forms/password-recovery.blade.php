@@ -1,10 +1,10 @@
-<form method="post" onsubmit="return submitRecoveryForm($(this))" novalidate>
+<form class="form">
     <div class="form-group label-inside">
         <input type="text" class="form-control form-control-lg" name="email" id="form_email" required>
         <label for="form_email">{{ lng('email') }}</label>
         <small class="form-text text-muted">{{ lng('email_tip') }}</small>
     </div>
-    <button type="submit" class="btn btn-primary btn-lg">{{ lng('btn.send') }}</button>
+    <span class="btn waves-effect waves-light btn-primary btn-lg" onclick="submitForm($(this), submitRecoveryForm)">{{ lng('btn.send') }}</span>
 </form>
 
 <div class="mt-4">
@@ -12,8 +12,9 @@
 </div>
 
 <script>
-    function submitRecoveryForm(form)
+    function submitRecoveryForm(btn)
     {
+        var form = btn.closest('.form');
         form.find('.is-invalid').removeClass('is-invalid');
 
         $.post('/password-recovery', form.serialize(), function (data) {

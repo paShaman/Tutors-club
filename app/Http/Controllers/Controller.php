@@ -17,7 +17,7 @@ class Controller extends BaseController
     use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
 
     public $title       = [];
-    public $data        = [];
+    public $tpl         = [];
     public $styles      = [];
     public $scripts     = [];
 
@@ -42,6 +42,7 @@ class Controller extends BaseController
         $this->styles = [
             '/assets/plugins/bootstrap/scss/bootstrap.css',
             '/assets/plugins/jGrowl/less/jgrowl.css',
+            '/assets/plugins/btnWaves/btnWaves.css',
             Common::getAssetsPath() . 'css/google-sans.css',
             Common::getAssetsPath() . 'css/style.css',
         ];
@@ -51,6 +52,7 @@ class Controller extends BaseController
             '/assets/plugins/bootstrap/bootstrap.min.js',
             '/assets/plugins/jGrowl/jquery.jgrowl.min.js',
             '/assets/plugins/fontawesome/js/all.min.js',
+            '/assets/plugins/btnWaves/btnWaves.js',
             Common::getAssetsPath() . 'js/functions.js',
             Common::getAssetsPath() . 'js/main.js',
         ];
@@ -89,18 +91,18 @@ class Controller extends BaseController
 
         $this->title[]  = $page->title;
 
-        $this->data['page']  = $page->toArray();
+        $this->tpl['page']  = $page->toArray();
 
         $data = array_merge(
             [
-                'titleFull'     => implode(" - ", $this->title),
+                'titleFull'     => implode(" - ", array_reverse($this->title)),
                 'styles'        => $this->styles,
                 'scripts'       => $this->scripts,
                 'localization'  => Lang::get('js'),
                 'user'          => Auth::user(),
                 'userId'        => Auth::id(),
             ],
-            $this->data
+            $this->tpl
         );
 
         return $this->_render('pages.' . $pageName, $data);

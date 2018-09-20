@@ -36,4 +36,8 @@ return [
     'only_for_guest'        => 'Доступно только для неавторизованных пользователей',
     'logout'                => 'Выход',
     'settings'              => 'Настройки',
+    'subscriptions'         => 'Подписки',
+    'social_networks'       => 'Социальные сети',
+    'social_on'             => 'Подключить',
+    'social_off'            => 'Отключить',
 ];

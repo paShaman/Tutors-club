@@ -8,6 +8,7 @@
   @include gradient-bg($background);
   border-color: $border;
   @include box-shadow($btn-box-shadow);
+  box-shadow: 0 4px 6px 0 rgba($background, .15), 0 1px 0 1px rgba($background, .05), 0 0 0 1px rgba($background, .05);
 
   @include hover {
     color: color-yiq($hover-background);

@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Model\Page;
+use App\Model\Social;
+use Illuminate\Support\Facades\Auth;
 
 class PageController extends Controller
 {
@@ -47,5 +49,29 @@ class PageController extends Controller
     public function passwordRecovery()
     {
         return $this->_renderPage('password-recovery');
+    }
+
+    /**
+     * страница настроек
+     *
+     * @return \Illuminate\View\View
+     */
+    public function settings()
+    {
+        $socialNetworks = [
+            Social::SOCIAL_VKONTAKTE    => [],
+            Social::SOCIAL_FACEBOOK     => [],
+            Social::SOCIAL_GOOGLE       => [],
+        ];
+
+        $userSocialNetworks = Auth::user()->social()->get();
+
+        foreach ($userSocialNetworks as $socialNetwork) {
+            $socialNetworks[$socialNetwork->social] = $socialNetwork->social_id;
+        }
+
+        $this->tpl['socialNetworks'] = $socialNetworks;
+
+        return $this->_renderPage('settings');
     }
 }

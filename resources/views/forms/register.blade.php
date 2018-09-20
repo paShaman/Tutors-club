@@ -1,4 +1,4 @@
-<form method="post" onsubmit="return submitRegistrationForm($(this))" novalidate>
+<form class="form">
     <div class="form-group label-inside">
         <input type="text" class="form-control form-control-lg" name="email" id="form_email" required>
         <label for="form_email">{{ lng('email') }}</label>
@@ -33,7 +33,7 @@
     <div class="form-group">
         <div class="g-recaptcha" data-sitekey="{{ env('RECAPTCHA_KEY') }}"></div>
     </div>
-    <button type="submit" class="btn btn-primary btn-lg">{{ lng('btn.register') }}</button>
+    <span class="btn waves-effect waves-light btn-primary btn-lg" onclick="submitForm($(this), submitRegistrationForm)">{{ lng('btn.register') }}</span>
 </form>
 
 <div class="mt-4">
@@ -41,8 +41,9 @@
 </div>
 
 <script>
-    function submitRegistrationForm(form)
+    function submitRegistrationForm(btn)
     {
+        var form = btn.closest('.form');
         form.find('.is-invalid').removeClass('is-invalid');
 
         $.post('/register', form.serialize(), function (data) {

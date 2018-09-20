@@ -14,6 +14,7 @@ Route::get('/',                     'PageController@page')->name('home');
 Route::get('/login',                'PageController@login')->name('login');
 Route::get('/register',             'PageController@register');
 Route::get('/password-recovery',    'PageController@passwordRecovery');
+Route::get('/settings',             'PageController@settings');
 
 Route::get('/login/vkontakte',          'Social\VkontakteController@redirectToProvider');
 Route::get('/login/vkontakte/callback', 'Social\VkontakteController@handleProviderCallback');

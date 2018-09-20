@@ -123,3 +123,24 @@ function webPushHandlerInit(webpushButtonSelector, OneSignalAppId) {
 /*
  *  webpush end
  */
+
+var submitFormInAction = false;
+
+/**
+ * функция предварительной обработки перед сабмитом формы
+ *
+ * @param btn
+ * @param callback
+ * @returns {boolean}
+ */
+function submitForm(btn, callback)
+{
+    if (submitFormInAction) {
+        return false;
+    }
+
+    submitFormInAction = true;
+
+    callback(btn);
+}
+
