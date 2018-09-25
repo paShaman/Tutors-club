@@ -25,6 +25,17 @@ function message(type, message, sticky)
     $.jGrowl(message, { header: header, sticky: sticky ? true : false, theme: theme });
 }
 
+function errorMessages(data)
+{
+    if (typeof data.data == 'string') {
+        message(false, data.data);
+    } else {
+        for (var i in data.data) {
+            message(false, data.data[i]);
+        }
+    }
+}
+
 function lng(word)
 {
     return localization[word] ? localization[word] : '';

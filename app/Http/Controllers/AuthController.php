@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Common;
 use App\Mail\PasswordRecovery;
-use App\User;
+use App\Model\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -39,31 +39,31 @@ class AuthController extends Controller
             'policy_agree'          => ['required', Rule::in(['on'])], //checkbox
         ];
 
-        $input = $request->post();
+        $post = $request->post();
 
-        if (empty(Common::checkRecaptcha($input))) {
+        if (empty(Common::checkRecaptcha($post))) {
             return $this->_resultError(lng('error.recaptcha'));
         }
 
-        $validator = Validator::make($input, $rules);
+        $validator = Validator::make($post, $rules);
 
         if ($validator->fails()) {
             return $this->_resultError($validator);
         }
 
         //проверка email на существование
-        $user = User::where('email', $input['email'])->first();
+        $user = User::where('email', $post['email'])->first();
 
         if (!empty($user)) {
             return $this->_resultError(lng('duplicate_email'));
         }
 
         $user = new User();
-        $user->email        = $input['email'];
-        $user->password     = Hash::make($input['password']);
-        $user->first_name   = $input['first_name'] ?? '';
-        $user->last_name    = $input['last_name'] ?? '';
-        $user->middle_name  = $input['middle_name'] ?? '';
+        $user->email        = $post['email'];
+        $user->password     = Hash::make($post['password']);
+        $user->first_name   = $post['first_name'] ?? '';
+        $user->last_name    = $post['last_name'] ?? '';
+        $user->middle_name  = $post['middle_name'] ?? '';
         $user->date_agree   = DB::raw('now()');
 
         try {
@@ -92,15 +92,15 @@ class AuthController extends Controller
             'password'          => 'required',
         ];
 
-        $input = $request->post();
+        $post = $request->post();
 
-        $validator = Validator::make($input, $rules);
+        $validator = Validator::make($post, $rules);
 
         if ($validator->fails()) {
             return $this->_resultError($validator);
         }
 
-        if (Auth::attempt(['email' => $input['email'], 'password' => $input['password']], true)) {
+        if (Auth::attempt(['email' => $post['email'], 'password' => $post['password']], true)) {
             return $this->_resultSuccess(lng('success.login'));
         }
 
@@ -131,15 +131,15 @@ class AuthController extends Controller
             'email'             => 'required|email',
         ];
 
-        $input = $request->post();
+        $post = $request->post();
 
-        $validator = Validator::make($input, $rules);
+        $validator = Validator::make($post, $rules);
 
         if ($validator->fails()) {
             return $this->_resultError($validator);
         }
 
-        $user = User::where('email', $input['email'])->first();
+        $user = User::where('email', $post['email'])->first();
 
         if (empty($user)) {
             return $this->_resultError(lng('error.no_user_with_this_email'));

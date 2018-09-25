@@ -21,21 +21,18 @@
             endSubmitForm();
 
             if (data.success) {
-                message(true, data.message);
+                message(true, data.data);
 
                 setTimeout(function () {
                     window.location.href = '/';
                 }, 1000);
             } else {
-                if (data.data) {
+                errorMessages(data);
+
+                if (typeof data.data != 'string') {
                     for (var i in data.data) {
                         $('[name=' + i + ']', form).addClass('is-invalid');
-                        message(false, data.data[i]);
                     }
-                }
-
-                if (data.message) {
-                    message(false, data.message);
                 }
             }
         });

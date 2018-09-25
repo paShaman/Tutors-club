@@ -105,32 +105,33 @@ class Controller extends BaseController
      *
      * @param bool $success
      * @param array $data
-     * @param string $message
      * @return \Illuminate\Http\JsonResponse
      */
-    protected function _resultJson($success = true, $data = [], $message = '')
+    protected function _resultJson($success = true, $data = [])
     {
+        $messages = [];
 
         return response()->json([
             'success'   => $success,
             'data'      => $data,
-            'message'   => $message,
+            'messages'  => $messages,
         ]);
     }
 
     protected function _resultSuccess($message = '')
     {
-        return $this->_resultJson(true, [], $message);
+        return $this->_resultJson(true, $message);
     }
 
     protected function _resultError($message = '')
     {
         if ($message instanceof \Illuminate\Validation\Validator) {
             $errors = array_combine($message->errors()->keys(), $message->errors()->all());
-
-            return $this->_resultJson(false, $errors);
+        } else {
+            $errors = $message;
         }
-        return $this->_resultJson(false, [], $message);
+
+        return $this->_resultJson(false, $errors);
     }
 
     /**

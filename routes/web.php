@@ -33,5 +33,7 @@ Route::get('/info/{page}', 'PageController@page')->where('page', '[A-Za-z\-]+');
 Route::post('/sender/subscribe',   'SenderController@subscribe');
 Route::post('/sender/unsubscribe', 'SenderController@unsubscribe');
 
+Route::post('/user/settings', 'UserController@settings')->middleware('auth');
+
 //test urls
 Route::get('/sender/test', 'SenderController@test');

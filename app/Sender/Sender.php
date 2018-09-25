@@ -2,7 +2,7 @@
 
 namespace App\Sender;
 
-use App\User;
+use App\Model\User;
 
 class Sender
 {

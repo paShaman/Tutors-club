@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Common;
 use App\Model\Social;
-use App\User;
+use App\Model\User;
 use Illuminate\Support\Facades\Auth;
 use Intervention\Image\ImageManagerStatic as Image;
 
