@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Common;
+use App\Message;
 use App\Model\Page;
 use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Routing\Controller as BaseController;
@@ -93,6 +94,7 @@ class Controller extends BaseController
                 'localization'  => Lang::get('js'),
                 'user'          => Auth::user(),
                 'userId'        => Auth::id(),
+                'messages'      => Message::collectMessages()
             ],
             $this->tpl
         );
@@ -109,12 +111,10 @@ class Controller extends BaseController
      */
     protected function _resultJson($success = true, $data = [])
     {
-        $messages = [];
-
         return response()->json([
             'success'   => $success,
             'data'      => $data,
-            'messages'  => $messages,
+            'messages'  => Message::collectMessages(),
         ]);
     }
 

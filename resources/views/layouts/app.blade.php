@@ -43,6 +43,10 @@
     @foreach ($localization as $key => $value)
         localization['{{ $key }}'] = '{{ $value }}';
     @endforeach
+
+    @foreach ($messages as $message)
+        message('{{ $message['type'] }}', '{{ $message['text'] }}');
+    @endforeach
 </script>
 
     @include('layouts.webpush')
