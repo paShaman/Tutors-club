@@ -30,10 +30,11 @@ class VkontakteController extends SocialController
             $socialUser = Socialite::driver('vkontakte')->user();
 
             $create = [
+                'id'            => $socialUser->getId(),
                 'first_name'    => $socialUser->user['first_name'],
                 'last_name'     => $socialUser->user['last_name'],
                 'email'         => $socialUser->accessTokenResponseBody['email'],
-                'avatar'        => ['url' => $socialUser->getAvatar()]
+                'avatar'        => $socialUser->getAvatar()
             ];
 
             return $this->_handleProviderCallback(Social::SOCIAL_VKONTAKTE, $create);

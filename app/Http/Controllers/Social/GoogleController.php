@@ -30,10 +30,11 @@ class GoogleController extends SocialController
             $socialUser = Socialite::driver('google')->user();
 
             $create = [
+                'id'            => $socialUser->getId(),
                 'first_name'    => $socialUser->user['name']['givenName'] ?? $socialUser->getName(),
                 'last_name'     => $socialUser->user['name']['familyName'] ?? '',
                 'email'         => $socialUser->getEmail(),
-                'avatar'        => ['url' => $socialUser->getAvatar()]
+                'avatar'        => $socialUser->getAvatar()
             ];
 
             return $this->_handleProviderCallback(Social::SOCIAL_GOOGLE, $create);

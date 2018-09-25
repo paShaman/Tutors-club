@@ -30,6 +30,7 @@ class FacebookController extends SocialController
             $socialUser = Socialite::driver('facebook')->user();
 
             $create = [
+                'id'            => $socialUser->getId(),
                 'first_name'    => $socialUser->getName(),
                 'email'         => $socialUser->getEmail(),
                 'avatar'        => [

@@ -53,4 +53,31 @@ class User extends Authenticatable
     {
         return $this->id;
     }
+
+    /**
+     * отключаем социальную сеть
+     *
+     * @param $social
+     * @return bool
+     */
+    public function socialDisconnect($social)
+    {
+        try {
+            if (empty($social)) {
+                throw new \Exception('empty_params');
+            }
+
+            $socialConnected = $this->social()->where('social', $social);
+
+            if (!$socialConnected->first()) {
+                throw new \Exception('social_not_connected');
+            }
+
+            $socialConnected->delete();
+
+            return true;
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
 }

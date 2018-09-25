@@ -26,12 +26,16 @@ return [
         'recovery'          => 'Ошибка восстановления пароля',
         'recaptcha'         => 'Ошибка проверки ReCaptcha',
         'no_user_with_this_email' => 'Такой пользователь не существует',
+        'social_disconnect' => 'Ошибка отключения социальной сети',
     ],
     'success' => [
         'register'          => 'Успешная регистрация',
         'login'             => 'Успешная авторизация',
         'recovery'          => 'Вам на почту выслан новый пароль',
         'settings'          => 'Настройки успешно обновлены',
+        'social_disconnect' => 'Социальная сеть успешно отключена',
+        'social_user_exists' => 'Пользователь с выбранной социальной сетью уже существует',
+        'email_user_exists' => 'Пользователь с такий email уже существует',
     ],
     'unauthorized'          => 'Вы не авторизованы',
     'only_for_guest'        => 'Доступно только для неавторизованных пользователей',
@@ -41,4 +45,11 @@ return [
     'social_networks'       => 'Социальные сети',
     'social_on'             => 'Подключить',
     'social_off'            => 'Отключить',
+
+    //exceptions
+    'empty_params' => '',
+    'social_not_connected' => '',
+    'user_not_found' => '',
+    'sender_exists' => '',
+    'sender_not_exists' => '',
 ];

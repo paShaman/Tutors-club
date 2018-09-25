@@ -10,29 +10,35 @@
 | contains the "web" middleware group. Now create something great!
 |
 */
-Route::get('/',                     'PageController@page')->name('home');
-Route::get('/login',                'PageController@login')->name('login');
-Route::get('/register',             'PageController@register');
-Route::get('/password-recovery',    'PageController@passwordRecovery');
-Route::get('/settings',             'PageController@settings');
 
+//pages
+Route::get('/',                     'PageController@page')->name('home');
+Route::get('/login',                'PageController@login')->name('login')->middleware('guest');
+Route::get('/register',             'PageController@register')->middleware('guest');
+Route::get('/password-recovery',    'PageController@passwordRecovery')->middleware('guest');
+Route::get('/settings',             'PageController@settings')->name('settings');
+Route::get('/info/{page}',          'PageController@page')->where('page', '[A-Za-z\-]+');
+
+//social
 Route::get('/login/vkontakte',          'Social\VkontakteController@redirectToProvider');
 Route::get('/login/vkontakte/callback', 'Social\VkontakteController@handleProviderCallback');
 Route::get('/login/facebook',           'Social\FacebookController@redirectToProvider');
 Route::get('/login/facebook/callback',  'Social\FacebookController@handleProviderCallback');
 Route::get('/login/google',             'Social\GoogleController@redirectToProvider');
 Route::get('/login/google/callback',    'Social\GoogleController@handleProviderCallback');
+Route::post('/social/disconnect',       'SocialController@disconnect')->middleware('auth');
 
+//auth
 Route::post('/register',            'AuthController@register');
 Route::post('/login',               'AuthController@login');
 Route::post('/password-recovery',   'AuthController@recovery');
 Route::get('/logout',               'AuthController@logout');
 
-Route::get('/info/{page}', 'PageController@page')->where('page', '[A-Za-z\-]+');
+//sender
+Route::post('/sender/subscribe',   'SenderController@subscribe')->middleware('auth');
+Route::post('/sender/unsubscribe', 'SenderController@unsubscribe')->middleware('auth');
 
-Route::post('/sender/subscribe',   'SenderController@subscribe');
-Route::post('/sender/unsubscribe', 'SenderController@unsubscribe');
-
+//user
 Route::post('/user/settings', 'UserController@settings')->middleware('auth');
 
 //test urls

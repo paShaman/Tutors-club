@@ -13,7 +13,8 @@ class PageController extends Controller
         $this->middleware('auth')->except([
             'login',
             'register',
-            'passwordRecovery'
+            'passwordRecovery',
+            'policy'
         ]);
 
         parent::__construct();

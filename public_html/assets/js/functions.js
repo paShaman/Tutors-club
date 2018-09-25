@@ -27,11 +27,13 @@ function message(type, message, sticky)
 
 function errorMessages(data)
 {
-    if (typeof data.data == 'string') {
-        message(false, data.data);
-    } else {
-        for (var i in data.data) {
-            message(false, data.data[i]);
+    if (data.data) {
+        if (typeof data.data == 'string') {
+            message(false, data.data);
+        } else {
+            for (var i in data.data) {
+                message(false, data.data[i]);
+            }
         }
     }
 }
