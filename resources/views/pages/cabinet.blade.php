@@ -4,6 +4,10 @@
 
     <div class="card-body">
         You are logged in!
+
+        <br>
+
+        {{ $url }}
     </div>
 
 @endsection

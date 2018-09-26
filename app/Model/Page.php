@@ -4,8 +4,8 @@ namespace App\Model;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Page extends Model {
-
+class Page extends Model
+{
     const PAGE_DEFAULT = 'cabinet';
 
     const NEED_AUTH = 1;

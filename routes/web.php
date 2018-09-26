@@ -29,10 +29,11 @@ Route::get('/login/google/callback',    'Social\GoogleController@handleProviderC
 Route::post('/social/disconnect',       'SocialController@disconnect')->middleware('auth');
 
 //auth
-Route::post('/register',            'AuthController@register');
-Route::post('/login',               'AuthController@login');
-Route::post('/password-recovery',   'AuthController@recovery');
-Route::get('/logout',               'AuthController@logout');
+Route::post('/register',            'AuthController@register')->middleware('guest');
+Route::post('/login',               'AuthController@login')->middleware('guest');
+Route::post('/password-recovery',   'AuthController@recovery')->middleware('guest');
+Route::get('/logout',               'AuthController@logout')->middleware('auth');
+Route::get('/auth',                 'AuthController@auth')->name('auth')->middleware('signed');
 
 //sender
 Route::post('/sender/subscribe',   'SenderController@subscribe')->middleware('auth');

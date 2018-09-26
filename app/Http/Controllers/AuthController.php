@@ -15,13 +15,6 @@ use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('guest')->except('logout');
-
-        parent::__construct();
-    }
-
     /**
      * регистрация пользователя
      *
@@ -105,6 +98,20 @@ class AuthController extends Controller
         }
 
         return $this->_resultError(lng('error.login'));
+    }
+
+    /**
+     * принудительная авторизация по ссылке с подписью
+     *
+     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
+     */
+    public function auth()
+    {
+        $userId = request()->get('user');
+
+        Auth::loginUsingId($userId, true);
+
+        return redirect(route('home'));
     }
 
     /**

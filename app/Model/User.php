@@ -5,10 +5,12 @@ namespace App\Model;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Support\Facades\URL;
 
 class User extends Authenticatable
 {
     use Notifiable;
+    use \Venturecraft\Revisionable\RevisionableTrait;
 
     /**
      * The attributes that are mass assignable.
@@ -79,5 +81,15 @@ class User extends Authenticatable
         } catch (\Exception $e) {
             return false;
         }
+    }
+
+    /**
+     * генерил урл для авторизации по хешу
+     *
+     * @return string
+     */
+    public function generateUrlForForceLogin()
+    {
+        return URL::signedRoute('auth', ['user' => $this->id]);
     }
 }
