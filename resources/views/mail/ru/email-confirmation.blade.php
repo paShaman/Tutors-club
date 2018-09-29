@@ -2,6 +2,6 @@
 
 @section('content')
 
-{{ lng('password_new') }}: {{ $password }}
+    {{ $url }}
 
 @endsection

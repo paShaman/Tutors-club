@@ -15,8 +15,12 @@
                 @endif
 
                 <li class="navbar-text mr-3">
-                    {{ $user->last_name }}
-                    {{ $user->first_name }}
+                    @if (!$user->last_name && !$user->first_name)
+                        {{ $user->email }}
+                    @else
+                        {{ $user->last_name }}
+                        {{ $user->first_name }}
+                    @endif
                 </li>
                 <li class="nav-item">
                     <a class="nav-link waves-effect pl-2 pr-2" href="/settings">

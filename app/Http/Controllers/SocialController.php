@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Image;
-use App\Message;
+use App\Notification;
 use App\Model\Social;
 use App\Model\User;
 use Illuminate\Support\Facades\Auth;
@@ -41,7 +41,7 @@ class SocialController extends Controller
             if (!empty($user)) {
                 //текущий пользователь и пользователь по социальной сети не совпадают
                 if (!empty($userBySocial) && $user->getId() != $userBySocial->getId()) {
-                    Message::put(lng('error.social_user_exists'));
+                    Notification::put(lng('error.social_user_exists'));
 
                     throw new \Exception('social_user_exists');
                 }
@@ -52,7 +52,7 @@ class SocialController extends Controller
             if (!empty($user)) {
                 //текущий пользователь и пользователь по email и не совпадают
                 if (!empty($userByEmail) && $user->getId() != $userByEmail->getId()) {
-                    Message::put(lng('error.email_user_exists'));
+                    Notification::put(lng('error.email_user_exists'));
 
                     throw new \Exception('email_user_exists');
                 }

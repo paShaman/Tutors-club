@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Common;
-use App\Message;
 use App\Model\Page;
+use App\Notification;
 use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Foundation\Validation\ValidatesRequests;
@@ -94,7 +94,7 @@ class Controller extends BaseController
                 'localization'  => Lang::get('js'),
                 'user'          => Auth::user(),
                 'userId'        => Auth::id(),
-                'messages'      => Message::collectMessages()
+                'messages'      => Notification::collectNotifications()
             ],
             $this->tpl
         );
@@ -114,7 +114,7 @@ class Controller extends BaseController
         return response()->json([
             'success'   => $success,
             'data'      => $data,
-            'messages'  => Message::collectMessages(),
+            'messages'  => Notification::collectNotifications()
         ]);
     }
 

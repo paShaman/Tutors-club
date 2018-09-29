@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9cfe3b4493a892f7dc1bdaac8c31fb8a",
+    "content-hash": "1a0185ebeff97a903e8b16f6e49418f6",
     "packages": [
         {
             "name": "dnoegel/php-xdg-base-dir",
@@ -2908,6 +2908,44 @@
                 "environment"
             ],
             "time": "2018-07-29T20:33:41+00:00"
+        },
+        {
+            "name": "yandex-money/yandex-checkout-sdk-php",
+            "version": "1.0.18",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/yandex-money/yandex-checkout-sdk-php.git",
+                "reference": "55e746d70bd1f110b3f8dcccc6e7f0acd65b6c44"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/yandex-money/yandex-checkout-sdk-php/zipball/55e746d70bd1f110b3f8dcccc6e7f0acd65b6c44",
+                "reference": "55e746d70bd1f110b3f8dcccc6e7f0acd65b6c44",
+                "shasum": ""
+            },
+            "require": {
+                "ext-curl": "*",
+                "ext-json": "*",
+                "ext-mbstring": "*",
+                "php": ">=5.3.0",
+                "psr/log": "^1.0"
+            },
+            "require-dev": {
+                "ext-xml": "*",
+                "mockery/mockery": "^0.9.9",
+                "phpunit/phpunit": "4.*"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "YandexCheckout\\": "lib/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "time": "2018-09-03T13:43:16+00:00"
         }
     ],
     "packages-dev": [

@@ -34,6 +34,8 @@ Route::post('/login',               'AuthController@login')->middleware('guest')
 Route::post('/password-recovery',   'AuthController@recovery')->middleware('guest');
 Route::get('/logout',               'AuthController@logout')->middleware('auth');
 Route::get('/auth',                 'AuthController@auth')->name('auth')->middleware('signed');
+Route::get('/email/verify/{id}',    'AuthController@verify')->name('verification.verify')->middleware('signed')->middleware('auth');
+Route::get('/email/resend',         'AuthController@resend')->name('verification.resend')->middleware('auth');
 
 //sender
 Route::post('/sender/subscribe',   'SenderController@subscribe')->middleware('auth');
@@ -43,4 +45,4 @@ Route::post('/sender/unsubscribe', 'SenderController@unsubscribe')->middleware('
 Route::post('/user/settings', 'UserController@settings')->middleware('auth');
 
 //test urls
-Route::get('/sender/test', 'SenderController@test');
+Route::get('/sender/test', 'SenderController@test')->middleware('verified');;

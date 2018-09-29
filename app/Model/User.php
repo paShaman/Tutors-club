@@ -2,12 +2,13 @@
 
 namespace App\Model;
 
+use App\VerifyEmail;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Support\Facades\URL;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
     use Notifiable;
     use \Venturecraft\Revisionable\RevisionableTrait;
@@ -18,7 +19,7 @@ class User extends Authenticatable
      * @var array
      */
     protected $fillable = [
-        'email', 'first_name', 'last_name', 'middle_name', 'date_agree', 'avatar'
+        'email', 'first_name', 'last_name', 'middle_name', 'date_agree', 'avatar', 'email_verified_at'
     ];
 
     /**
@@ -91,5 +92,15 @@ class User extends Authenticatable
     public function generateUrlForForceLogin()
     {
         return URL::signedRoute('auth', ['user' => $this->id]);
+    }
+
+    /**
+     * Send the email verification notification.
+     *
+     * @return void
+     */
+    public function sendEmailVerificationNotification()
+    {
+        $this->notify(new VerifyEmail());
     }
 }

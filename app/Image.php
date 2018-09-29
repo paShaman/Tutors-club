@@ -2,9 +2,9 @@
 
 namespace App;
 
-use Intervention\Image\ImageManagerStatic as ImageParent;
+use Intervention\Image\ImageManagerStatic;
 
-class Image extends ImageParent
+class Image extends ImageManagerStatic
 {
     /**
      * создаем урл для картинки

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Common;
 use App\Mail\PasswordRecovery;
 use App\Model\User;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -12,9 +13,14 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Foundation\Auth\VerifiesEmails;
 
 class AuthController extends Controller
 {
+    use VerifiesEmails;
+
+    protected $redirectTo = '/';
+
     /**
      * регистрация пользователя
      *
@@ -25,8 +31,6 @@ class AuthController extends Controller
     {
         $rules = [
             'email'                 => 'required|email',
-            'first_name'            => 'required',
-            'last_name'             => 'required',
             'password'              => 'required',
             'password_confirmation' => 'required|same:password',
             'policy_agree'          => ['required', Rule::in(['on'])], //checkbox
@@ -66,8 +70,10 @@ class AuthController extends Controller
             return $this->_resultError(lng('error.register'));
         }
 
+        event(new Registered($user));
+
         //force auth
-        Auth::loginUsingId($user->id, true);
+        Auth::login($user, true);
 
         return $this->_resultSuccess(lng('success.register'));
     }
