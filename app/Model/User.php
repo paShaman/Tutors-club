@@ -2,6 +2,7 @@
 
 namespace App\Model;
 
+use App\Access;
 use App\VerifyEmail;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
@@ -102,5 +103,13 @@ class User extends Authenticatable implements MustVerifyEmail
     public function sendEmailVerificationNotification()
     {
         $this->notify(new VerifyEmail());
+    }
+
+    /**
+     * проверка на админа
+     */
+    public function isAdmin()
+    {
+        return $this->id == Access::ADMIN_USER_ID;
     }
 }

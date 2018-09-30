@@ -22,6 +22,14 @@
                         {{ $user->first_name }}
                     @endif
                 </li>
+                @if ($user->isAdmin())
+                    <li class="nav-item">
+                        <a class="nav-link waves-effect pl-2 pr-2" href="/admin">
+                            <i class="fa fa-unlock-alt fa-lg fa-fw"></i>
+                            <span class="d-lg-none ml-2">{{ lng('admin') }}</span>
+                        </a>
+                    </li>
+                @endif
                 <li class="nav-item">
                     <a class="nav-link waves-effect pl-2 pr-2" href="/settings">
                         <i class="fa fa-cogs fa-lg fa-fw"></i>

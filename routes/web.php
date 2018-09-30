@@ -44,5 +44,8 @@ Route::post('/sender/unsubscribe', 'SenderController@unsubscribe')->middleware('
 //user
 Route::post('/user/settings', 'UserController@settings')->middleware('auth');
 
+//admin
+Route::get('/admin', 'Admin\PanelController@index')->middleware('admin');
+
 //test urls
-Route::get('/sender/test', 'SenderController@test')->middleware('verified');;
+Route::get('/sender/test', 'SenderController@test')->middleware('verified');
