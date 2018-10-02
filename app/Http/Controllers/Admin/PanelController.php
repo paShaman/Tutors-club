@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Form;
 use App\Http\Controllers\Controller;
 
 class PanelController extends Controller
@@ -14,6 +15,8 @@ class PanelController extends Controller
     public function index()
     {
         $this->_initJsGrid();
+
+        $this->tpl['modalPaymentForm'] = Form::buildModal('admin.payment', lng('add_payment'));
 
         return $this->_renderPage('admin.panel');
     }

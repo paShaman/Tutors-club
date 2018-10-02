@@ -7,11 +7,11 @@
 
 <body>
 
-    @include('mail.header')
+    @include('layouts.mail.header')
 
     @yield('content')
 
-    @include('mail.footer')
+    @include('layouts.mail.footer')
 
 </body>
 

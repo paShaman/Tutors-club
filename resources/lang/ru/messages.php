@@ -18,6 +18,9 @@ return [
         'send'              => 'Отправить',
         'login'             => 'Войти',
         'register'          => 'Зарегистрироваться',
+        'close'             => 'Закрыть',
+        'cancel'            => 'Отмена',
+        'ok'                => 'Ok',
     ],
     'duplicate_email'       => 'Данный email уже зарегистрирован',
     'error' => [
@@ -46,6 +49,7 @@ return [
     'social_on'             => 'Подключить',
     'social_off'            => 'Отключить',
     'admin'                 => 'Администрирование',
+    'add_payment'           => 'Внесение платежа',
 
     //exceptions
     'empty_params' => '',

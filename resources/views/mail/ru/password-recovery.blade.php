@@ -1,4 +1,4 @@
-@extends('mail.template')
+@extends('layouts.mail.template')
 
 @section('content')
 
