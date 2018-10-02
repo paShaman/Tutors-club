@@ -22,6 +22,9 @@
                         {{ $user->first_name }}
                     @endif
                 </li>
+                <li class="navbar-text mr-3">
+                    <b class="text-danger">{{ $user->account }} ₽</b>
+                </li>
                 @if ($user->isAdmin())
                     <li class="nav-item">
                         <a class="nav-link waves-effect pl-2 pr-2" href="/admin">

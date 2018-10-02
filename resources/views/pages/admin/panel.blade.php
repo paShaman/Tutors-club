@@ -9,14 +9,16 @@
             <a class="nav-link active" data-toggle="pill" href="#admin-users">Пользователи</a>
         </li>
         <li class="nav-item">
-            <a class="nav-link" data-toggle="pill" href="#admin-test">Тест</a>
+            <a class="nav-link" data-toggle="pill" href="#admin-payments">Оплаты</a>
         </li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane fade show active" id="admin-users">
             @include('pages.admin.users')
         </div>
-        <div class="tab-pane fade" id="admin-test">test</div>
+        <div class="tab-pane fade" id="admin-payments">
+            @include('pages.admin.payments')
+        </div>
     </div>
 
 @endsection

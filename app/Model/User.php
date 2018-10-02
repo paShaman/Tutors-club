@@ -22,7 +22,7 @@ class User extends Authenticatable implements MustVerifyEmail
      * @var array
      */
     protected $fillable = [
-        'email', 'first_name', 'last_name', 'middle_name', 'date_agree', 'avatar', 'email_verified_at'
+        'email', 'first_name', 'last_name', 'middle_name', 'date_agree', 'avatar', 'email_verified_at', 'account'
     ];
 
     /**
@@ -52,13 +52,23 @@ class User extends Authenticatable implements MustVerifyEmail
 
     /**
      * get users roles
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
     public function roles()
     {
         return $this->belongsToMany('App\Model\Role', 'users_to_roles');
     }
+
+    /**
+     * gte history of users payments
+     */
+    public function payments()
+    {
+        return $this->hasMany('App\Model\Payment');
+    }
+
+    /*
+     * FUNCTIONS ---------------------------------
+     */
 
     /**
      * get protected param
@@ -142,7 +152,7 @@ class User extends Authenticatable implements MustVerifyEmail
                 'u.avatar',
                 'u.date_agree',
                 'u.email',
-                'u.email_verified_at',
+                'u.account',
                 'u.first_name',
                 'u.id',
                 'u.last_name',
@@ -181,4 +191,10 @@ class User extends Authenticatable implements MustVerifyEmail
 
         return $sql->get()->toArray();
     }
+
+    /**
+     * внесение оплаты
+     */
+    public function addPayment()
+    {}
 }

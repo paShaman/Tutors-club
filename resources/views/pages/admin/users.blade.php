@@ -36,15 +36,15 @@
                         return '<span class="avatar" style="background-image: url(' + value + ')"></span>';
                     }
                 },
-                { name: "email", type: "text" },
-                { name: "email_verified_at", type: "text", filtering: false, },
+                { name: "email", type: "text", width: 100 },
+                { name: "account", type: "text", filtering: false, width: 50 },
                 { name: "first_name", type: "text" },
                 { name: "last_name", type: "text" },
                 { name: "middle_name", type: "text" },
                 { name: "roles", type: "text", filtering: false, sorting: false},
-                { name: "force_login", type: "text", sorting: false, filtering: false,
+                { name: "force_login", type: "text", sorting: false, filtering: false, width: 50,
                     itemTemplate: function(value) {
-                        return '<a class="btn waves-effect waves-light btn-sm btn-primary" href="'+ value +'" target="_blank">Авторизоваться</a>';
+                        return '<a class="btn waves-effect waves-light btn-sm btn-primary" href="'+ value +'" target="_blank"><i class="fa fa-door-open"></i></a>';
                     }
                 },
             ]
