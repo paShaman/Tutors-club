@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class CreateUsersSendersTable extends Migration
+class CreateUsersRolesTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,12 +13,11 @@ class CreateUsersSendersTable extends Migration
      */
     public function up()
     {
-        Schema::create('users_senders', function (Blueprint $table) {
-            $table->increments('id');
-            $table->enum('sender', ['webpush_onesignal', 'telegram']);
+        Schema::create('users_to_roles', function (Blueprint $table) {
             $table->integer('user_id');
-            $table->string('sender_id');
-            $table->index(['user_id', 'sender']);
+            $table->integer('role_id');
+            $table->primary(['user_id', 'group_id']);
+            $table->index('user_id');
             $table->timestamps();
         });
     }
@@ -30,6 +29,6 @@ class CreateUsersSendersTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('users_senders');
+        Schema::dropIfExists('users_to_roles');
     }
 }

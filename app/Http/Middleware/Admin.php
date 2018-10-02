@@ -17,7 +17,7 @@ class Admin
      */
     public function handle($request, Closure $next)
     {
-        if (!Auth::check() || Auth::id() != Access::ADMIN_USER_ID) {
+        if (!Auth::check() || !Auth::user()->isAdmin()) {
             return redirect(route('home'));
         }
 

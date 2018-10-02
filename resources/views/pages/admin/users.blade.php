@@ -41,6 +41,7 @@
                 { name: "first_name", type: "text" },
                 { name: "last_name", type: "text" },
                 { name: "middle_name", type: "text" },
+                { name: "roles", type: "text", filtering: false, sorting: false},
                 { name: "force_login", type: "text", sorting: false, filtering: false,
                     itemTemplate: function(value) {
                         return '<a class="btn waves-effect waves-light btn-sm btn-primary" href="'+ value +'" target="_blank">Авторизоваться</a>';

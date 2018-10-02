@@ -51,6 +51,16 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * get users roles
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
+    public function roles()
+    {
+        return $this->belongsToMany('App\Model\Role', 'users_to_roles');
+    }
+
+    /**
      * get protected param
      *
      * @return mixed
@@ -112,7 +122,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function isAdmin()
     {
-        return $this->id == Access::ADMIN_USER_ID;
+        return $this->roles()->where('id', Access::ROLE_ADMIN)->first();
     }
 
     /**
@@ -124,16 +134,20 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public static function getList($params = [], $pagination = [])
     {
-        $sql = DB::table('users')
+        $sql = DB::table('users as u')
+            ->leftJoin('users_to_roles as utr', 'utr.user_id', '=', 'u.id')
+            ->leftJoin('roles as r', 'utr.role_id', '=', 'r.id')
+            ->groupBy('u.id')
             ->select([
-                'avatar',
-                'date_agree',
-                'email',
-                'email_verified_at',
-                'first_name',
-                'id',
-                'last_name',
-                'middle_name',
+                'u.avatar',
+                'u.date_agree',
+                'u.email',
+                'u.email_verified_at',
+                'u.first_name',
+                'u.id',
+                'u.last_name',
+                'u.middle_name',
+                DB::raw('group_concat(r.title separator ", ") as roles')
             ])
         ;
 

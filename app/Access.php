@@ -4,5 +4,5 @@ namespace App;
 
 class Access
 {
-    const ADMIN_USER_ID = 1;
+    const ROLE_ADMIN = 1;
 }

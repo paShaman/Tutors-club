@@ -15,8 +15,8 @@ class CreateUsersSocialTable extends Migration
     {
         Schema::create('users_social', function (Blueprint $table) {
             $table->enum('social', ['facebook', 'google', 'vkontakte']);
-            $table->string('social_id');
             $table->integer('user_id');
+            $table->string('social_id');
             $table->primary(['user_id', 'social']);
             $table->index('user_id');
             $table->timestamps();
