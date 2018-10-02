@@ -13,6 +13,8 @@ class PanelController extends Controller
      */
     public function index()
     {
+        $this->_initJsGrid();
+
         return $this->_renderPage('admin.panel');
     }
 }

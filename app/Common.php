@@ -2,8 +2,12 @@
 
 namespace App;
 
+use Illuminate\Database\Query\Builder;
+
 class Common
 {
+    const PAGINATION_PAGE_SIZE = 20;
+
     /**
      * check environment path
      *
@@ -77,5 +81,32 @@ class Common
             return [$path . $dir1 .  $dir2 .  $md5 . '.' . $extension, 'upload' . DIRECTORY_SEPARATOR . $dir1 . $dir2];
         }
         return $path . $dir1 .  $dir2 .  $md5 . '.' . $extension;
+    }
+
+    /**
+     * применяем пагинацию к запросу
+     *
+     * @param Builder $sql
+     * @param $params
+     */
+    public static function pagination($sql, $params)
+    {
+        $limit = $params['page_size'] ?? self::PAGINATION_PAGE_SIZE;
+        $offset = (($params['page'] ?? 1) - 1) * $limit;
+
+        $count = $sql->count();
+
+        $sql
+            ->limit($limit)
+            ->offset($offset)
+        ;
+
+        $items = $sql->get()->toArray();
+
+        foreach ($items as &$item) {
+            $item = (array)$item;
+        }
+
+        return ['itemsCount' => $count, 'data' => $items];
     }
 }

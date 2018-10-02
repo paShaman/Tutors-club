@@ -3,10 +3,12 @@
 namespace App\Model;
 
 use App\Access;
+use App\Common;
 use App\VerifyEmail;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\URL;
 
 class User extends Authenticatable implements MustVerifyEmail
@@ -111,5 +113,58 @@ class User extends Authenticatable implements MustVerifyEmail
     public function isAdmin()
     {
         return $this->id == Access::ADMIN_USER_ID;
+    }
+
+    /**
+     * получаем списки пользователей
+     *
+     * @param $params
+     * @param array $pagination
+     * @return array
+     */
+    public static function getList($params = [], $pagination = [])
+    {
+        $sql = DB::table('users')
+            ->select([
+                'avatar',
+                'date_agree',
+                'email',
+                'email_verified_at',
+                'first_name',
+                'id',
+                'last_name',
+                'middle_name',
+            ])
+        ;
+
+        if (!empty($params['id'])) {
+            $sql->where('id', $params['id']);
+        }
+
+        if (!empty($params['email'])) {
+            $sql->where('email', 'like', '%' . $params['email'] . '%');
+        }
+
+        if (!empty($params['first_name'])) {
+            $sql->where('first_name', 'like', '%' . $params['first_name'] . '%');
+        }
+
+        if (!empty($params['last_name'])) {
+            $sql->where('last_name', 'like', '%' . $params['last_name'] . '%');
+        }
+
+        if (!empty($params['middle_name'])) {
+            $sql->where('middle_name', 'like', '%' . $params['middle_name'] . '%');
+        }
+
+        if (!empty($params['order'])) {
+            $sql->orderBy($params['order'], $params['order_way'] ?? 'asc');
+        }
+
+        if (!empty($pagination)) {
+            return Common::pagination($sql, $pagination);
+        }
+
+        return $sql->get()->toArray();
     }
 }

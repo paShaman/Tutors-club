@@ -141,4 +141,14 @@ class Controller extends BaseController
     {
         $this->scripts[] = 'https://www.google.com/recaptcha/api.js';
     }
+
+    /**
+     * init JsGrid
+     */
+    protected function _initJsGrid()
+    {
+        $this->scripts[] = '/assets/plugins/jsgrid/jsgrid.min.js';
+        $this->styles[] = '/assets/plugins/jsgrid/jsgrid.min.css';
+        $this->styles[] = '/assets/plugins/jsgrid/jsgrid-theme.min.css';
+    }
 }
