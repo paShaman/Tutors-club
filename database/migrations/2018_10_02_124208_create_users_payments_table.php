@@ -22,7 +22,7 @@ class CreateUsersPaymentsTable extends Migration
             $table->text('reason');
             $table->timestamps();
             $table->index('user_id');
-            $table->index('external_payment_id');
+            $table->unique('external_payment_id');
             $table->index('charged_user_id');
         });
     }

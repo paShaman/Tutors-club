@@ -25,7 +25,7 @@ function message(type, message, sticky)
     $.jGrowl(message, { header: header, sticky: sticky ? true : false, theme: theme });
 }
 
-function errorMessages(data)
+function errorMessages(data, form)
 {
     if (data.data) {
         if (typeof data.data == 'string') {
@@ -33,6 +33,10 @@ function errorMessages(data)
         } else {
             for (var i in data.data) {
                 message(false, data.data[i]);
+
+                if (form) {
+                    $('[name=' + i + ']', form).addClass('is-invalid');
+                }
             }
         }
     }
@@ -154,10 +158,60 @@ function submitForm(btn, callback)
 
     submitFormInAction = true;
 
+    var modal = btn.closest('.modal-content');
+
+    addLoader(modal);
+
     callback(btn);
 }
 
-function endSubmitForm() {
+/**
+ * завершаем обработку формы
+ */
+function endSubmitForm()
+{
+    var modal = $('.modal-content.loading');
+
+    removeLoader(modal);
+
     submitFormInAction = false;
 }
 
+/**
+ * добавление прелоадера на блок
+ *
+ * @param block
+ */
+function addLoader(block)
+{
+    if (block.is(":empty")) {
+        block.addClass('loading__min-width');
+    } else {
+        block.append('<div class="loading__voile" />');
+    }
+    block.addClass('loading').append('<svg class="spinner" width="65px" height="65px" viewBox="0 0 66 66" xmlns="http://www.w3.org/2000/svg"><circle class="path" fill="none" stroke-width="6" stroke-linecap="round" cx="33" cy="33" r="30"></circle></svg>')
+}
+
+/**
+ * убираем прелоадер с блока
+ *
+ * @param block
+ */
+function removeLoader(block)
+{
+    block.find('.spinner').remove();
+    block.find('.loading__voile').remove();
+    block.removeClass('loading loading__min-width');
+}
+
+/**
+ * закрытие открытого модального окна
+ */
+function modalClose()
+{
+    var modal = $('.modal.show');
+
+    if (modal.length) {
+        $('#' + modal.attr('id')).modal('hide');
+    }
+}

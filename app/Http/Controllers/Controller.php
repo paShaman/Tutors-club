@@ -45,6 +45,7 @@ class Controller extends BaseController
             '/assets/plugins/jGrowl/less/jgrowl.css',
             '/assets/plugins/btnWaves/btnWaves.css',
             Common::getAssetsPath() . 'css/google-sans.css',
+            Common::getAssetsPath() . 'css/loader.css',
             Common::getAssetsPath() . 'css/style.css',
         ];
 

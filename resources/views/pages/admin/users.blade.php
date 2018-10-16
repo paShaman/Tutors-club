@@ -18,7 +18,7 @@
                     var d = $.Deferred();
 
                     $.ajax({
-                        url: "/admin/users-list",
+                        url: "/admin/user/list",
                         dataType: "json",
                         data: filter
                     }).done(function(response) {

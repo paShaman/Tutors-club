@@ -86,8 +86,8 @@ class SocialController extends Controller
 
                 if (!$exists) {
                     $social = new Social([
-                        'user_id' => $user->id,
-                        'social' => $provider,
+                        'user_id'   => $user->id,
+                        'social'    => $provider,
                         'social_id' => $socialUser['id'],
                     ]);
 

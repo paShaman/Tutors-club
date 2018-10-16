@@ -8,6 +8,7 @@ use App\VerifyEmail;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\URL;
 
@@ -194,7 +195,59 @@ class User extends Authenticatable implements MustVerifyEmail
 
     /**
      * внесение оплаты
+     *
+     * @param $amount
+     * @param $reason
+     * @return bool
      */
-    public function addPayment()
-    {}
+    public function addPayment($amount, $reason)
+    {
+        try {
+            if (empty($amount) || empty($reason)) {
+                throw new \Exception('empty_params');
+            }
+
+            $payment = new Payment([
+                'amount'            => $amount,
+                'user_id'           => $this->id,
+                'charged_user_id'   => Auth::id(),
+                'reason'            => $reason
+            ]);
+
+            $this->payments()->save($payment);
+
+            $this->recalcAccount();
+
+            return true;
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
+
+    /**
+     * пересчет счета пользователя
+     *
+     * @todo так как тонны транзакций не планируется, то для верности будем делать при каждом изменении счета
+     *
+     * @return bool
+     */
+    public function recalcAccount()
+    {
+        try {
+            $payments = $this->payments()->get();
+
+            $account = 0;
+
+            foreach ($payments as $payment) {
+                $account += $payment->amount;
+            }
+
+            $this->account = $account;
+            $this->save();
+
+            return true;
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
 }

@@ -27,13 +27,7 @@
                     window.location.href = '/';
                 }, 1000);
             } else {
-                errorMessages(data);
-
-                if (typeof data.data != 'string') {
-                    for (var i in data.data) {
-                        $('[name=' + i + ']', form).addClass('is-invalid');
-                    }
-                }
+                errorMessages(data, form);
             }
         });
     }

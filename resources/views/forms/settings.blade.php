@@ -26,13 +26,7 @@
             if (data.success) {
                 message(true, data.data);
             } else {
-                errorMessages(data);
-
-                if (typeof data.data != 'string') {
-                    for (var i in data.data) {
-                        $('[name=' + i + ']', form).addClass('is-invalid');
-                    }
-                }
+                errorMessages(data, form);
             }
         });
     }
