@@ -47,7 +47,8 @@ Route::post('/user/settings', 'UserController@settings')->middleware('auth');
 //admin
 Route::get('/admin', 'Admin\PanelController@index')->middleware('admin');
 Route::get('/admin/user/list', 'Admin\UserController@usersList')->middleware('admin');
-Route::post('/admin/user/payment-add', 'Admin\UserController@paymentAdd')->middleware('admin');
+Route::get('/admin/payment/list', 'Admin\PaymentController@paymentsList')->middleware('admin');
+Route::post('/admin/payment/add', 'Admin\PaymentController@paymentAdd')->middleware('admin');
 
 //test urls
 Route::get('/sender/test', 'SenderController@test')->middleware('verified');

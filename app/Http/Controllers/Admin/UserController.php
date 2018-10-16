@@ -44,28 +44,4 @@ class UserController extends Controller
 
         return $this->_resultJson(true, $data);
     }
-
-    /**
-     * Добавление платежа
-     *
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function paymentAdd()
-    {
-        $userId = request()->post('user_id');
-        $amount = request()->post('amount');
-        $reason = request()->post('reason');
-
-        /**
-         * @var $user User
-         */
-        $user = User::findOrFail($userId);
-
-        $result = $user->addPayment($amount, $reason);
-
-        if (empty($result)) {
-            return $this->_resultError('Ошибка добавления платежа');
-        }
-        return $this->_resultSuccess('Платеж добавлен');
-    }
 }

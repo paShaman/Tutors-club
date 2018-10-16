@@ -33,7 +33,7 @@
                 endSubmitForm();
             }
 
-            $.post('/admin/user/payment-add', params, function (data) {
+            $.post('/admin/payment/add', params, function (data) {
                 if (data.success) {
                     message(true, data.data);
                 } else {
