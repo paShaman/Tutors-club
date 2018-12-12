@@ -8,6 +8,8 @@ class Common
 {
     const PAGINATION_PAGE_SIZE = 20;
 
+    const BTN = 'btn waves-effect waves-light';
+
     /**
      * check environment path
      *

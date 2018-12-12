@@ -33,7 +33,7 @@
     <div class="form-group">
         <div class="g-recaptcha" data-sitekey="{{ env('RECAPTCHA_KEY') }}"></div>
     </div>
-    <span class="btn waves-effect waves-light btn-primary btn-lg" onclick="submitForm($(this), submitRegistrationForm)">{{ lng('btn.register') }}</span>
+    <span class="<?=App\Common::BTN?> btn-primary btn-lg" onclick="submitForm($(this), submitRegistrationForm)">{{ lng('btn.register') }}</span>
 </form>
 
 <div class="mt-4">

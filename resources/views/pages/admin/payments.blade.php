@@ -1,5 +1,5 @@
 <div class="border-bottom pb-3 mb-3">
-    <a href="#" class="btn waves-effect waves-light btn-primary" data-toggle="modal" data-target="#modalAdminAddPayment"><i class="fa fa-coins"></i> Внести оплату</a>
+    <a href="#" class="<?=App\Common::BTN?> btn-primary" data-toggle="modal" data-target="#modalAdminAddPayment"><i class="fa fa-coins"></i> Внести оплату</a>
 
     {!! $modalAdminAddPayment !!}
 </div>

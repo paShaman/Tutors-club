@@ -4,7 +4,7 @@
         <label for="form_email">{{ lng('email') }}</label>
         <small class="form-text text-muted">{{ lng('email_tip') }}</small>
     </div>
-    <span class="btn waves-effect waves-light btn-primary btn-lg" onclick="submitForm($(this), submitRecoveryForm)">{{ lng('btn.send') }}</span>
+    <span class="<?=App\Common::BTN?> btn-primary btn-lg" onclick="submitForm($(this), submitRecoveryForm)">{{ lng('btn.send') }}</span>
 </form>
 
 <div class="mt-4">

@@ -11,7 +11,7 @@
         <input type="text" class="form-control form-control-lg" name="middle_name" id="form_middle_name" required value="{{ $user->middle_name }}">
         <label for="form_middle_name">{{ lng('middle_name') }}</label>
     </div>
-    <span class="btn waves-effect waves-light btn-primary btn-lg" onclick="submitForm($(this), submitSettingsForm)">{{ lng('btn.send') }}</span>
+    <span class="<?=App\Common::BTN?> btn-primary btn-lg" onclick="submitForm($(this), submitSettingsForm)">{{ lng('btn.send') }}</span>
 </form>
 
 <script>

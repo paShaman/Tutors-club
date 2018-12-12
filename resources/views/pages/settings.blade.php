@@ -13,19 +13,19 @@
             <div>
                 <div class="mb-1" social="vkontakte">
                     <div @if (empty($socialNetworks['vkontakte'])) style="display: none" @endif>
-                        <span class="btn waves-effect waves-light btn-sm btn-danger" onclick="socialDisconnect('vkontakte')"><i class="fab fa-vk fa-fw"></i> {{ lng('social_off') }}</span>
+                        <span class="<?=App\Common::BTN?> btn-sm btn-danger" onclick="socialDisconnect('vkontakte')"><i class="fab fa-vk fa-fw"></i> {{ lng('social_off') }}</span>
                     </div>
                     <div @if (!empty($socialNetworks['vkontakte'])) style="display: none" @endif>
-                        <a href="/login/vkontakte" class="btn waves-effect waves-light btn-sm btn-success"><i class="fab fa-vk fa-fw"></i> {{ lng('social_on') }}</a>
+                        <a href="/login/vkontakte" class="<?=App\Common::BTN?> btn-sm btn-success"><i class="fab fa-vk fa-fw"></i> {{ lng('social_on') }}</a>
                     </div>
                 </div>
 
                 <div class="mb-1" social="facebook">
                     <div @if (empty($socialNetworks['facebook'])) style="display: none" @endif>
-                        <span class="btn waves-effect waves-light btn-sm btn-danger" onclick="socialDisconnect('facebook')"><i class="fab fa-facebook-f fa-fw"></i> {{ lng('social_off') }}</span>
+                        <span class="<?=App\Common::BTN?> btn-sm btn-danger" onclick="socialDisconnect('facebook')"><i class="fab fa-facebook-f fa-fw"></i> {{ lng('social_off') }}</span>
                     </div>
                     <div @if (!empty($socialNetworks['facebook'])) style="display: none" @endif>
-                        <a href="/login/facebook" class="btn waves-effect waves-light btn-sm btn-success"><i class="fab fa-facebook-f fa-fw"></i> {{ lng('social_on') }}</a>
+                        <a href="/login/facebook" class="<?=App\Common::BTN?> btn-sm btn-success"><i class="fab fa-facebook-f fa-fw"></i> {{ lng('social_on') }}</a>
                     </div>
                 </div>
 
@@ -34,7 +34,7 @@
                         <span class="btn btn-sm btn-danger waves-effect waves-light" onclick="socialDisconnect('google')"><i class="fab fa-google fa-fw"></i> {{ lng('social_off') }}</span>
                     </div>
                     <div @if (!empty($socialNetworks['google'])) style="display: none" @endif>
-                        <a href="/login/google" class="btn waves-effect waves-light btn-sm btn-success"><i class="fab fa-google fa-fw"></i> {{ lng('social_on') }}</a>
+                        <a href="/login/google" class="<?=App\Common::BTN?> btn-sm btn-success"><i class="fab fa-google fa-fw"></i> {{ lng('social_on') }}</a>
                     </div>
                 </div>
 

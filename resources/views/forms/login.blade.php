@@ -8,7 +8,7 @@
         <input type="password" class="form-control form-control-lg" name="password" id="form_password" required>
         <label for="form_password">{{ lng('password') }}</label>
     </div>
-    <span class="btn waves-effect waves-light btn-primary btn-lg" onclick="submitForm($(this), submitAuthForm)">{{ lng('btn.login') }}</span>
+    <span class="<?=App\Common::BTN?> btn-primary btn-lg" onclick="submitForm($(this), submitAuthForm)">{{ lng('btn.login') }}</span>
 </form>
 
 <div class="mt-4">

@@ -44,7 +44,7 @@
                 { name: "roles", type: "text", filtering: false, sorting: false},
                 { name: "force_login", type: "text", sorting: false, filtering: false, width: 50,
                     itemTemplate: function(value) {
-                        return '<a class="btn waves-effect waves-light btn-sm btn-primary" href="'+ value +'" target="_blank"><i class="fa fa-door-open"></i></a>';
+                        return '<a class="<?=App\Common::BTN?> btn-sm btn-primary" href="'+ value +'" target="_blank"><i class="fa fa-door-open"></i></a>';
                     }
                 },
             ]

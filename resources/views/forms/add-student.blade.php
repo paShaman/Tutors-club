@@ -39,5 +39,5 @@
 @endsection
 
 @section('modal-button')
-    <button type="button" class="btn btn-primary" onclick="submitForm($(this), submitAddStudentForm)">{{ lng('btn.add') }}</button>
+    <button class="<?=App\Common::BTN?> btn-primary" onclick="submitForm($(this), submitAddStudentForm)"><i class="fa fa-plus"></i> {{ lng('btn.add') }}</button>
 @endsection
