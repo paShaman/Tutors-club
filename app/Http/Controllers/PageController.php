@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Form;
 use App\Model\Page;
 use App\Model\Social;
 use Illuminate\Support\Facades\Auth;
@@ -84,5 +85,20 @@ class PageController extends Controller
         $this->tpl['socialNetworks'] = $socialNetworks;
 
         return $this->_renderPage('settings');
+    }
+
+    /**
+     * страница учеников
+     *
+     * @return \Illuminate\View\View
+     */
+    public function students()
+    {
+        $students = Auth::user()->students()->get()->toArray();
+
+        $this->tpl['students'] = $students;
+        $this->tpl['modalAddStudent'] = Form::buildModal('add-student', lng('add_student'));
+
+        return $this->_renderPage('students');
     }
 }

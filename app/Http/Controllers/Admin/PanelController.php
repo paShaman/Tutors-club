@@ -16,7 +16,7 @@ class PanelController extends Controller
     {
         $this->_initJsGrid();
 
-        $this->tpl['modalPaymentForm'] = Form::buildModal('admin.payment', lng('add_payment'));
+        $this->tpl['modalAdminAddPayment'] = Form::buildModal('admin.add-payment', lng('add_payment'));
 
         return $this->_renderPage('admin.panel');
     }

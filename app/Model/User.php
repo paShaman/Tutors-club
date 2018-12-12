@@ -4,6 +4,7 @@ namespace App\Model;
 
 use App\Access;
 use App\Common;
+use App\Notification;
 use App\VerifyEmail;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
@@ -56,7 +57,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function roles()
     {
-        return $this->belongsToMany('App\Model\Role', 'users_to_roles');
+        return $this->belongsToMany('App\Model\Role', 'roles_to_users');
     }
 
     /**
@@ -65,6 +66,14 @@ class User extends Authenticatable implements MustVerifyEmail
     public function payments()
     {
         return $this->hasMany('App\Model\Payment');
+    }
+
+    /**
+     * get users students
+     */
+    public function students()
+    {
+        return $this->belongsToMany('App\Model\Student', 'students_to_users');
     }
 
     /*
@@ -146,8 +155,8 @@ class User extends Authenticatable implements MustVerifyEmail
     public static function getList($params = [], $pagination = [])
     {
         $sql = DB::table('users as u')
-            ->leftJoin('users_to_roles as utr', 'utr.user_id', '=', 'u.id')
-            ->leftJoin('roles as r', 'utr.role_id', '=', 'r.id')
+            ->leftJoin('roles_to_users as rtu', 'rtu.user_id', '=', 'u.id')
+            ->leftJoin('roles as r', 'rtu.role_id', '=', 'r.id')
             ->groupBy('u.id')
             ->select([
                 'u.avatar',
@@ -247,6 +256,35 @@ class User extends Authenticatable implements MustVerifyEmail
 
             return true;
         } catch (\Exception $e) {
+            return false;
+        }
+    }
+
+    /**
+     * добавление ученика
+     *
+     * @todo если более одного ученика, то необходима активная подписка
+     *
+     * @param $params
+     * @return bool
+     */
+    public function addStudent($params)
+    {
+        try {
+            if (empty($params['name'])) {
+                throw new \Exception('empty_params');
+            }
+
+            $student = new Student([
+                'name'            => $params['name'],
+                'description'     => $params['description'] ?? '',
+            ]);
+
+            $this->students()->save($student);
+
+            return true;
+        } catch (\Exception $e) {
+            Notification::put($e->getMessage());
             return false;
         }
     }

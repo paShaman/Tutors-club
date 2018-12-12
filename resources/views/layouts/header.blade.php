@@ -1,4 +1,4 @@
-<nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top">
+<nav class="navbar navbar-expand-lg navbar-dark bg-info fixed-top">
     <a class="navbar-brand font-weight-bold" href="/">Tutors club</a>
 
     @if (Auth::check())
@@ -8,8 +8,13 @@
     @endif
 
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
-        <ul class="navbar-nav ml-auto">
-            @if (Auth::check())
+        @if (Auth::check())
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="/students">Ученики</a>
+                </li>
+            </ul>
+            <ul class="navbar-nav ml-auto">
                 @if ($user->avatar)
                     <span class="avatar mr-2" style="background-image: url({{ $user->avatar }})"></span>
                 @endif
@@ -23,7 +28,7 @@
                     @endif
                 </li>
                 <li class="navbar-text mr-3">
-                    <b class="text-danger">{{ $user->account }} ₽</b>
+                    <b class="text-warning">{{ $user->account }} ₽</b>
                 </li>
                 @if ($user->isAdmin())
                     <li class="nav-item">
@@ -45,7 +50,7 @@
                         <span class="d-lg-none ml-2">{{ lng('logout') }}</span>
                     </a>
                 </li>
-            @endif
-        </ul>
+            </ul>
+        @endif
     </div>
 </nav>

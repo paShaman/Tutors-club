@@ -9,6 +9,7 @@ return [
         'password'              => 'Пароль',
         'password_confirmation' => 'Повторите пароль',
         'policy_agree'          => 'Политика конфеденциальности',
+        'student_name'          => 'Имя',
     ],
     'required'  => 'Обязательное поле ":attribute"',
     'email'     => 'Некорректный email',

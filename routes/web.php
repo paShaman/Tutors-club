@@ -16,8 +16,9 @@ Route::get('/',                     'PageController@page')->name('home');
 Route::get('/login',                'PageController@login')->name('login')->middleware('guest');
 Route::get('/register',             'PageController@register')->middleware('guest');
 Route::get('/password-recovery',    'PageController@passwordRecovery')->middleware('guest');
-Route::get('/settings',             'PageController@settings')->name('settings');
+Route::get('/settings',             'PageController@settings')->name('settings')->middleware('auth');
 Route::get('/info/{page}',          'PageController@page')->where('page', '[A-Za-z\-]+');
+Route::get('/students',             'PageController@students')->middleware('auth');
 
 //social
 Route::get('/login/vkontakte',          'Social\VkontakteController@redirectToProvider');
@@ -52,3 +53,6 @@ Route::post('/admin/payment/add', 'Admin\PaymentController@paymentAdd')->middlew
 
 //test urls
 Route::get('/sender/test', 'SenderController@test')->middleware('verified');
+
+//student
+Route::post('/student/add', 'StudentController@addStudent')->middleware('auth');

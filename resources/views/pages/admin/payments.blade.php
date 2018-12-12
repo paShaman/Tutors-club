@@ -1,7 +1,7 @@
 <div class="border-bottom pb-3 mb-3">
-    <a href="#" class="btn waves-effect waves-light btn-primary" data-toggle="modal" data-target="#modalAdminPayment"><i class="fa fa-coins"></i> Внести оплату</a>
+    <a href="#" class="btn waves-effect waves-light btn-primary" data-toggle="modal" data-target="#modalAdminAddPayment"><i class="fa fa-coins"></i> Внести оплату</a>
 
-    {!! $modalPaymentForm !!}
+    {!! $modalAdminAddPayment !!}
 </div>
 
 <div class="users-payments-grid"></div>

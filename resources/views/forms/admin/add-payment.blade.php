@@ -34,14 +34,14 @@
             }
 
             $.post('/admin/payment/add', params, function (data) {
+                endSubmitForm();
+
                 if (data.success) {
                     message(true, data.data);
+                    modalClose();
                 } else {
                     errorMessages(data);
                 }
-
-                endSubmitForm();
-                modalClose();
             });
         }
     </script>
