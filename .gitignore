@@ -4,4 +4,4 @@
 /.idea
 .env
 composer.phar
-/public_html/assets/build
+/public_html/build
