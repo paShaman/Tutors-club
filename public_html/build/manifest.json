@@ -1,0 +1,71 @@
+{
+  "_@fullcalendar-BpetZWy7.js": {
+    "file": "assets/@fullcalendar-BpetZWy7.js",
+    "name": "@fullcalendar"
+  },
+  "_@inertiajs-CPoxUQQ9.js": {
+    "file": "assets/@inertiajs-CPoxUQQ9.js",
+    "name": "@inertiajs",
+    "imports": [
+      "_rolldown-runtime-S-ySWqyJ.js",
+      "_@fullcalendar-BpetZWy7.js"
+    ]
+  },
+  "_@kurkle-BH0wwHQ1.js": {
+    "file": "assets/@kurkle-BH0wwHQ1.js",
+    "name": "@kurkle"
+  },
+  "_chart.js-D-lGoA4q.js": {
+    "file": "assets/chart.js-D-lGoA4q.js",
+    "name": "chart.js",
+    "imports": [
+      "_@kurkle-BH0wwHQ1.js"
+    ]
+  },
+  "_class-variance-authority-EJxemKqA.js": {
+    "file": "assets/class-variance-authority-EJxemKqA.js",
+    "name": "class-variance-authority"
+  },
+  "_lucide-vue-next-DsOeQjNz.js": {
+    "file": "assets/lucide-vue-next-DsOeQjNz.js",
+    "name": "lucide-vue-next",
+    "imports": [
+      "_@fullcalendar-BpetZWy7.js"
+    ]
+  },
+  "_rolldown-runtime-S-ySWqyJ.js": {
+    "file": "assets/rolldown-runtime-S-ySWqyJ.js",
+    "name": "rolldown-runtime"
+  },
+  "_tailwind-merge-DdbwQ7gh.js": {
+    "file": "assets/tailwind-merge-DdbwQ7gh.js",
+    "name": "tailwind-merge"
+  },
+  "_vue-chartjs-BuU-kD3d.js": {
+    "file": "assets/vue-chartjs-BuU-kD3d.js",
+    "name": "vue-chartjs",
+    "imports": [
+      "_@fullcalendar-BpetZWy7.js",
+      "_chart.js-D-lGoA4q.js"
+    ]
+  },
+  "resources/js/app.ts": {
+    "file": "assets/app-C9c1f6Ee.js",
+    "name": "app",
+    "src": "resources/js/app.ts",
+    "isEntry": true,
+    "imports": [
+      "_rolldown-runtime-S-ySWqyJ.js",
+      "_@fullcalendar-BpetZWy7.js",
+      "_@inertiajs-CPoxUQQ9.js",
+      "_chart.js-D-lGoA4q.js",
+      "_class-variance-authority-EJxemKqA.js",
+      "_lucide-vue-next-DsOeQjNz.js",
+      "_tailwind-merge-DdbwQ7gh.js",
+      "_vue-chartjs-BuU-kD3d.js"
+    ],
+    "css": [
+      "assets/app-DdVxoZlk.css"
+    ]
+  }
+}

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 return [
 
     /*
@@ -8,37 +10,37 @@ return [
     |--------------------------------------------------------------------------
     |
     | This file is for storing the credentials for third party services such
-    | as Stripe, Mailgun, SparkPost and others. This file provides a sane
+    | as Mailgun, Postmark, AWS and more. This file provides the de facto
     | default location for this type of information, allowing packages
     | to have a conventional place to find your various credentials.
     |
     */
 
-    'mailgun' => [
-        'domain' => env('MAILGUN_DOMAIN'),
-        'secret' => env('MAILGUN_SECRET'),
+    'postmark' => [
+        'token' => env('POSTMARK_TOKEN'),
     ],
 
     'ses' => [
-        'key' => env('SES_KEY'),
-        'secret' => env('SES_SECRET'),
-        'region' => env('SES_REGION', 'us-east-1'),
+        'key' => env('AWS_ACCESS_KEY_ID'),
+        'secret' => env('AWS_SECRET_ACCESS_KEY'),
+        'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
-    'sparkpost' => [
-        'secret' => env('SPARKPOST_SECRET'),
+    'resend' => [
+        'key' => env('RESEND_KEY'),
     ],
 
-    'stripe' => [
-        'model' => App\Model\User::class,
-        'key' => env('STRIPE_KEY'),
-        'secret' => env('STRIPE_SECRET'),
+    'slack' => [
+        'notifications' => [
+            'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),
+            'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
+        ],
     ],
 
     'vkontakte' => [
         'client_id' => env('VKONTAKTE_APP'),
         'client_secret' => env('VKONTAKTE_SECRET'),
-        'redirect' => env('VKONTAKTE_REDIRECT_URI')
+        'redirect' => env('VKONTAKTE_REDIRECT_URI'),
     ],
 
     'facebook' => [
@@ -50,6 +52,7 @@ return [
     'google' => [
         'client_id' => env('GOOGLE_APP'),
         'client_secret' => env('GOOGLE_SECRET'),
-        'redirect' => env('GOOGLE_REDIRECT_URI')
+        'redirect' => env('GOOGLE_REDIRECT_URI'),
     ],
+
 ];

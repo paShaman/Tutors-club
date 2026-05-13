@@ -1,58 +1,71 @@
 <?php
 
-/*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider within a group which
-| contains the "web" middleware group. Now create something great!
-|
-*/
+declare(strict_types=1);
 
-//pages
-Route::get('/',                     'PageController@page')->name('home');
-Route::get('/login',                'PageController@login')->name('login')->middleware('guest');
-Route::get('/register',             'PageController@register')->middleware('guest');
-Route::get('/password-recovery',    'PageController@passwordRecovery')->middleware('guest');
-Route::get('/settings',             'PageController@settings')->name('settings')->middleware('auth');
-Route::get('/info/{page}',          'PageController@page')->where('page', '[A-Za-z\-]+');
-Route::get('/students',             'PageController@students')->middleware('auth');
+use App\Http\Controllers\CalendarController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\PageController;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\LessonController;
+use App\Http\Controllers\StudentController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\Social\GoogleController;
+use App\Http\Controllers\Admin\PanelController;
+use App\Http\Controllers\Admin\PaymentController;
+use App\Http\Controllers\Admin\UserController as AdminUserController;
+use Illuminate\Support\Facades\Route;
 
-//social
-Route::get('/login/vkontakte',          'Social\VkontakteController@redirectToProvider');
-Route::get('/login/vkontakte/callback', 'Social\VkontakteController@handleProviderCallback');
-Route::get('/login/facebook',           'Social\FacebookController@redirectToProvider');
-Route::get('/login/facebook/callback',  'Social\FacebookController@handleProviderCallback');
-Route::get('/login/google',             'Social\GoogleController@redirectToProvider');
-Route::get('/login/google/callback',    'Social\GoogleController@handleProviderCallback');
-Route::post('/social/disconnect',       'SocialController@disconnect')->middleware('auth');
+// ─── Pages ──────────────────────────────────────────────────
+Route::get('/', [DashboardController::class, 'index'])
+    ->name('home')
+    ->middleware('auth');
 
-//auth
-Route::post('/register',            'AuthController@register')->middleware('guest');
-Route::post('/login',               'AuthController@login')->middleware('guest');
-Route::post('/password-recovery',   'AuthController@recovery')->middleware('guest');
-Route::get('/logout',               'AuthController@logout')->middleware('auth');
-Route::get('/auth',                 'AuthController@auth')->name('auth')->middleware('signed');
-Route::get('/email/verify/{id}',    'AuthController@verify')->name('verification.verify')->middleware('signed')->middleware('auth');
-Route::get('/email/resend',         'AuthController@resend')->name('verification.resend')->middleware('auth');
+Route::get('/login', [PageController::class, 'login'])
+    ->name('login')
+    ->middleware('guest');
 
-//sender
-Route::post('/sender/subscribe',   'SenderController@subscribe')->middleware('auth');
-Route::post('/sender/unsubscribe', 'SenderController@unsubscribe')->middleware('auth');
+Route::get('/register', [PageController::class, 'register'])
+    ->middleware('guest');
 
-//user
-Route::post('/user/settings', 'UserController@settings')->middleware('auth');
+Route::get('/settings', [PageController::class, 'settings'])
+    ->name('settings');
 
-//admin
-Route::get('/admin', 'Admin\PanelController@index')->middleware('admin');
-Route::get('/admin/user/list', 'Admin\UserController@usersList')->middleware('admin');
-Route::get('/admin/payment/list', 'Admin\PaymentController@paymentsList')->middleware('admin');
-Route::post('/admin/payment/add', 'Admin\PaymentController@paymentAdd')->middleware('admin');
+Route::get('/info/{page}', [PageController::class, 'page'])
+    ->where('page', '[A-Za-z\-]+');
 
-//test urls
-Route::get('/sender/test', 'SenderController@test')->middleware('verified');
+// ─── Calendar ───────────────────────────────────────────────
+Route::get('/calendar', [CalendarController::class, 'index'])
+    ->middleware('auth');
 
-//student
-Route::post('/student/add', 'StudentController@addStudent')->middleware('auth');
+Route::get('/calendar/events', [CalendarController::class, 'getEvents'])
+    ->middleware('auth');
+
+// ─── Social ─────────────────────────────────────────────────
+Route::get('/login/google', [GoogleController::class, 'redirectToProvider']);
+Route::get('/login/google/callback', [GoogleController::class, 'handleProviderCallback']);
+
+// ─── Auth ───────────────────────────────────────────────────
+Route::post('/register', [AuthController::class, 'register'])->middleware('guest');
+Route::post('/login', [AuthController::class, 'login'])->middleware('guest');
+Route::get('/logout', [AuthController::class, 'logout'])->middleware('auth');
+Route::get('/auth', [AuthController::class, 'auth'])->name('auth')->middleware('signed');
+
+// ─── User ───────────────────────────────────────────────────
+Route::post('/user/settings', [UserController::class, 'settings'])->middleware('auth');
+
+// ─── Admin ──────────────────────────────────────────────────
+Route::get('/admin', [PanelController::class, 'index'])->middleware('admin');
+Route::get('/admin/user/list', [AdminUserController::class, 'usersList'])->middleware('admin');
+Route::get('/admin/payment/list', [PaymentController::class, 'paymentsList'])->middleware('admin');
+Route::post('/admin/payment/add', [PaymentController::class, 'paymentAdd'])->middleware('admin');
+
+// ─── Students ───────────────────────────────────────────────
+Route::get('/students', [StudentController::class, 'getStudents'])->middleware('auth');
+Route::post('/students/edit', [StudentController::class, 'editStudent'])->middleware('auth');
+Route::post('/students/delete', [StudentController::class, 'deleteStudent'])->middleware('auth');
+
+// ─── Lessons ────────────────────────────────────────────────
+Route::get('/lessons', [LessonController::class, 'getLessons'])->middleware('auth')->name('lessons');
+Route::post('/lessons/edit', [LessonController::class, 'editLesson'])->middleware('auth');
+Route::post('/lessons/delete', [LessonController::class, 'deleteLesson'])->middleware('auth');
+Route::post('/lessons/pay', [LessonController::class, 'payLesson'])->middleware('auth');

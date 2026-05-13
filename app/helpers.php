@@ -1,16 +1,20 @@
 <?php
 
-if (! function_exists('lng')) {
+declare(strict_types=1);
+
+use Illuminate\Support\Facades\Lang;
+
+if (!function_exists('lng')) {
     /**
-     * Translate the given message.
+     * Get a localized string from the messages.php translation file.
      *
-     * @param  string|null  $id
-     * @param  array   $replace
-     * @param  string|null  $locale
-     * @return \Illuminate\Contracts\Translation\Translator|string
+     * @param  string  $key    Dot-notation key (e.g. 'error.register', 'title')
+     * @param  array   $replace Parameters to replace in the translation string
+     * @param  string|null $locale Force a specific locale
+     * @return string
      */
-    function lng($id = null, $replace = [], $locale = null)
+    function lng(string $key, array $replace = [], ?string $locale = null): string
     {
-        return trans('messages.' . $id, $replace, $locale);
+        return Lang::get('messages.' . $key, $replace, $locale);
     }
 }

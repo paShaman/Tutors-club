@@ -15,12 +15,18 @@ class UserController extends Controller
         $post = request()->post();
         $user = Auth::user();
 
-        $user->first_name = $post['first_name'] ?? $user->first_name;
-        $user->last_name = $post['last_name'] ?? $user->last_name;
-        $user->middle_name = $post['middle_name'] ?? $user->middle_name;
+        if (array_key_exists('first_name', $post)) {
+            $user->first_name = trim((string) $post['first_name']);
+        }
+        if (array_key_exists('last_name', $post)) {
+            $user->last_name = trim((string) $post['last_name']);
+        }
+        if (array_key_exists('middle_name', $post)) {
+            $user->middle_name = trim((string) $post['middle_name']);
+        }
 
         $user->save();
 
-        return $this->_resultSuccess(lng('success.settings'));
+        return back()->with('success', lng('success.settings'));
     }
 }

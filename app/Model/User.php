@@ -5,18 +5,16 @@ namespace App\Model;
 use App\Access;
 use App\Common;
 use App\Notification;
-use App\VerifyEmail;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\URL;
 
-class User extends Authenticatable implements MustVerifyEmail
+class User extends Authenticatable
 {
     use Notifiable;
-    use \Venturecraft\Revisionable\RevisionableTrait;
 
     /**
      * The attributes that are mass assignable.
@@ -24,7 +22,7 @@ class User extends Authenticatable implements MustVerifyEmail
      * @var array
      */
     protected $fillable = [
-        'email', 'first_name', 'last_name', 'middle_name', 'date_agree', 'avatar', 'email_verified_at', 'account'
+        'email', 'first_name', 'last_name', 'middle_name', 'date_agree', 'avatar', 'account'
     ];
 
     /**
@@ -37,19 +35,23 @@ class User extends Authenticatable implements MustVerifyEmail
     ];
 
     /**
+     * Полное ФИО (фамилия + имя + отчество).
+     */
+    protected function name(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => trim(
+                implode(' ', array_filter([$this->last_name, $this->first_name, $this->middle_name]))
+            ),
+        );
+    }
+
+    /**
      * Get the social connects for the user.
      */
     public function social()
     {
         return $this->hasMany('App\Model\Social');
-    }
-
-    /**
-     * Get the senders connects for the user.
-     */
-    public function senders()
-    {
-        return $this->hasMany('App\Model\Sender');
     }
 
     /**
@@ -125,16 +127,6 @@ class User extends Authenticatable implements MustVerifyEmail
     public function generateUrlForForceLogin()
     {
         return URL::signedRoute('auth', ['user' => $this->id]);
-    }
-
-    /**
-     * Send the email verification notification.
-     *
-     * @return void
-     */
-    public function sendEmailVerificationNotification()
-    {
-        $this->notify(new VerifyEmail());
     }
 
     /**
@@ -277,10 +269,42 @@ class User extends Authenticatable implements MustVerifyEmail
 
             $student = new Student([
                 'name'            => $params['name'],
+                'class'           => $params['class'] ?? '',
                 'description'     => $params['description'] ?? '',
             ]);
 
             $this->students()->save($student);
+
+            return true;
+        } catch (\Exception $e) {
+            Notification::put($e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * редактирование ученика
+     *
+     * @param $params
+     * @return bool
+     */
+    public function editStudent($params)
+    {
+        try {
+            if (empty($params['student_id'])) {
+                throw new \Exception('empty_params');
+            }
+
+            $student = $this->students()->where('id', $params['student_id'])->first();
+
+            if (!$student) {
+                throw new \Exception('student_not_connected');
+            }
+
+            if (isset($params['is_deleted'])) {
+                $student->is_deleted = $params['is_deleted'];
+            }
+            $student->save();
 
             return true;
         } catch (\Exception $e) {

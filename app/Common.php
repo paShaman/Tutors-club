@@ -1,114 +1,71 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App;
 
 use Illuminate\Database\Query\Builder;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Pagination\Paginator;
 
 class Common
 {
-    const PAGINATION_PAGE_SIZE = 20;
-
-    const BTN = 'btn waves-effect waves-light';
-
     /**
-     * check environment path
+     * Verify reCAPTCHA token.
      *
-     * @return string
-     */
-    public static function getAssetsPath()
-    {
-        if (app()->environment() == 'local') {
-            return '/assets/';
-        }
-        return '/assets/build/';
-    }
-
-    /**
-     * проверка recaptcha
-     *
-     * @param $input
+     * @param  array $post POST data containing 'recaptcha' token
      * @return bool
      */
-    public static function checkRecaptcha($input)
+    public static function checkRecaptcha(array $post): bool
     {
-        //проверка reCaptcha
-        $options = array(
-            CURLOPT_RETURNTRANSFER => true,     // return web page
-            //CURLOPT_SSL_VERIFYPEER => false,     // Disabled SSL Cert checks,
-            CURLOPT_POSTFIELDS => [
-                'secret'    => env('RECAPTCHA_SECRET'),
-                'response'  => !empty($input['g-recaptcha-response']) ? $input['g-recaptcha-response'] : ''
-            ]
-        );
+        $token = $post['recaptcha'] ?? '';
 
-        $ch      = curl_init( 'https://www.google.com/recaptcha/api/siteverify' );
-        curl_setopt_array( $ch, $options );
-        $content = curl_exec( $ch );
-        curl_close( $ch );
-
-        $content = json_decode($content, true);
-
-        if (empty($content['success'])) {
+        if (empty($token)) {
             return false;
         }
-        return true;
+
+        $secret = config('services.recaptcha.secret', '');
+        $url = 'https://www.google.com/recaptcha/api/siteverify';
+
+        $ch = curl_init();
+        curl_setopt_array($ch, [
+            CURLOPT_URL            => $url,
+            CURLOPT_POST           => true,
+            CURLOPT_POSTFIELDS     => http_build_query([
+                'secret'   => $secret,
+                'response' => $token,
+            ]),
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT        => 5,
+        ]);
+
+        $response = curl_exec($ch);
+        curl_close($ch);
+
+        if (empty($response)) {
+            return false;
+        }
+
+        $data = json_decode($response, true);
+
+        return !empty($data['success']);
     }
 
     /**
-     * генерим корректный путь к файлу
+     * Paginate a query builder.
      *
-     * @param $filename
-     * @param $extension
-     * @param $returnWithDir
-     * @return string|array
+     * @param  Builder $sql        Query builder instance
+     * @param  array   $pagination Pagination params ['page' => int, 'perPage' => int]
+     * @return LengthAwarePaginator
      */
-    public static function generateFilePath($filename, $extension, $returnWithDir = false)
+    public static function pagination(Builder $sql, array $pagination = []): LengthAwarePaginator
     {
-        $md5 = md5($filename);
+        $page = (int) ($pagination['page'] ?? Paginator::resolveCurrentPage());
+        $perPage = (int) ($pagination['perPage'] ?? 20);
 
-        $dir1 = substr($md5, 0, 2) . DIRECTORY_SEPARATOR;
-        $dir2 = substr($md5, 2, 2) . DIRECTORY_SEPARATOR;
+        $total = $sql->getCountForPagination();
+        $results = $sql->forPage($page, $perPage)->get();
 
-        $path = $_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . 'upload' . DIRECTORY_SEPARATOR;
-
-        if (!is_dir($path . $dir1)) {
-            mkdir($path . $dir1);
-        }
-
-        if (!is_dir($path . $dir1 . $dir2)) {
-            mkdir($path . $dir1 . $dir2);
-        }
-
-        if ($returnWithDir) {
-            return [$path . $dir1 .  $dir2 .  $md5 . '.' . $extension, 'upload' . DIRECTORY_SEPARATOR . $dir1 . $dir2];
-        }
-        return $path . $dir1 .  $dir2 .  $md5 . '.' . $extension;
-    }
-
-    /**
-     * применяем пагинацию к запросу
-     *
-     * @param Builder $sql
-     * @param $params
-     */
-    public static function pagination($sql, $params)
-    {
-        $limit = $params['page_size'] ?? self::PAGINATION_PAGE_SIZE;
-        $offset = (($params['page'] ?? 1) - 1) * $limit;
-
-        $count = $sql->count();
-
-        $sql
-            ->limit($limit)
-            ->offset($offset)
-        ;
-
-        $items = $sql->get()->toArray();
-
-        foreach ($items as &$item) {
-            $item = (array)$item;
-        }
-
-        return ['itemsCount' => $count, 'data' => $items];
+        return new LengthAwarePaginator($results, $total, $perPage, $page);
     }
 }

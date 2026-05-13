@@ -1,29 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Exceptions;
 
-use Exception;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Throwable;
 
-class Handler extends ExceptionHandler
+final class Handler extends ExceptionHandler
 {
-    /**
-     * A list of the exception types that are not reported.
-     *
-     * @var array
-     */
-    protected $dontReport = [
-        //
-    ];
-
     /**
      * A list of the inputs that are never flashed for validation exceptions.
      *
-     * @var array
+     * @var array<int, string>
      */
     protected $dontFlash = [
         'password',
@@ -31,43 +25,29 @@ class Handler extends ExceptionHandler
     ];
 
     /**
-     * Report or log an exception.
-     *
-     * @param  \Exception  $exception
-     * @return void
-     */
-    public function report(Exception $exception)
-    {
-        parent::report($exception);
-    }
-
-    /**
      * Render an exception into an HTTP response.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Exception  $exception
-     * @return \Illuminate\Http\Response
      */
-    public function render($request, Exception $e)
+    public function render($request, Throwable $e): \Symfony\Component\HttpFoundation\Response
     {
-        if(
-            $e instanceof NotFoundHttpException ||
-            $e instanceof ModelNotFoundException
-        ){
-            return response((new \App\Http\Controllers\PageController())->page(404));
+        if (
+            $e instanceof NotFoundHttpException
+            || $e instanceof ModelNotFoundException
+        ) {
+            return response()->view('errors.404', [], 404);
         }
+
         return parent::render($request, $e);
     }
 
     /**
-     * @param \Illuminate\Http\Request $request
-     * @param AuthenticationException $exception
-     * @return \Illuminate\Http\JsonResponse|\Illuminate\Http\RedirectResponse|Response
+     * Convert an authentication exception into a response.
      */
-    protected function unauthenticated($request, AuthenticationException $exception)
+    protected function unauthenticated($request, AuthenticationException $exception): \Symfony\Component\HttpFoundation\Response
     {
-        return $request->expectsJson()
-            ? response()->json(['message' => $exception->getMessage()], Response::HTTP_UNAUTHORIZED)
-            : redirect()->guest(route('login'));
+        if ($request instanceof Request && $request->expectsJson()) {
+            return response()->json(['message' => $exception->getMessage()], Response::HTTP_UNAUTHORIZED);
+        }
+
+        return redirect()->guest(route('login'));
     }
 }

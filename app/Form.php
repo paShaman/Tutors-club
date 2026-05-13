@@ -1,22 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App;
 
 class Form
 {
     /**
-     * рендерим форму
+     * Build a modal form configuration array.
      *
-     * @param $viewName
-     * @param $title
-     * @param array $data
-     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
+     * @param  string $modalId Unique modal identifier (e.g. 'student.add')
+     * @param  string $title   Modal title (localized)
+     * @return array{id: string, title: string}
      */
-    public static function buildModal($viewName, $title, $data = [])
+    public static function buildModal(string $modalId, string $title): array
     {
-        $data['modalId'] = 'modal' . studly_case(str_replace(['.', '/'], '-', $viewName));
-        $data['modalTitle'] = $title;
-
-        return view('forms.' . $viewName, $data);
+        return [
+            'id'    => $modalId,
+            'title' => $title,
+        ];
     }
 }

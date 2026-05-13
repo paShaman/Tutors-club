@@ -1,130 +1,61 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
-use App\Common;
-use App\Model\Page;
 use App\Notification;
-use Illuminate\Foundation\Bus\DispatchesJobs;
-use Illuminate\Routing\Controller as BaseController;
-use Illuminate\Foundation\Validation\ValidatesRequests;
+use App\Model\Page;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Foundation\Bus\DispatchesJobs;
+use Illuminate\Foundation\Validation\ValidatesRequests;
+use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Lang;
 
-
-class Controller extends BaseController
+abstract class Controller extends BaseController
 {
     use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
 
-    public $title       = [];
-    public $tpl         = [];
-    public $styles      = [];
-    public $scripts     = [];
-
-    public function __construct()
-    {
-        app('translator')->setLocale('ru');
-
-        if (request()->isXmlHttpRequest()) {
-            //ajax
-        } else {
-            $this->title[] = lng('title');
-
-            $this->_initFilesBefore();
-        }
-    }
-
     /**
-     * базовые скрипты и стили
+     * Legacy render for Blade-based controllers (kept for backward compatibility).
      */
-    protected function _initFilesBefore()
-    {
-        $this->styles = [
-            '/assets/plugins/bootstrap/scss/bootstrap.css',
-            '/assets/plugins/jGrowl/less/jgrowl.css',
-            '/assets/plugins/btnWaves/btnWaves.css',
-            Common::getAssetsPath() . 'css/google-sans.css',
-            Common::getAssetsPath() . 'css/loader.css',
-            Common::getAssetsPath() . 'css/style.css',
-        ];
-
-        $this->scripts = [
-            '/assets/plugins/jquery-3.3.1.min.js',
-            '/assets/plugins/bootstrap/bootstrap.min.js',
-            '/assets/plugins/jGrowl/jquery.jgrowl.min.js',
-            '/assets/plugins/fontawesome/js/all.min.js',
-            '/assets/plugins/btnWaves/btnWaves.js',
-            Common::getAssetsPath() . 'js/functions.js',
-            Common::getAssetsPath() . 'js/main.js',
-        ];
-    }
-
-    /**
-     * рендер блока
-     *
-     * @param $view
-     * @param $data
-     * @return \Illuminate\View\View
-     */
-    protected function _render($view, $data)
-    {
-        return view($view, $data);
-    }
-
-    /**
-     * рендер страницы
-     *
-     * @return \Illuminate\View\View
-     */
-    protected function _renderPage($pageName)
+    protected function _renderPage(string $pageName): \Illuminate\View\View
     {
         $page = Page::where('name', $pageName)
-            ->where('active', 1)
+            ->where('is_active', 1)
             ->firstOrFail();
 
-        $this->title[]  = $page->title;
+        $titleFull = lng('title') . ' — ' . $page->title;
 
-        $this->tpl['page']  = $page->toArray();
-
-        $data = array_merge(
-            [
-                'titleFull'     => implode(" - ", array_reverse($this->title)),
-                'styles'        => $this->styles,
-                'scripts'       => $this->scripts,
-                'localization'  => Lang::get('js'),
-                'user'          => Auth::user(),
-                'userId'        => Auth::id(),
-                'messages'      => Notification::collectNotifications()
-            ],
-            $this->tpl
-        );
-
-        return $this->_render('pages.' . $pageName, $data);
-    }
-
-    /**
-     * response as json
-     *
-     * @param bool $success
-     * @param array $data
-     * @return \Illuminate\Http\JsonResponse
-     */
-    protected function _resultJson($success = true, $data = [])
-    {
-        return response()->json([
-            'success'   => $success,
-            'data'      => $data,
-            'messages'  => Notification::collectNotifications()
+        return view('pages.' . $pageName, [
+            'titleFull'    => $titleFull,
+            'page'         => $page->toArray(),
+            'user'         => Auth::user(),
+            'userId'       => Auth::id(),
+            'messages'     => Notification::collectNotifications(),
+            'localization' => Lang::get('js'),
         ]);
     }
 
-    protected function _resultSuccess($message = '')
+    /**
+     * Response as JSON (used by AJAX endpoints).
+     */
+    protected function _resultJson(bool $success = true, mixed $data = []): \Illuminate\Http\JsonResponse
+    {
+        return response()->json([
+            'success'  => $success,
+            'data'     => $data,
+            'messages' => Notification::collectNotifications(),
+        ]);
+    }
+
+    protected function _resultSuccess(string $message = ''): \Illuminate\Http\JsonResponse
     {
         return $this->_resultJson(true, $message);
     }
 
-    protected function _resultError($message = '')
+    protected function _resultError(mixed $message = ''): \Illuminate\Http\JsonResponse
     {
         if ($message instanceof \Illuminate\Validation\Validator) {
             $errors = array_combine($message->errors()->keys(), $message->errors()->all());
@@ -133,23 +64,5 @@ class Controller extends BaseController
         }
 
         return $this->_resultJson(false, $errors);
-    }
-
-    /**
-     * init Google ReCaptcha
-     */
-    protected function _initReCaptcha()
-    {
-        $this->scripts[] = 'https://www.google.com/recaptcha/api.js';
-    }
-
-    /**
-     * init JsGrid
-     */
-    protected function _initJsGrid()
-    {
-        $this->scripts[] = '/assets/plugins/jsgrid/jsgrid.min.js';
-        $this->styles[] = '/assets/plugins/jsgrid/jsgrid.min.css';
-        $this->styles[] = '/assets/plugins/jsgrid/jsgrid-theme.min.css';
     }
 }

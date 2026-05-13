@@ -12,7 +12,7 @@ class Page extends Model
     const NO_NEED_AUTH = 2;
 
     protected $fillable = [
-        'active', 'name', 'title', 'description', 'keywords', 'need_auth'
+        'is_active', 'name', 'title', 'description', 'keywords', 'need_auth'
     ];
 
 }

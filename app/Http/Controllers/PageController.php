@@ -1,79 +1,47 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
-use App\Form;
-use App\Model\Page;
 use App\Model\Social;
 use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
+use Inertia\Response;
 
-class PageController extends Controller
+final class PageController extends Controller
 {
     public function __construct()
     {
         $this->middleware('auth')->except([
             'login',
             'register',
-            'passwordRecovery',
-            'policy'
         ]);
-
-        parent::__construct();
     }
+
     /**
-     * рендерим страницу
-     *
-     * @param string $pageName
-     * @return \Illuminate\View\View
+     * Login page.
      */
-    public function page($pageName = Page::PAGE_DEFAULT)
+    public function login(): Response
     {
-        return $this->_renderPage($pageName);
+        return Inertia::render('Login');
     }
 
     /**
-     * страница авторизации
-     *
-     * @return \Illuminate\View\View
+     * Register page.
      */
-    public function login()
+    public function register(): Response
     {
-        return $this->_renderPage('login');
+        return Inertia::render('Register');
     }
 
     /**
-     * страница регистрации
-     *
-     * @return \Illuminate\View\View
+     * Settings page.
      */
-    public function register()
-    {
-        $this->_initReCaptcha();
-
-        return $this->_renderPage('register');
-    }
-
-    /**
-     * страница восстановления пароля
-     *
-     * @return \Illuminate\View\View
-     */
-    public function passwordRecovery()
-    {
-        return $this->_renderPage('password-recovery');
-    }
-
-    /**
-     * страница настроек
-     *
-     * @return \Illuminate\View\View
-     */
-    public function settings()
+    public function settings(): Response
     {
         $socialNetworks = [
-            Social::SOCIAL_VKONTAKTE    => [],
-            Social::SOCIAL_FACEBOOK     => [],
-            Social::SOCIAL_GOOGLE       => [],
+            Social::SOCIAL_GOOGLE    => [],
         ];
 
         $userSocialNetworks = Auth::user()->social()->get();
@@ -82,23 +50,8 @@ class PageController extends Controller
             $socialNetworks[$socialNetwork->social] = $socialNetwork->social_id;
         }
 
-        $this->tpl['socialNetworks'] = $socialNetworks;
-
-        return $this->_renderPage('settings');
-    }
-
-    /**
-     * страница учеников
-     *
-     * @return \Illuminate\View\View
-     */
-    public function students()
-    {
-        $students = Auth::user()->students()->get()->toArray();
-
-        $this->tpl['students'] = $students;
-        $this->tpl['modalAddStudent'] = Form::buildModal('add-student', lng('add_student'));
-
-        return $this->_renderPage('students');
+        return Inertia::render('Settings', [
+            'socialNetworks' => $socialNetworks,
+        ]);
     }
 }

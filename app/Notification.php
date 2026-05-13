@@ -1,43 +1,34 @@
 <?php
 
-namespace App;
+declare(strict_types=1);
 
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Cache;
+namespace App;
 
 class Notification
 {
-    const TYPE_ERROR    = 'error';
-    const TYPE_SUCCESS  = 'success';
-    const TYPE_WARNING  = 'warning';
-    const TYPE_INFO     = 'info';
+    /**
+     * @var array<int, string>
+     */
+    private static array $messages = [];
 
     /**
-     * собираем сообщения которые надо отобразить пользователю
-     *
-     * @return array
+     * Add a notification message.
      */
-    public static function collectNotifications()
+    public static function put(string $message): void
     {
-        $notifications = Cache::pull('notifications_' . Auth::id());
-
-        return empty($notifications) ? [] : $notifications;
+        self::$messages[] = $message;
     }
 
     /**
-     * записываем сообщение в кеш, оно отобразиться при следующем ajax запросе или при обновлении страницы
+     * Get all collected notification messages and clear them.
      *
-     * @param $notification
-     * @param string $type
+     * @return array<int, string>
      */
-    public static function put($notification, $type = self::TYPE_ERROR)
+    public static function collectNotifications(): array
     {
-        $key = 'notifications_' . Auth::id();
+        $messages = self::$messages;
+        self::$messages = [];
 
-        $notifications = Cache::get($key);
-
-        $notifications[] = ['type' => $type, 'text' => $notification];
-
-        Cache::put($key, $notifications, 60);
+        return $messages;
     }
 }

@@ -17,6 +17,9 @@ class CreateStudentsTable extends Migration
             $table->increments('id');
             $table->string('name');
             $table->string('description');
+            $table->integer('class')->nullable();
+            $table->string('type')->nullable();
+            $table->boolean('is_deleted')->default(1);
             $table->timestamps();
         });
     }
