@@ -107,6 +107,7 @@ const years = computed(() => {
 
 const yearVisibility = ref<Record<number, boolean>>({})
 const monthVisibility = ref<Record<string, boolean>>({})
+const studentVisibility = ref<Record<string, boolean>>({})
 
 function toggleYear(year: number) {
   yearVisibility.value[year] = !yearVisibility.value[year]
@@ -115,6 +116,11 @@ function toggleYear(year: number) {
 function toggleMonth(year: number, month: number) {
   const key = `${year}-${month}`
   monthVisibility.value[key] = !monthVisibility.value[key]
+}
+
+function toggleStudent(year: number, month: number, studentId: number) {
+  const key = `${year}-${month}-${studentId}`
+  studentVisibility.value[key] = !studentVisibility.value[key]
 }
 
 // Modal state
@@ -147,6 +153,32 @@ function openAddModal() {
     lesson_duration: page.props.defaultDuration ?? 60,
     lesson_date: page.props.defaultDate ?? '',
     lesson_time: '',
+    lesson_date_payed: '',
+    lesson_is_payed: false,
+    lesson_is_future: false,
+  }
+  editingLesson.value = null
+  showModal.value = true
+}
+
+function openAddModalForStudent(studentGroup: StudentGroup) {
+  modalMode.value = 'add'
+
+  // Find the most recent lesson for this student to pre-fill data
+  const sortedLessons = [...studentGroup.lessons].sort(
+    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime() || (b.time ?? '').localeCompare(a.time ?? '')
+  )
+  const lastLesson = sortedLessons[0] ?? null
+
+  form.value = {
+    lesson_id: null,
+    lesson_student_id: String(studentGroup.student.id),
+    lesson_subject: lastLesson?.subject ?? '',
+    lesson_theme: lastLesson?.theme ?? '',
+    lesson_price: lastLesson?.price ?? page.props.defaultPrice ?? 2000,
+    lesson_duration: lastLesson?.duration ?? page.props.defaultDuration ?? 60,
+    lesson_date: page.props.defaultDate ?? '',
+    lesson_time: lastLesson?.time ?? '',
     lesson_date_payed: '',
     lesson_is_payed: false,
     lesson_is_future: false,
@@ -382,8 +414,15 @@ function formatDatePayed(dateStr: string | null): string {
             <!-- Students (visible when month expanded) -->
             <div v-if="monthVisibility[`${yearData.year}-${monthNum}`]" class="mt-2 space-y-3">
               <div v-for="studentGroup in sortedStudents(monthData.students)" :key="studentGroup.student.id">
-                <!-- Student header -->
-                <div class="ml-3 flex items-center gap-3 px-3 py-2">
+                <!-- Student header (collapsible) -->
+                <button
+                  @click="toggleStudent(yearData.year, Number(monthNum), studentGroup.student.id)"
+                  class="ml-3 w-full flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-accent transition-colors cursor-pointer text-left"
+                >
+                  <component
+                    :is="studentVisibility[`${yearData.year}-${monthNum}-${studentGroup.student.id}`] ? ChevronDown : ChevronRight"
+                    class="h-4 w-4 text-muted-foreground shrink-0"
+                  />
                   <div
                     :class="cn(
                       'flex h-8 w-8 items-center justify-center rounded-full text-xs font-semibold text-white shadow shrink-0',
@@ -414,10 +453,18 @@ function formatDatePayed(dateStr: string | null): string {
                       Долг: {{ studentGroup.sum_not_payed.toLocaleString('ru-RU') }} ₽
                     </p>
                   </div>
-                </div>
+                  <!-- Add lesson button for this student -->
+                  <button
+                    @click.stop="openAddModalForStudent(studentGroup)"
+                    class="inline-flex items-center justify-center rounded-lg h-8 w-8 text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors cursor-pointer shrink-0"
+                    title="Добавить урок ученику"
+                  >
+                    <Plus class="h-4 w-4" />
+                  </button>
+                </button>
 
-                <!-- Lessons list -->
-                <div class="ml-8 space-y-2">
+                <!-- Lessons list (visible when student expanded) -->
+                <div v-if="studentVisibility[`${yearData.year}-${monthNum}-${studentGroup.student.id}`]" class="ml-11 space-y-2">
                   <Card
                     v-for="lesson in [...studentGroup.lessons].sort((a: Lesson, b: Lesson) => new Date(b.date).getTime() - new Date(a.date).getTime() || (b.time ?? '').localeCompare(a.time ?? ''))"
                     :key="lesson.id"
@@ -487,13 +534,23 @@ function formatDatePayed(dateStr: string | null): string {
 
                       <!-- Actions -->
                       <div class="flex items-center gap-1 shrink-0">
+                        <!-- Pay button -->
                         <button
                           v-if="!lesson.is_payed"
                           @click="togglePayLesson(lesson.id)"
-                          class="inline-flex items-center justify-center rounded-lg h-8 w-8 text-muted-foreground hover:bg-emerald-50 hover:text-emerald-600 transition-colors cursor-pointer"
-                          title="Оплатить"
+                          class="inline-flex items-center gap-1.5 rounded-lg h-8 px-3 text-xs font-semibold bg-emerald-500 text-white hover:bg-emerald-600 transition-colors cursor-pointer"
+                          title="Оплатить урок"
                         >
-                          <span class="font-bold text-sm">₽</span>
+                          <CheckCircle2 class="h-3.5 w-3.5" />
+                          Оплатить
+                        </button>
+                        <!-- Already paid indicator -->
+                        <button
+                          v-if="lesson.is_payed"
+                          class="inline-flex items-center gap-1.5 rounded-lg h-8 px-3 text-xs font-semibold bg-emerald-100 text-emerald-700 cursor-default"
+                        >
+                          <CheckCircle2 class="h-3.5 w-3.5" />
+                          Оплачен
                         </button>
                         <button
                           @click="openEditModal(lesson)"
