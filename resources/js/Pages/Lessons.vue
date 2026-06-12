@@ -53,6 +53,7 @@ interface StudentGroup {
   cnt: number
   cnt_not_payed: number
   cnt_special: number
+  cnt_all: number
 }
 
 interface MonthGroup {
@@ -64,6 +65,7 @@ interface MonthGroup {
   cnt: number
   cnt_not_payed: number
   cnt_special: number
+  cnt_all: number
 }
 
 interface YearGroup {
@@ -75,6 +77,7 @@ interface YearGroup {
   cnt: number
   cnt_not_payed: number
   cnt_special: number
+  cnt_all: number
 }
 
 const page = usePage<{
@@ -281,6 +284,15 @@ function sortedStudents(students: Record<number, StudentGroup>): StudentGroup[] 
   })
 }
 
+function pluralLessons(n: number): string {
+  const m = n % 100
+  if (m >= 11 && m <= 14) return 'уроков'
+  const r = n % 10
+  if (r === 1) return 'урок'
+  if (r >= 2 && r <= 4) return 'урока'
+  return 'уроков'
+}
+
 function formatDate(dateStr: string): string {
   const d = new Date(dateStr)
   return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })
@@ -361,7 +373,7 @@ function formatDatePayed(dateStr: string | null): string {
               <div class="text-left">
                 <h2 class="text-xl font-bold text-foreground">{{ yearData.year }}</h2>
                 <p class="text-sm text-muted-foreground mt-0.5">
-                  {{ yearData.cnt + yearData.cnt_special }} уроков
+                  {{ (yearData.cnt_all + yearData.cnt_special) }} {{ pluralLessons(yearData.cnt_all + yearData.cnt_special) }}
                   <span v-if="yearData.cnt_special" class="text-amber-600"> (особых: {{ yearData.cnt_special }})</span>
                 </p>
               </div>
@@ -403,7 +415,7 @@ function formatDatePayed(dateStr: string | null): string {
                       {{ monthNames[Number(monthNum)] }}
                     </h3>
                     <p class="text-xs text-muted-foreground">
-                      {{ monthData.cnt + monthData.cnt_special }} уроков
+                      {{ (monthData.cnt_all + monthData.cnt_special) }} {{ pluralLessons(monthData.cnt_all + monthData.cnt_special) }}
                       <span v-if="monthData.cnt_special" class="text-amber-600"> (особых: {{ monthData.cnt_special }})</span>
                     </p>
                   </div>

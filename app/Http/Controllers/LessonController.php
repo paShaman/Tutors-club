@@ -64,6 +64,7 @@ final class LessonController extends Controller
                     $student['cnt'] = 0;
                     $student['cnt_not_payed'] = 0;
                     $student['cnt_special'] = 0;
+                    $student['cnt_all'] = 0;
 
                     foreach ($student['lessons'] as $lesson) {
                         if ($lesson['is_future']) {
@@ -73,6 +74,7 @@ final class LessonController extends Controller
                             $student['sum_special'] += $lesson['price'];
                             $student['cnt_special']++;
                         } else {
+                            $student['cnt_all']++;
                             if ($lesson['is_payed']) {
                                 $student['sum'] += $lesson['price'];
                                 $student['cnt']++;
@@ -90,6 +92,7 @@ final class LessonController extends Controller
                 $month['cnt'] = array_sum(array_column($month['students'], 'cnt'));
                 $month['cnt_not_payed'] = array_sum(array_column($month['students'], 'cnt_not_payed'));
                 $month['cnt_special'] = array_sum(array_column($month['students'], 'cnt_special'));
+                $month['cnt_all'] = array_sum(array_column($month['students'], 'cnt_all'));
             }
 
             $year['sum'] = array_sum(array_column($year['months'], 'sum'));
@@ -98,6 +101,7 @@ final class LessonController extends Controller
             $year['cnt'] = array_sum(array_column($year['months'], 'cnt'));
             $year['cnt_not_payed'] = array_sum(array_column($year['months'], 'cnt_not_payed'));
             $year['cnt_special'] = array_sum(array_column($year['months'], 'cnt_special'));
+            $year['cnt_all'] = array_sum(array_column($year['months'], 'cnt_all'));
         }
 
         // Remove deleted students from the student list
