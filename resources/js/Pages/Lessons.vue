@@ -288,7 +288,19 @@ function formatDate(dateStr: string): string {
 
 function formatDatePayed(dateStr: string | null): string {
   if (!dateStr) return 'Не оплачен'
-  return dateStr
+  const d = new Date(dateStr)
+  const day = String(d.getDate()).padStart(2, '0')
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const year = d.getFullYear()
+
+  const hours = String(d.getHours()).padStart(2, '0')
+  const minutes = String(d.getMinutes()).padStart(2, '0')
+
+  if (hours == '00' && minutes == '00') {
+      return `${day}.${month}.${year}`
+  } else {
+      return `${day}.${month}.${year} ${hours}:${minutes}`
+  }
 }
 </script>
 
@@ -437,7 +449,7 @@ function formatDatePayed(dateStr: string | null): string {
                     <p class="text-sm font-medium text-foreground truncate">
                       {{ studentGroup.student.name }}
                       <span v-if="studentGroup.student.class" class="text-muted-foreground font-normal">
-                        · {{ studentGroup.student.class }}
+                        · класс {{ studentGroup.student.class }}
                       </span>
                     </p>
                   </div>
@@ -485,7 +497,7 @@ function formatDatePayed(dateStr: string | null): string {
                             class="inline-flex items-center gap-1 text-xs text-muted-foreground"
                           >
                             <Clock class="h-3 w-3" />
-                            {{ lesson.time }}
+                            {{ lesson.time.substring(0, 5) }}
                           </span>
                           <span
                             v-if="lesson.duration"
@@ -610,7 +622,7 @@ function formatDatePayed(dateStr: string | null): string {
               >
                 <option value="" disabled>Выберите ученика</option>
                 <option v-for="student in page.props.students" :key="student.id" :value="student.id">
-                  {{ student.name }}{{ student.class ? ` (${student.class})` : '' }}
+                  {{ student.name }}{{ student.class ? ` (класс ${student.class})` : '' }}
                 </option>
               </select>
             </div>
