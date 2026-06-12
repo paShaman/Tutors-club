@@ -568,14 +568,6 @@ function formatDatePayed(dateStr: string | null): string {
                           <CheckCircle2 class="h-3.5 w-3.5" />
                           Оплатить
                         </button>
-                        <!-- Already paid indicator -->
-                        <button
-                          v-if="lesson.is_payed"
-                          class="inline-flex items-center gap-1.5 rounded-lg h-8 px-3 text-xs font-semibold bg-emerald-100 text-emerald-700 cursor-default"
-                        >
-                          <CheckCircle2 class="h-3.5 w-3.5" />
-                          Оплачен
-                        </button>
                         <button
                           @click="openEditModal(lesson)"
                           class="inline-flex items-center justify-center rounded-lg h-8 w-8 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors cursor-pointer"
