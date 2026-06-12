@@ -89,7 +89,7 @@ final class DashboardController
             $students[] = [
                 'id'           => $student->id,
                 'name'         => $student->name,
-                'studentClass' => $student->class ?: '',
+                'studentClass' => $student->current_class,
                 'totalLessons' => $totalLessons,
                 'paidLessons'  => $paidLessons,
                 'avatarColor'  => $avatarColors[$colorIdx % count($avatarColors)],
@@ -124,7 +124,7 @@ final class DashboardController
                 $nextStudent = \App\Model\Student::find($nextLessonRaw->student_id);
                 if ($nextStudent) {
                     $nextLessonRaw->student_name = $nextStudent->name;
-                    $nextLessonRaw->student_class = $nextStudent->class;
+                    $nextLessonRaw->student_class = $nextStudent->current_class;
                 }
             }
         }

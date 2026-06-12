@@ -21,6 +21,7 @@ const page = usePage<{
     id: number
     name: string
     class: string | null
+    current_class: string
     type: string | null
     description: string | null
     is_deleted: number
@@ -195,7 +196,7 @@ async function deleteStudent(student: any) {
                 <div>
                   <h3 class="font-medium text-foreground">{{ student.name }}</h3>
                   <p class="text-xs text-muted-foreground">
-                    {{ student.class ? `Класс: ${student.class}` : 'Класс не указан' }}
+                    {{ student.current_class || 'Класс не указан' }}
                   </p>
                 </div>
               </div>

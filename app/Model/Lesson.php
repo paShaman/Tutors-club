@@ -14,7 +14,7 @@ class Lesson extends Model
         'lesson_subject_english',
     ];
 
-    const PRICE_DEFAULT = 2000;
+    const PRICE_DEFAULT = 3000;
     const DURATION_DEFAULT = 60;
 
     protected $fillable = [

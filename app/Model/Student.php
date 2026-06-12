@@ -11,6 +11,41 @@ class Student extends Model
         'name', 'description', 'is_deleted', 'class', 'type'
     ];
 
+    protected $appends = ['current_class'];
+
+    /**
+     * Динамический расчёт текущего класса ученика.
+     * Каждый сентябрь класс увеличивается на 1.
+     * После 11 класса возвращает «окончил школу».
+     */
+    public function getCurrentClassAttribute(): string
+    {
+        $initialClass = (int) $this->class;
+
+        if ($initialClass <= 0) {
+            return '';
+        }
+
+        $created = \Carbon\Carbon::parse($this->created_at);
+        $now = \Carbon\Carbon::now();
+
+        // Учебный год создания: если месяц >= 9, то год начала = текущий год, иначе = предыдущий
+        $creationAcademicYear = $created->month >= 9 ? $created->year : $created->year - 1;
+
+        // Текущий учебный год
+        $currentAcademicYear = $now->month >= 9 ? $now->year : $now->year - 1;
+
+        $yearsPassed = $currentAcademicYear - $creationAcademicYear;
+
+        $currentClass = $initialClass + $yearsPassed;
+
+        if ($currentClass > 11) {
+            return 'окончил школу';
+        }
+
+        return $currentClass . ' класс';
+    }
+
     /**
      * get students lessons
      */

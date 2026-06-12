@@ -3,7 +3,7 @@ import { Head, usePage } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import Card from '@/components/ui/Card.vue'
 import Button from '@/components/ui/Button.vue'
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { cn } from '@/lib/utils'
 import {
   BookOpen,
@@ -41,6 +41,7 @@ interface StudentData {
   id: number
   name: string
   class: string | null
+  current_class: string
   type: string | null
 }
 
@@ -112,6 +113,25 @@ const yearVisibility = ref<Record<number, boolean>>({})
 const monthVisibility = ref<Record<string, boolean>>({})
 const studentVisibility = ref<Record<string, boolean>>({})
 
+onMounted(() => {
+  const now = new Date()
+  const currentYear = now.getFullYear()
+  const currentMonth = now.getMonth() + 1
+
+  yearVisibility.value[currentYear] = true
+
+  const monthKey = `${currentYear}-${currentMonth}`
+  monthVisibility.value[monthKey] = true
+
+  const yearData = page.props.sortedLessons?.[currentYear]
+  const monthData = yearData?.months?.[currentMonth]
+  if (monthData?.students) {
+    for (const studentId of Object.keys(monthData.students)) {
+      studentVisibility.value[`${currentYear}-${currentMonth}-${studentId}`] = true
+    }
+  }
+})
+
 function toggleYear(year: number) {
   yearVisibility.value[year] = !yearVisibility.value[year]
 }
@@ -136,7 +156,7 @@ const form = ref({
   lesson_student_id: '' as string,
   lesson_subject: '',
   lesson_theme: '',
-  lesson_price: page.props.defaultPrice ?? 2000,
+  lesson_price: page.props.defaultPrice ?? 3000,
   lesson_duration: page.props.defaultDuration ?? 60,
   lesson_date: page.props.defaultDate ?? '',
   lesson_time: '',
@@ -152,7 +172,7 @@ function openAddModal() {
     lesson_student_id: '',
     lesson_subject: '',
     lesson_theme: '',
-    lesson_price: page.props.defaultPrice ?? 2000,
+    lesson_price: page.props.defaultPrice ?? 3000,
     lesson_duration: page.props.defaultDuration ?? 60,
     lesson_date: page.props.defaultDate ?? '',
     lesson_time: '',
@@ -178,7 +198,7 @@ function openAddModalForStudent(studentGroup: StudentGroup) {
     lesson_student_id: String(studentGroup.student.id),
     lesson_subject: lastLesson?.subject ?? '',
     lesson_theme: lastLesson?.theme ?? '',
-    lesson_price: lastLesson?.price ?? page.props.defaultPrice ?? 2000,
+    lesson_price: lastLesson?.price ?? page.props.defaultPrice ?? 3000,
     lesson_duration: lastLesson?.duration ?? page.props.defaultDuration ?? 60,
     lesson_date: page.props.defaultDate ?? '',
     lesson_time: lastLesson?.time ?? '',
@@ -460,8 +480,8 @@ function formatDatePayed(dateStr: string | null): string {
                   <div class="flex-1 min-w-0">
                     <p class="text-sm font-medium text-foreground truncate">
                       {{ studentGroup.student.name }}
-                      <span v-if="studentGroup.student.class" class="text-muted-foreground font-normal">
-                        · класс {{ studentGroup.student.class }}
+                      <span v-if="studentGroup.student.current_class" class="text-muted-foreground font-normal">
+                        · {{ studentGroup.student.current_class }}
                       </span>
                     </p>
                   </div>
@@ -626,7 +646,7 @@ function formatDatePayed(dateStr: string | null): string {
               >
                 <option value="" disabled>Выберите ученика</option>
                 <option v-for="student in page.props.students" :key="student.id" :value="student.id">
-                  {{ student.name }}{{ student.class ? ` (класс ${student.class})` : '' }}
+                  {{ student.name }}{{ student.current_class ? ` ${student.current_class}` : '' }}
                 </option>
               </select>
             </div>
