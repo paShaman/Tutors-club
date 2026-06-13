@@ -81,12 +81,13 @@ function logout(): void {
 // Форматированная текущая дата
 const todayDate = computed(() => {
   const now = new Date()
-  return now.toLocaleDateString('ru-RU', {
+  const formatted = now.toLocaleDateString('ru-RU', {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
     weekday: 'long',
   })
+  return formatted.charAt(0).toUpperCase() + formatted.slice(1)
 })
 
 // Close mobile sidebar on page navigation
@@ -240,7 +241,7 @@ onUnmounted(() => {
         </button>
 
         <!-- Текущая дата -->
-        <p class="hidden sm:block text-sm text-muted-foreground capitalize">
+        <p class="hidden sm:block text-sm text-muted-foreground">
           {{ todayDate }}
         </p>
 

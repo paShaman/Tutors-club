@@ -14,6 +14,8 @@ import {
   CheckCircle2,
   AlertCircle,
   ChevronRight,
+  BookOpen,
+  Coins,
 } from 'lucide-vue-next'
 import { Line, Bar } from 'vue-chartjs'
 import {
@@ -347,16 +349,18 @@ const barChartOptions = computed(() => ({
                 <ChevronRight class="h-4 w-4" />
               </Link>
           </div>
-          <div class="mt-4 flex items-center gap-4 text-sm">
-            <div>
-            <p class="text-muted-foreground">За месяц</p>
-              <p class="font-semibold text-foreground">{{ student.totalLessons }}</p>
-            </div>
-            <div class="h-8 w-px bg-border" />
-            <div>
-              <p class="text-muted-foreground">Оплачено</p>
-              <p class="font-semibold text-emerald-600">{{ student.paidLessons }}</p>
-            </div>
+          <div class="mt-4 flex items-center gap-3 text-sm">
+            <span class="inline-flex items-center gap-1">
+              <BookOpen class="h-3.5 w-3.5 text-muted-foreground" />
+              <span class="text-muted-foreground">За месяц</span>
+              <span class="font-semibold text-foreground">{{ student.totalLessons }}</span>
+            </span>
+            <span class="text-muted-foreground/40 select-none">|</span>
+            <span class="inline-flex items-center gap-1">
+              <Coins class="h-3.5 w-3.5 text-emerald-600" />
+              <span class="text-muted-foreground">Оплачено</span>
+              <span class="font-semibold text-emerald-600">{{ student.paidLessons }}</span>
+            </span>
           </div>
         </Card>
       </div>

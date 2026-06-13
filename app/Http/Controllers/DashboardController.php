@@ -135,7 +135,7 @@ final class DashboardController
                 'id'          => $nextLessonRaw->id,
                 'studentName' => $nextLessonRaw->student_name ?? '',
                 'studentClass' => $nextLessonRaw->student_class ?? '',
-                'date'        => Carbon::parse($nextLessonRaw->date)->isoFormat('D MMMM YYYY', 'ru'),
+                'date'        => Carbon::parse($nextLessonRaw->date)->translatedFormat('j F Y'),
                 'time'        => substr($nextLessonRaw->time, 0, 5),
                 'duration'    => $nextLessonRaw->duration,
                 'isPaid'      => (bool) $nextLessonRaw->is_payed,
