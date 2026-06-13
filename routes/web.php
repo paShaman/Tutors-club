@@ -9,7 +9,6 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\LessonController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\Social\GoogleController;
 use App\Http\Controllers\Admin\PanelController;
 use App\Http\Controllers\ChangelogController;
 use App\Http\Controllers\Admin\PaymentController;
@@ -40,10 +39,6 @@ Route::get('/calendar', [CalendarController::class, 'index'])
 
 Route::get('/calendar/events', [CalendarController::class, 'getEvents'])
     ->middleware('auth');
-
-// ─── Social ─────────────────────────────────────────────────
-Route::get('/login/google', [GoogleController::class, 'redirectToProvider']);
-Route::get('/login/google/callback', [GoogleController::class, 'handleProviderCallback']);
 
 // ─── Auth ───────────────────────────────────────────────────
 Route::post('/register', [AuthController::class, 'register'])->middleware('guest');

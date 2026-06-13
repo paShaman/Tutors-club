@@ -47,14 +47,6 @@ class User extends Authenticatable
     }
 
     /**
-     * Get the social connects for the user.
-     */
-    public function social()
-    {
-        return $this->hasMany('App\Model\Social');
-    }
-
-    /**
      * get users roles
      */
     public function roles()
@@ -90,33 +82,6 @@ class User extends Authenticatable
     public function getId()
     {
         return $this->id;
-    }
-
-    /**
-     * отключаем социальную сеть
-     *
-     * @param $social
-     * @return bool
-     */
-    public function socialDisconnect($social)
-    {
-        try {
-            if (empty($social)) {
-                throw new \Exception('empty_params');
-            }
-
-            $socialConnected = $this->social()->where('social', $social);
-
-            if (!$socialConnected->first()) {
-                throw new \Exception('social_not_connected');
-            }
-
-            $socialConnected->delete();
-
-            return true;
-        } catch (\Exception $e) {
-            return false;
-        }
     }
 
     /**

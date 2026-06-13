@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Common;
 use App\Model\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
@@ -10,7 +9,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rule;
 
 class AuthController extends Controller
 {
@@ -28,10 +26,6 @@ class AuthController extends Controller
         $post = $request->post();
 
         $request->validate($rules);
-
-        if (empty(Common::checkRecaptcha($post))) {
-            //return redirect()->back()->with('error', lng('error.recaptcha'));
-        }
 
         $existing = User::where('email', $post['email'])->first();
         if (!empty($existing)) {

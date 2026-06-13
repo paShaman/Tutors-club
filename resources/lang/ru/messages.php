@@ -31,8 +31,6 @@ return [
         'recovery'          => 'Ошибка восстановления пароля',
         'recaptcha'         => 'Ошибка проверки ReCaptcha',
         'no_user_with_this_email' => 'Такой пользователь не существует',
-        'social_disconnect' => 'Ошибка отключения социальной сети',
-        'social_user_exists' => 'Пользователь с выбранной социальной сетью уже существует',
         'email_user_exists' => 'Пользователь с такий email уже существует',
         'add_student'       => 'Ученик не добавлен',
         'delete_student'    => 'Ученик не удален',
@@ -46,7 +44,6 @@ return [
         'login'             => 'Успешная авторизация',
         'recovery'          => 'Вам на почту выслан новый пароль',
         'settings'          => 'Настройки успешно обновлены',
-        'social_disconnect' => 'Социальная сеть успешно отключена',
         'add_student'       => 'Ученик успешно добавлен',
         'delete_student'    => 'Ученик успешно удален',
         'return_student'    => 'Ученик успешно возвращен',
@@ -60,9 +57,6 @@ return [
     'logout'                => 'Выход',
     'settings'              => 'Настройки',
     'subscriptions'         => 'Подписки',
-    'social_networks'       => 'Социальные сети',
-    'social_on'             => 'Подключить',
-    'social_off'            => 'Отключить',
     'admin'                 => 'Администрирование',
     'add_payment'           => 'Внесение платежа',
     'add_student'           => 'Добавить ученика',
@@ -103,7 +97,6 @@ return [
 
     //exceptions
     'empty_params' => '',
-    'social_not_connected' => '',
     'student_not_connected' => '',
     'user_not_found' => '',
     //const
