@@ -193,6 +193,11 @@ function openAddModalForStudent(studentGroup: StudentGroup) {
   )
   const lastLesson = sortedLessons[0] ?? null
 
+  // Current date and rounded hour for the new lesson
+  const now = new Date()
+  const todayStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0')
+  const roundedHour = String(now.getHours()).padStart(2, '0') + ':00'
+
   form.value = {
     lesson_id: null,
     lesson_student_id: String(studentGroup.student.id),
@@ -200,8 +205,8 @@ function openAddModalForStudent(studentGroup: StudentGroup) {
     lesson_theme: lastLesson?.theme ?? '',
     lesson_price: lastLesson?.price ?? page.props.defaultPrice ?? 3000,
     lesson_duration: lastLesson?.duration ?? page.props.defaultDuration ?? 60,
-    lesson_date: page.props.defaultDate ?? '',
-    lesson_time: lastLesson?.time ?? '',
+    lesson_date: todayStr,
+    lesson_time: roundedHour,
     lesson_date_payed: '',
     lesson_is_payed: false,
     lesson_is_future: false,
