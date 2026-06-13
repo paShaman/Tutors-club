@@ -1,48 +1,171 @@
 <script setup lang="ts">
+import { ref, onMounted } from 'vue'
 import { Head, usePage } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import Card from '@/components/ui/Card.vue'
+import Button from '@/components/ui/Button.vue'
 import FullCalendar from '@fullcalendar/vue3'
 import dayGridPlugin from '@fullcalendar/daygrid'
 import timeGridPlugin from '@fullcalendar/timegrid'
 import interactionPlugin from '@fullcalendar/interaction'
-import type { EventClickArg, EventInput } from '@fullcalendar/core'
 import ruLocale from '@fullcalendar/core/locales/ru'
-import { ref, onMounted } from 'vue'
-import { Calendar as CalendarIcon } from 'lucide-vue-next'
+import type { EventClickArg, DatesSetArg } from '@fullcalendar/core'
 
 defineOptions({ layout: AppLayout })
 
-const page = usePage<{ url: string }>()
+const page = usePage<{
+  students: Array<{
+    id: number
+    name: string
+    current_class: string
+    type: string | null
+  }>
+  lessonsSubjects: string[]
+  defaultPrice: number
+  defaultDuration: number
+  defaultDate: string
+}>()
 
-const loading = ref(true)
-const events = ref<EventInput[]>([])
+interface LessonEvent {
+  student_id: number
+  student_name: string
+  subject: string
+  theme: string | null
+  price: number
+  duration: number
+  is_payed: number
+  date: string
+  date_payed: string | null
+  time: string | null
+  is_future: number
+}
 
-async function fetchEvents(fetchInfo: { start: Date; end: Date; startStr: string; endStr: string }, successCallback: (events: EventInput[]) => void, failureCallback: (error: Error) => void) {
-  try {
-    const url = new URL('/calendar/events', page.props.url ? new URL(page.props.url).origin : window.location.origin)
-    url.searchParams.set('start', fetchInfo.startStr)
-    url.searchParams.set('end', fetchInfo.endStr)
+const calendarRef = ref<InstanceType<typeof FullCalendar> | null>(null)
+const events = ref<any[]>([])
 
-    const response = await fetch(url.toString(), {
-      headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+// Modal state
+const showModal = ref(false)
+const modalMode = ref<'add' | 'edit'>('edit')
+const deletingLesson = ref<number | null>(null)
+
+const subjectLabels: Record<string, string> = {
+  lesson_subject_maths: 'Математика',
+  lesson_subject_informatics: 'Информатика',
+  lesson_subject_english: 'Английский',
+}
+
+function subjectName(key: string): string {
+  return subjectLabels[key] ?? key
+}
+
+const form = ref({
+  lesson_id: null as number | null,
+  lesson_student_id: '' as string,
+  lesson_subject: '',
+  lesson_theme: '',
+  lesson_price: page.props.defaultPrice ?? 3000,
+  lesson_duration: page.props.defaultDuration ?? 60,
+  lesson_date: '',
+  lesson_time: '',
+  lesson_date_payed: '',
+  lesson_is_payed: false,
+  lesson_is_future: false,
+})
+
+function handleEventClick(arg: EventClickArg) {
+  const props = arg.event.extendedProps as LessonEvent
+
+  modalMode.value = 'edit'
+  form.value = {
+    lesson_id: Number(arg.event.id),
+    lesson_student_id: String(props.student_id),
+    lesson_subject: props.subject,
+    lesson_theme: props.theme ?? '',
+    lesson_price: props.price,
+    lesson_duration: props.duration,
+    lesson_date: props.date,
+    lesson_time: props.time ?? '',
+    lesson_date_payed: props.date_payed ?? '',
+    lesson_is_payed: !!props.is_payed,
+    lesson_is_future: !!props.is_future,
+  }
+
+  showModal.value = true
+}
+
+function handleDatesSet(arg: DatesSetArg) {
+  const view = arg.view
+
+  fetch('/calendar/events?' + new URLSearchParams({
+    start: view.activeStart.toISOString(),
+    end: view.activeEnd.toISOString(),
+  }))
+    .then(res => res.json())
+    .then(data => {
+      events.value = data
     })
+}
 
-    if (!response.ok) throw new Error('Network response was not ok')
+function closeModal() {
+  showModal.value = false
+}
 
+async function submitLesson() {
+  try {
+    const response = await fetch('/lessons/edit', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest',
+      },
+      body: JSON.stringify(form.value),
+    })
     const data = await response.json()
-    events.value = data
-    successCallback(data)
-  } catch (error) {
-    failureCallback(error as Error)
-  } finally {
-    loading.value = false
+
+    if (data.success) {
+      closeModal()
+      // Reload calendar events
+      const calendarApi = calendarRef.value?.getApi()
+      if (calendarApi) {
+        calendarApi.refetchEvents()
+      }
+    } else {
+      alert(typeof data.data === 'string' ? data.data : Object.values(data.data).join('\n'))
+    }
+  } catch (e) {
+    alert('Ошибка сети')
   }
 }
 
-function handleEventClick(info: EventClickArg) {
-  // Will be used later for lesson editing
-  console.log('Event clicked:', info.event.id, info.event.title)
+async function deleteLesson() {
+  if (!form.value.lesson_id) return
+  if (!confirm('Удалить урок?')) return
+
+  try {
+    const response = await fetch('/lessons/delete', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest',
+      },
+      body: JSON.stringify({ lesson_id: form.value.lesson_id }),
+    })
+    const data = await response.json()
+
+    if (data.success) {
+      closeModal()
+      const calendarApi = calendarRef.value?.getApi()
+      if (calendarApi) {
+        calendarApi.refetchEvents()
+      }
+    } else {
+      alert(typeof data.data === 'string' ? data.data : Object.values(data.data).join('\n'))
+    }
+  } catch (e) {
+    alert('Ошибка сети')
+  }
 }
 </script>
 
@@ -51,27 +174,18 @@ function handleEventClick(info: EventClickArg) {
 
   <div class="space-y-6 animate-fade-up">
     <!-- Page header -->
-    <div class="flex items-center gap-3 sm:gap-4">
-      <div class="flex h-10 w-10 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10">
-        <CalendarIcon class="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
-      </div>
-      <div class="min-w-0">
-        <h1 class="text-lg sm:text-2xl font-bold tracking-tight text-foreground">
-          Календарь уроков
+    <div class="flex items-center justify-between flex-wrap gap-4">
+      <div class="flex items-center gap-4">
+        <h1 class="text-2xl font-bold tracking-tight text-foreground">
+          Календарь
         </h1>
-        <p class="text-xs sm:text-sm text-muted-foreground mt-0.5">
-          Расписание занятий с учениками
-        </p>
       </div>
     </div>
 
-    <!-- Calendar Card -->
-    <Card class="p-2 sm:p-4 md:p-6 overflow-hidden">
-      <div v-if="loading" class="flex items-center justify-center py-16 text-muted-foreground text-sm">
-        Загрузка календаря...
-      </div>
-
+    <!-- Calendar -->
+    <Card class="p-4 fc-theme-custom">
       <FullCalendar
+        ref="calendarRef"
         :options="{
           plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin],
           initialView: 'dayGridMonth',
@@ -80,29 +194,174 @@ function handleEventClick(info: EventClickArg) {
           headerToolbar: {
             left: 'prev,next today',
             center: 'title',
-            right: 'dayGridMonth,timeGridWeek',
+            right: 'dayGridMonth,timeGridWeek,timeGridDay',
           },
           buttonText: {
             today: 'Сегодня',
             month: 'Месяц',
             week: 'Неделя',
+            day: 'День',
           },
-          events: fetchEvents,
+          events: events,
           eventClick: handleEventClick,
-          height: 'auto',
+          datesSet: handleDatesSet,
+          editable: false,
+          selectable: false,
           firstDay: 1,
+          height: 'auto',
           eventTimeFormat: {
             hour: '2-digit',
             minute: '2-digit',
-          },
-          slotLabelFormat: {
-            hour: '2-digit',
-            minute: '2-digit',
+            hour12: false,
           },
         }"
-        class="fc-theme-custom"
       />
     </Card>
+
+    <!-- Edit Modal Overlay -->
+    <Teleport to="body">
+      <Transition name="overlay">
+        <div v-if="showModal" class="fixed inset-0 z-60 bg-black/40 backdrop-blur-sm" @click="closeModal" />
+      </Transition>
+      <Transition name="modal">
+        <div v-if="showModal" class="fixed inset-0 z-70 flex items-center justify-center p-4 overflow-y-auto">
+          <Card class="relative w-full max-w-lg p-6 shadow-xl">
+            <h2 class="text-2xl font-semibold text-foreground mb-5">
+              Редактировать урок
+            </h2>
+
+            <form @submit.prevent="submitLesson" class="space-y-4">
+              <!-- Student -->
+              <div>
+                <label class="block text-sm font-medium text-foreground mb-1.5">Ученик *</label>
+                <select
+                  v-model="form.lesson_student_id"
+                  required
+                  class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+                >
+                  <option value="" disabled>Выберите ученика</option>
+                  <option v-for="student in page.props.students" :key="student.id" :value="student.id">
+                    {{ student.name }}{{ student.current_class ? ` ${student.current_class}` : '' }}
+                  </option>
+                </select>
+              </div>
+
+              <!-- Subject -->
+              <div>
+                <label class="block text-sm font-medium text-foreground mb-1.5">Предмет *</label>
+                <select
+                  v-model="form.lesson_subject"
+                  required
+                  class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+                >
+                  <option value="" disabled>Выберите предмет</option>
+                  <option v-for="subj in page.props.lessonsSubjects" :key="subj" :value="subj">
+                    {{ subjectName(subj) }}
+                  </option>
+                </select>
+              </div>
+
+              <!-- Theme -->
+              <div>
+                <label class="block text-sm font-medium text-foreground mb-1.5">Тема</label>
+                <input
+                  v-model="form.lesson_theme"
+                  class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+                  placeholder="Тема урока"
+                />
+              </div>
+
+              <!-- Date & Time row -->
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-foreground mb-1.5">Дата *</label>
+                  <input
+                    v-model="form.lesson_date"
+                    type="date"
+                    required
+                    class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+                  />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-foreground mb-1.5">Время</label>
+                  <input
+                    v-model="form.lesson_time"
+                    type="time"
+                    class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+                  />
+                </div>
+              </div>
+
+              <!-- Price & Duration row -->
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-foreground mb-1.5">Цена (₽)</label>
+                  <input
+                    v-model.number="form.lesson_price"
+                    type="number"
+                    min="0"
+                    class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+                  />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-foreground mb-1.5">Длительность (мин)</label>
+                  <input
+                    v-model.number="form.lesson_duration"
+                    type="number"
+                    min="0"
+                    step="5"
+                    class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+                  />
+                </div>
+              </div>
+
+              <!-- Toggles -->
+              <div class="flex items-center gap-6">
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input
+                    v-model="form.lesson_is_payed"
+                    type="checkbox"
+                    class="rounded border-border text-primary focus:ring-primary/30"
+                  />
+                  <span class="text-sm text-foreground">Оплачен</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input
+                    v-model="form.lesson_is_future"
+                    type="checkbox"
+                    class="rounded border-border text-primary focus:ring-primary/30"
+                  />
+                  <span class="text-sm text-foreground">План</span>
+                </label>
+              </div>
+
+              <!-- Date payed (when is_payed checked) -->
+              <div v-if="form.lesson_is_payed">
+                <label class="block text-sm font-medium text-foreground mb-1.5">Дата оплаты</label>
+                <input
+                  v-model="form.lesson_date_payed"
+                  type="date"
+                  class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+                />
+              </div>
+
+              <!-- Actions -->
+              <div class="flex items-center gap-3 pt-2">
+                <Button type="submit" class="flex-1">
+                  Сохранить
+                </Button>
+                <Button type="button" variant="destructive" class="flex-1" @click="deleteLesson">
+                  Удалить
+                </Button>
+                <Button type="button" variant="outline" class="flex-1" @click="closeModal">
+                  Отмена
+                </Button>
+              </div>
+            </form>
+          </Card>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
@@ -136,10 +395,15 @@ function handleEventClick(info: EventClickArg) {
 
 .fc-theme-custom .fc-event {
   border: none;
-  border-radius: 0.375rem;
+  border-radius: 0.5rem;
   padding: 2px 6px;
   font-size: 0.75rem;
   cursor: pointer;
+  transition: filter 0.2s ease, transform 0.2s ease;
+}
+.fc-theme-custom .fc-event:hover {
+  filter: brightness(0.92);
+  transform: translateY(-1px);
 }
 
 .fc-theme-custom .fc-daygrid-day-number {

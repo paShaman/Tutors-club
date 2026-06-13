@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Model\Lesson;
+use App\Model\Student;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -17,7 +18,37 @@ final class CalendarController extends Controller
      */
     public function index(): Response
     {
-        return Inertia::render('Calendar');
+        $students = Auth::user()->students()->get()->keyBy('id')->toArray();
+
+        // Remove deleted students
+        $activeStudents = [];
+        foreach ($students as $key => $item) {
+            if (empty($item['is_deleted'])) {
+                $activeStudents[] = $item;
+            }
+        }
+        usort($activeStudents, function ($a, $b) {
+            $aType = empty($a['type']) ? 0 : 1;
+            $bType = empty($b['type']) ? 0 : 1;
+
+            if ($aType !== $bType) {
+                return $aType - $bType;
+            }
+
+            if ($a['name'] == $b['name']) {
+                return 0;
+            }
+
+            return $a['name'] < $b['name'] ? -1 : 1;
+        });
+
+        return Inertia::render('Calendar', [
+            'students'          => $activeStudents,
+            'lessonsSubjects'   => Lesson::LESSON_SUBJECTS,
+            'defaultPrice'      => Lesson::PRICE_DEFAULT,
+            'defaultDuration'   => Lesson::DURATION_DEFAULT,
+            'defaultDate'       => date('Y-m-d'),
+        ]);
     }
 
     /**
@@ -49,6 +80,19 @@ final class CalendarController extends Controller
                 'display' => 'block',
                 'title' => $student['name'],
                 'start' => $dateStart->format($lesson->time ? "Y-m-d\TH:i:s" : "Y-m-d"),
+                'extendedProps' => [
+                    'student_id'       => $lesson->student_id,
+                    'student_name'     => $student['name'],
+                    'subject'          => $lesson->subject,
+                    'theme'            => $lesson->theme,
+                    'price'            => $lesson->price,
+                    'duration'         => $lesson->duration,
+                    'is_payed'         => $lesson->is_payed,
+                    'date'             => $lesson->date,
+                    'date_payed'       => $lesson->date_payed,
+                    'time'             => $lesson->time,
+                    'is_future'        => $lesson->is_future,
+                ],
             ];
 
             if ($lesson->time) {
