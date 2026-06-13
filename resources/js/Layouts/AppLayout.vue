@@ -127,13 +127,14 @@ onUnmounted(() => {
     <aside
       :class="cn(
         'fixed inset-y-0 left-0 z-50 flex flex-col transition-all duration-300',
-        sidebarCompact ? 'w-16' : (sidebarOpen ? 'w-64 translate-x-0' : 'w-64 -translate-x-full'),
-        !sidebarCompact && 'lg:translate-x-0',
+        sidebarOpen
+          ? 'w-64 translate-x-0'
+          : (sidebarCompact ? 'w-16 lg:translate-x-0' : 'w-64 -translate-x-full lg:translate-x-0'),
       )"
     >
       <div class="glass flex h-full flex-col border-r border-white/20 px-3 py-4">
         <!-- Logo -->
-        <div class="flex items-center px-2 mb-8" :class="sidebarCompact ? 'justify-center' : 'justify-between'">
+        <div class="flex items-center px-2 mb-8" :class="(sidebarCompact && !sidebarOpen) ? 'justify-center' : 'justify-between'">
           <Link href="/" class="flex items-center gap-2.5">
             <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary shadow-lg shadow-primary/25">
               <GraduationCap class="h-5 w-5 text-primary-foreground" />
@@ -141,14 +142,14 @@ onUnmounted(() => {
             <span
               :class="cn(
                 'text-lg font-semibold tracking-tight text-foreground whitespace-nowrap transition-opacity duration-200',
-                sidebarCompact ? 'hidden' : 'opacity-100',
+                (sidebarCompact && !sidebarOpen) ? 'hidden' : 'opacity-100',
               )"
             >
               Tutors Club
             </span>
           </Link>
           <button
-            v-if="!sidebarCompact"
+            v-if="sidebarOpen || !sidebarCompact"
             class="rounded-lg p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground lg:hidden cursor-pointer"
             @click="sidebarOpen = false"
           >
@@ -164,7 +165,7 @@ onUnmounted(() => {
             :href="item.href"
             :class="cn(
               'group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200',
-              sidebarCompact && 'justify-center px-2',
+              sidebarCompact && !sidebarOpen && 'justify-center px-2',
               isActive(item.activeRoute)
                 ? 'bg-primary/10 text-primary'
                 : 'text-muted-foreground hover:bg-accent hover:text-foreground cursor-pointer',
@@ -174,14 +175,14 @@ onUnmounted(() => {
             <span
               :class="cn(
                 'whitespace-nowrap transition-opacity duration-200',
-                sidebarCompact ? 'hidden' : 'opacity-100',
+                (sidebarCompact && !sidebarOpen) ? 'hidden' : 'opacity-100',
               )"
             >
               {{ item.label }}
             </span>
             <!-- Tooltip в компактном режиме -->
             <span
-              v-if="sidebarCompact"
+              v-if="sidebarCompact && !sidebarOpen"
               class="pointer-events-none absolute left-full ml-3 z-100 rounded-lg bg-gray-900 px-2.5 py-1.5 text-xs font-medium text-white whitespace-nowrap opacity-0 transition-opacity duration-150 group-hover:opacity-100 shadow-lg"
             >
               {{ item.label }}
@@ -192,7 +193,7 @@ onUnmounted(() => {
         <!-- Changelog button -->
         <div class="mt-auto pt-3 px-2 space-y-1.5">
           <button
-            v-if="!sidebarCompact"
+            v-if="!sidebarCompact || sidebarOpen"
             class="flex items-center gap-2 rounded-xl px-2.5 py-2 text-xs font-medium text-muted-foreground hover:bg-accent hover:text-foreground transition-colors cursor-pointer w-full"
             @click="changelogOpen = true"
           >
@@ -202,7 +203,7 @@ onUnmounted(() => {
           <p
             :class="cn(
               'text-xs text-muted-foreground/60 whitespace-nowrap transition-opacity duration-200',
-              sidebarCompact ? 'opacity-0' : 'opacity-100',
+              (sidebarCompact && !sidebarOpen) ? 'opacity-0' : 'opacity-100',
             )"
           >
             © {{ new Date().getFullYear() }} Tutors Club

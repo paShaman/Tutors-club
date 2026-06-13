@@ -53,7 +53,7 @@ const title = computed(() => props.mode === 'edit' ? 'Редактировать
       <div v-if="show" class="fixed inset-0 z-60 bg-black/40 backdrop-blur-sm" @click="emit('close')" />
     </Transition>
     <Transition name="modal">
-      <div v-if="show" class="fixed inset-0 z-70 flex items-center justify-center p-4 overflow-y-auto">
+      <div v-if="show" class="fixed inset-0 z-70 flex items-center justify-center p-4 overflow-y-auto" @click.self="emit('close')">
         <Card class="relative w-full max-w-md p-6 shadow-xl">
           <h2 class="text-2xl font-semibold text-foreground mb-5">
             {{ title }}
