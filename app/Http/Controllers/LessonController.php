@@ -148,8 +148,8 @@ final class LessonController extends Controller
             'students'          => $activeStudents,
             'selectedStudentId' => $selectedStudentId ? (int) $selectedStudentId : null,
             'lessonsSubjects'   => Lesson::LESSON_SUBJECTS,
-            'defaultPrice'      => Lesson::PRICE_DEFAULT,
-            'defaultDuration'   => Lesson::DURATION_DEFAULT,
+            'defaultPrice'      => config('lesson.default_price'),
+            'defaultDuration'   => config('lesson.default_duration'),
             'defaultDate'       => date('Y-m-d'),
         ]);
     }

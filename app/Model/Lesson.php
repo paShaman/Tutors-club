@@ -14,9 +14,6 @@ class Lesson extends Model
         'lesson_subject_english',
     ];
 
-    const PRICE_DEFAULT = 3000;
-    const DURATION_DEFAULT = 60;
-
     protected $fillable = [
         'student_id', 'subject', 'theme', 'price', 'duration', 'is_payed', 'date', 'date_payed', 'time', 'is_deleted', 'is_future'
     ];

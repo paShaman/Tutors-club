@@ -33,18 +33,15 @@ function subjectName(key: string): string {
   return subjectLabels[key] ?? key
 }
 
-const props = withDefaults(defineProps<{
+const props = defineProps<{
   show: boolean
   mode: 'add' | 'edit'
   students: StudentOption[]
   subjects: string[]
-  defaultPrice?: number
-  defaultDuration?: number
+  defaultPrice: number
+  defaultDuration: number
   initialForm?: LessonFormData | null
-}>(), {
-  defaultPrice: 3000,
-  defaultDuration: 60,
-})
+}>()
 
 const emit = defineEmits<{
   close: []
