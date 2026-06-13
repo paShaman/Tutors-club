@@ -10,8 +10,7 @@ import {
   Plus,
   Pencil,
   Trash2,
-  CheckCircle2,
-  XCircle,
+  Coins,
   Clock,
   ChevronDown,
   ChevronRight,
@@ -501,7 +500,7 @@ function formatDatePayed(dateStr: string | null): string {
                           {{ studentGroup.sum_special.toLocaleString('ru-RU') }} ₽
                         </p>
                         <p v-if="studentGroup.sum_not_payed" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-red-50 text-xs font-semibold text-red-600">
-                          Долг: {{ studentGroup.sum_not_payed.toLocaleString('ru-RU') }} ₽
+                          <span class="hidden sm:inline">Долг: </span>{{ studentGroup.sum_not_payed.toLocaleString('ru-RU') }} ₽
                         </p>
                       </div>
                       <!-- Add lesson button for this student -->
@@ -526,8 +525,8 @@ function formatDatePayed(dateStr: string | null): string {
                             !lesson.is_payed && !lesson.is_future && 'border-red-200/50 bg-red-50/20',
                           )"
                         >
-                          <div class="flex items-start justify-between gap-3">
-                            <div class="flex-1 min-w-0">
+                          <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                            <div class="flex-1 min-w-0 w-full">
                               <div class="flex items-center gap-2 flex-wrap">
                                 <p class="font-medium text-foreground">
                                   {{ formatDate(lesson.date) }}
@@ -570,9 +569,12 @@ function formatDatePayed(dateStr: string | null): string {
                                     lesson.is_payed ? 'text-emerald-600' : 'text-red-500',
                                   )"
                                 >
-                                  <CheckCircle2 v-if="lesson.is_payed" class="h-3.5 w-3.5" />
-                                  <XCircle v-else class="h-3.5 w-3.5" />
-                                  {{ lesson.is_payed ? (lesson.date_payed ? `Оплачен ${formatDatePayed(lesson.date_payed)}` : 'Оплачен') : 'Не оплачен' }}
+                                  <Coins v-if="lesson.is_payed" class="h-3.5 w-3.5" />
+                                  <Coins v-else class="h-3.5 w-3.5 text-red-500" />
+                                  <template v-if="lesson.is_payed">
+                                    <span class="hidden sm:inline">Оплачен </span>{{ lesson.date_payed ? formatDatePayed(lesson.date_payed) : '' }}
+                                  </template>
+                                  <span v-else>Не оплачен</span>
                                 </span>
                                 <span
                                   v-if="lesson.is_future"
@@ -585,16 +587,16 @@ function formatDatePayed(dateStr: string | null): string {
                             </div>
 
                             <!-- Actions -->
-                            <div class="flex items-center gap-1 shrink-0">
+                            <div class="flex items-center gap-1 sm:shrink-0 self-end sm:self-auto">
                               <!-- Pay button -->
                               <button
                                 v-if="!lesson.is_payed"
                                 @click="togglePayLesson(lesson.id)"
-                                class="inline-flex items-center gap-1.5 rounded-lg h-8 px-3 text-xs font-semibold bg-emerald-500 text-white hover:bg-emerald-600 transition-colors cursor-pointer"
+                                class="inline-flex items-center justify-center gap-1.5 rounded-lg h-8 w-8 sm:w-auto sm:px-3 text-xs font-semibold bg-emerald-500 text-white hover:bg-emerald-600 transition-colors cursor-pointer"
                                 title="Оплатить урок"
                               >
-                                <CheckCircle2 class="h-3.5 w-3.5" />
-                                Оплатить
+                                <Coins class="h-3.5 w-3.5" />
+                                <span class="hidden sm:inline">Оплатить</span>
                               </button>
                               <button
                                 @click="openEditModal(lesson)"
