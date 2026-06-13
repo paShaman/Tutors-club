@@ -301,6 +301,6 @@ onUnmounted(() => {
     </div>
 
     <!-- Changelog Modal -->
-    <ChangelogModal v-if="changelogOpen" @close="changelogOpen = false" />
+    <ChangelogModal :show="changelogOpen" @close="changelogOpen = false" />
   </div>
 </template>

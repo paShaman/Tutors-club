@@ -4,18 +4,17 @@ import axios from 'axios'
 import { X, GitFork, Loader2 } from 'lucide-vue-next'
 import Button from '@/components/ui/Button.vue'
 
+defineProps<{
+  show: boolean
+}>()
+
 const emit = defineEmits<{
   (e: 'close'): void
 }>()
 
-interface ChangelogItem {
-  text: string
-  hash: string
-}
-
 interface ChangelogCategory {
   title: string
-  items: ChangelogItem[]
+  items: string[]
 }
 
 const categories = ref<ChangelogCategory[]>([])
@@ -41,15 +40,17 @@ onMounted(loadChangelog)
 
 <template>
   <Teleport to="body">
-    <!-- Overlay -->
-    <div
-      class="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-4"
-      @click.self="emit('close')"
-    >
-      <!-- Modal -->
+    <Transition name="overlay">
       <div
-        class="relative w-full max-w-lg max-h-[80vh] flex flex-col rounded-2xl bg-white shadow-2xl ring-1 ring-black/5 overflow-hidden"
+        v-if="show"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-4"
+        @click.self="emit('close')"
       >
+        <Transition name="modal" @after-leave="emit('close')">
+          <div
+            v-if="show"
+            class="relative w-full max-w-lg max-h-[80vh] flex flex-col rounded-2xl bg-white shadow-2xl ring-1 ring-black/5 overflow-hidden"
+          >
         <!-- Header -->
         <div class="flex items-center justify-between px-5 py-4 border-b border-border/50">
           <div class="flex items-center gap-2.5">
@@ -97,14 +98,11 @@ onMounted(loadChangelog)
               <h4 class="text-sm font-semibold text-foreground mb-2">{{ cat.title }}</h4>
               <ul class="space-y-1.5">
                 <li
-                  v-for="item in cat.items"
-                  :key="item.hash"
-                  class="flex items-start gap-2 text-sm text-foreground/85 leading-snug pl-3 relative before:absolute before:left-0 before:top-[0.6em] before:h-1 before:w-1 before:rounded-full before:bg-primary/60"
+                  v-for="(item, i) in cat.items"
+                  :key="i"
+                  class="text-sm text-foreground/85 leading-snug pl-3 relative before:absolute before:left-0 before:top-[0.6em] before:h-1 before:w-1 before:rounded-full before:bg-primary/60"
                 >
-                  {{ item.text }}
-                  <code class="shrink-0 font-mono text-[10px] bg-muted px-1.5 py-px rounded text-muted-foreground mt-px">
-                    {{ item.hash }}
-                  </code>
+                  {{ item }}
                 </li>
               </ul>
             </div>
@@ -117,7 +115,35 @@ onMounted(loadChangelog)
             Закрыть
           </Button>
         </div>
+          </div>
+        </Transition>
       </div>
-    </div>
+    </Transition>
   </Teleport>
 </template>
+
+<style scoped>
+.overlay-enter-active,
+.overlay-leave-active {
+  transition: opacity 0.2s ease;
+}
+.overlay-enter-from,
+.overlay-leave-to {
+  opacity: 0;
+}
+
+.modal-enter-active {
+  transition: all 0.2s ease;
+}
+.modal-leave-active {
+  transition: all 0.15s ease;
+}
+.modal-enter-from {
+  opacity: 0;
+  transform: scale(0.95) translateY(8px);
+}
+.modal-leave-to {
+  opacity: 0;
+  transform: scale(0.95) translateY(4px);
+}
+</style>
