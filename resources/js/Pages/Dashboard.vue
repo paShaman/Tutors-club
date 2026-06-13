@@ -286,7 +286,7 @@ const barChartOptions = computed(() => ({
                 {{ nextLesson.studentName }}
               </h3>
               <p class="text-sm text-muted-foreground mt-0.5">
-                Класс: {{ nextLesson.studentClass }} · {{ nextLesson.duration }} мин
+                {{ nextLesson.studentClass }} · {{ nextLesson.duration }} мин
               </p>
             </div>
             <span
@@ -341,7 +341,7 @@ const barChartOptions = computed(() => ({
             </div>
             <div class="flex-1 min-w-0">
               <p class="font-medium text-foreground truncate">{{ student.name }}</p>
-              <p class="text-xs text-muted-foreground">Класс: {{ student.studentClass }}</p>
+              <p class="text-xs text-muted-foreground">{{ student.studentClass }}</p>
             </div>
               <Link :href="`/students?edit=${student.id}`" class="inline-flex items-center justify-center rounded-lg h-9 w-9 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors shrink-0">
                 <ChevronRight class="h-4 w-4" />
