@@ -208,10 +208,20 @@ onUnmounted(() => {
     >
       <!-- Top bar -->
       <header class="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-border/50 bg-white/60 backdrop-blur-xl px-4 sm:px-6">
+        <!-- Иконка проекта в шапке (только мобилка, без названия) -->
+        <Link
+          href="/"
+          class="lg:hidden flex items-center shrink-0"
+        >
+          <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary shadow-sm shadow-primary/25">
+            <GraduationCap class="h-4.5 w-4.5 text-primary-foreground" />
+          </div>
+        </Link>
+
         <button
           :class="cn(
             'rounded-lg p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground cursor-pointer',
-            sidebarCompact ? 'hidden' : 'lg:hidden',
+            sidebarCompact ? '' : 'lg:hidden',
           )"
           @click="sidebarOpen = true"
         >

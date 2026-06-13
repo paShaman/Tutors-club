@@ -51,22 +51,22 @@ function handleEventClick(info: EventClickArg) {
 
   <div class="space-y-6 animate-fade-up">
     <!-- Page header -->
-    <div class="flex items-center gap-4">
-      <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10">
-        <CalendarIcon class="h-6 w-6 text-primary" />
+    <div class="flex items-center gap-3 sm:gap-4">
+      <div class="flex h-10 w-10 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10">
+        <CalendarIcon class="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
       </div>
-      <div>
-        <h1 class="text-2xl font-bold tracking-tight text-foreground">
+      <div class="min-w-0">
+        <h1 class="text-lg sm:text-2xl font-bold tracking-tight text-foreground">
           Календарь уроков
         </h1>
-        <p class="text-sm text-muted-foreground mt-0.5">
+        <p class="text-xs sm:text-sm text-muted-foreground mt-0.5">
           Расписание занятий с учениками
         </p>
       </div>
     </div>
 
     <!-- Calendar Card -->
-    <Card class="p-4 md:p-6 overflow-hidden">
+    <Card class="p-2 sm:p-4 md:p-6 overflow-hidden">
       <div v-if="loading" class="flex items-center justify-center py-16 text-muted-foreground text-sm">
         Загрузка календаря...
       </div>
@@ -147,5 +147,89 @@ function handleEventClick(info: EventClickArg) {
   font-size: 0.8125rem;
   font-weight: 500;
   color: hsl(215.4 16.3% 46.9%);
+}
+
+/* --- Mobile: toolbar in two rows --- */
+@media (max-width: 639px) {
+  .fc-theme-custom .fc-toolbar {
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+  }
+
+  .fc-theme-custom .fc-toolbar-title {
+    font-size: 0.9375rem !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .fc-theme-custom .fc-button {
+    padding: 0.375rem 0.625rem !important;
+    font-size: 0.6875rem !important;
+    border-radius: 0.5rem !important;
+  }
+
+  .fc-theme-custom .fc-toolbar-chunk {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    justify-content: center;
+  }
+
+  /* Month view: compact day cells */
+  .fc-theme-custom .fc-daygrid-day-number {
+    padding: 2px 4px !important;
+    font-size: 0.6875rem !important;
+  }
+
+  .fc-theme-custom .fc-daygrid-day-events {
+    margin: 0 1px !important;
+  }
+
+  .fc-theme-custom .fc-daygrid-event {
+    padding: 1px 3px !important;
+    font-size: 0.5625rem !important;
+    line-height: 1.2 !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .fc-theme-custom .fc-daygrid-event-harness {
+    margin-bottom: 1px !important;
+  }
+
+  .fc-theme-custom .fc-more-link {
+    font-size: 0.625rem !important;
+  }
+
+  .fc-theme-custom .fc-daygrid-day-frame {
+    min-height: 0 !important;
+  }
+
+  .fc-theme-custom .fc-daygrid-day-top {
+    flex-direction: row !important;
+  }
+
+  .fc-theme-custom th .fc-scrollgrid-sync-inner {
+    padding: 0.25rem 0.125rem !important;
+    font-size: 0.6875rem !important;
+  }
+
+  .fc-theme-custom .fc-col-header-cell-cushion {
+    font-size: 0.6875rem !important;
+    padding: 2px !important;
+  }
+
+  /* Hide event time on mobile — show names only */
+  .fc-theme-custom .fc-event-time {
+    display: none !important;
+  }
+
+  .fc-theme-custom .fc-event-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 }
 </style>
