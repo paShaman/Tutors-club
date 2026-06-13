@@ -314,7 +314,7 @@ async function deleteStudent(student: any) {
       >
         <div class="fixed inset-0 bg-black/40 backdrop-blur-sm" @click="closeModals" />
         <Card class="relative z-10 w-full max-w-md p-6 shadow-xl">
-          <h2 class="text-lg font-semibold text-foreground mb-5">
+          <h2 class="text-2xl font-semibold text-foreground mb-5">
             {{ showEditModal ? 'Редактировать ученика' : 'Новый ученик' }}
           </h2>
 

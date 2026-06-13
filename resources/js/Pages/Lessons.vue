@@ -636,7 +636,7 @@ function formatDatePayed(dateStr: string | null): string {
       >
         <div class="fixed inset-0 bg-black/40 backdrop-blur-sm" @click="closeModal" />
         <Card class="relative z-10 w-full max-w-lg p-6 shadow-xl">
-          <h2 class="text-lg font-semibold text-foreground mb-5">
+          <h2 class="text-2xl font-semibold text-foreground mb-5">
             {{ modalMode === 'edit' ? 'Редактировать урок' : 'Новый урок' }}
           </h2>
 
