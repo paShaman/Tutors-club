@@ -20,9 +20,17 @@ final class LessonController extends Controller
     public function getLessons(): Response
     {
         $students = Auth::user()->students()->get()->keyBy('id')->toArray();
-        $lessons = Lesson::where('is_deleted', 0)
-            ->whereIn('student_id', array_keys($students))
-            ->orderBy('date', 'desc')->get()->toArray();
+
+        $selectedStudentId = request()->query('student_id');
+
+        $lessonsQuery = Lesson::where('is_deleted', 0)
+            ->whereIn('student_id', array_keys($students));
+
+        if ($selectedStudentId && isset($students[(int) $selectedStudentId])) {
+            $lessonsQuery->where('student_id', (int) $selectedStudentId);
+        }
+
+        $lessons = $lessonsQuery->orderBy('date', 'desc')->get()->toArray();
 
         $sortedLessons = [];
 
@@ -112,6 +120,13 @@ final class LessonController extends Controller
             }
         }
         usort($activeStudents, function ($a, $b) {
+            $aType = empty($a['type']) ? 0 : 1;
+            $bType = empty($b['type']) ? 0 : 1;
+
+            if ($aType !== $bType) {
+                return $aType - $bType;
+            }
+
             if ($a['name'] == $b['name']) {
                 return 0;
             }
@@ -122,6 +137,7 @@ final class LessonController extends Controller
         return Inertia::render('Lessons', [
             'sortedLessons'     => $sortedLessons,
             'students'          => $activeStudents,
+            'selectedStudentId' => $selectedStudentId ? (int) $selectedStudentId : null,
             'lessonsSubjects'   => Lesson::LESSON_SUBJECTS,
             'defaultPrice'      => Lesson::PRICE_DEFAULT,
             'defaultDuration'   => Lesson::DURATION_DEFAULT,

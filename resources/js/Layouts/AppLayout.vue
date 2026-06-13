@@ -178,7 +178,7 @@ onUnmounted(() => {
             <!-- Tooltip в компактном режиме -->
             <span
               v-if="sidebarCompact"
-              class="pointer-events-none absolute left-full ml-3 z-[100] rounded-lg bg-gray-900 px-2.5 py-1.5 text-xs font-medium text-white whitespace-nowrap opacity-0 transition-opacity duration-150 group-hover:opacity-100 shadow-lg"
+              class="pointer-events-none absolute left-full ml-3 z-100 rounded-lg bg-gray-900 px-2.5 py-1.5 text-xs font-medium text-white whitespace-nowrap opacity-0 transition-opacity duration-150 group-hover:opacity-100 shadow-lg"
             >
               {{ item.label }}
             </span>

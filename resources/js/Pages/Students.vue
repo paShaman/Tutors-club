@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, usePage } from '@inertiajs/vue3'
+import { Head, usePage, router } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import Card from '@/components/ui/Card.vue'
 import Button from '@/components/ui/Button.vue'
@@ -60,6 +60,10 @@ const form = ref({
 function openAddModal() {
   form.value = { student_id: null, student_name: '', student_class: '', student_type: '', student_description: '' }
   showAddModal.value = true
+}
+
+function openLessonsForStudent(student: any) {
+  router.get('/lessons', { student_id: student.id })
 }
 
 function openEditModal(student: any) {
@@ -186,9 +190,10 @@ async function deleteStudent(student: any) {
             v-for="student in regularStudents"
             :key="student.id"
             :class="cn(
-              'p-5 transition-all duration-200 hover:shadow-md',
+              'p-5 transition-all duration-200 hover:shadow-md cursor-pointer',
               student.is_deleted && 'opacity-60 grayscale',
             )"
+            @click="openLessonsForStudent(student)"
           >
             <div class="flex items-start justify-between">
               <div class="flex items-center gap-3">
@@ -205,14 +210,14 @@ async function deleteStudent(student: any) {
               <div class="flex items-center gap-1">
                 <button
                   v-if="!student.is_deleted"
-                  @click="openEditModal(student)"
+                  @click.stop="openEditModal(student)"
                   class="inline-flex items-center justify-center rounded-lg h-9 w-9 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors cursor-pointer"
                   title="Редактировать"
                 >
                   <Pencil class="h-4 w-4" />
                 </button>
                 <button
-                  @click="deleteStudent(student)"
+                  @click.stop="deleteStudent(student)"
                   :class="cn(
                     'inline-flex items-center justify-center rounded-lg h-9 w-9 transition-colors',
                     student.is_deleted
@@ -245,9 +250,10 @@ async function deleteStudent(student: any) {
             v-for="student in specialStudents"
             :key="student.id"
             :class="cn(
-              'p-5 transition-all duration-200 hover:shadow-md border-amber-200/50 bg-amber-50/30',
+              'p-5 transition-all duration-200 hover:shadow-md border-amber-200/50 bg-amber-50/30 cursor-pointer',
               student.is_deleted && 'opacity-60 grayscale',
             )"
+            @click="openLessonsForStudent(student)"
           >
             <div class="flex items-start justify-between">
               <div class="flex items-center gap-3">
@@ -267,14 +273,14 @@ async function deleteStudent(student: any) {
               <div class="flex items-center gap-1">
                 <button
                   v-if="!student.is_deleted"
-                  @click="openEditModal(student)"
+                  @click.stop="openEditModal(student)"
                   class="inline-flex items-center justify-center rounded-lg h-9 w-9 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors cursor-pointer"
                   title="Редактировать"
                 >
                   <Pencil class="h-4 w-4" />
                 </button>
                 <button
-                  @click="deleteStudent(student)"
+                  @click.stop="deleteStudent(student)"
                   :class="cn(
                     'inline-flex items-center justify-center rounded-lg h-9 w-9 transition-colors',
                     student.is_deleted

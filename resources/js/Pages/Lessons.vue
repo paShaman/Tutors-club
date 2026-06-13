@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { Head, usePage } from '@inertiajs/vue3'
+import { Head, usePage, router } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import Card from '@/components/ui/Card.vue'
 import Button from '@/components/ui/Button.vue'
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { cn } from '@/lib/utils'
 import {
   BookOpen,
@@ -83,12 +83,27 @@ interface YearGroup {
 const page = usePage<{
   sortedLessons: Record<number, YearGroup>
   students: StudentData[]
+  selectedStudentId: number | null
   lessonsSubjects: string[]
   defaultPrice: number
   defaultDuration: number
   defaultDate: string
   flash: { success: string | null; error: string | null }
 }>()
+
+const selectedStudentId = ref<number | null>(page.props.selectedStudentId ?? null)
+
+watch(selectedStudentId, (newVal) => {
+  const params: Record<string, any> = {}
+  if (newVal) {
+    params.student_id = newVal
+  }
+  router.get('/lessons', params, { preserveState: false, preserveScroll: false })
+})
+
+function clearStudentFilter() {
+  selectedStudentId.value = null
+}
 
 const monthNames = ['', 'Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь']
 
@@ -360,10 +375,30 @@ function formatDatePayed(dateStr: string | null): string {
         </div>
       </div>
 
-      <Button @click="openAddModal">
-        <Plus class="h-4 w-4" />
-        Добавить урок
-      </Button>
+      <div class="flex items-center gap-3">
+        <label class="hidden sm:inline text-sm font-medium text-muted-foreground shrink-0">Фильтр по ученику:</label>
+        <select
+          v-model="selectedStudentId"
+          class="rounded-xl border border-border bg-white/50 px-3.5 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors min-w-[160px] sm:min-w-[200px]"
+        >
+          <option :value="null">Все ученики</option>
+          <option v-for="student in page.props.students" :key="student.id" :value="student.id">
+            {{ student.name }}<span class="hidden sm:inline">{{ student.current_class ? ` (${student.current_class})` : '' }}</span>
+          </option>
+        </select>
+        <button
+          v-if="selectedStudentId"
+          @click="clearStudentFilter"
+          class="hidden sm:inline text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+        >
+          Сбросить
+        </button>
+
+        <Button @click="openAddModal">
+          <Plus class="h-4 w-4" />
+          <span class="hidden sm:inline">Добавить урок</span>
+        </Button>
+      </div>
     </div>
 
     <!-- Flash message -->
