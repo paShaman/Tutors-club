@@ -88,3 +88,54 @@ body {
   opacity: 0;
   transform: scale(0.95) translateY(-4px);
 }
+
+/* --- Collapse animation (height 0 → auto using interpolate-size) --- */
+.collapse-enter-active,
+.collapse-leave-active {
+  transition: height 0.35s ease, opacity 0.3s ease, margin 0.35s ease;
+  overflow: hidden;
+  interpolate-size: allow-keywords;
+}
+
+.collapse-enter-from,
+.collapse-leave-to {
+  height: 0;
+  opacity: 0;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.collapse-enter-to,
+.collapse-leave-from {
+  height: auto;
+  opacity: 1;
+}
+
+/* --- Modal animation --- */
+.modal-enter-active {
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.modal-leave-active {
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.modal-enter-from,
+.modal-leave-to {
+  opacity: 0;
+  transform: scale(0.95) translateY(8px);
+}
+
+/* Overlay backdrop */
+.overlay-enter-active {
+  transition: opacity 0.25s ease;
+}
+
+.overlay-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.overlay-enter-from,
+.overlay-leave-to {
+  opacity: 0;
+}

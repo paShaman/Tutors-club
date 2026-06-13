@@ -391,7 +391,7 @@ function formatDatePayed(dateStr: string | null): string {
         >
           <component
             :is="yearVisibility[yearData.year] ? ChevronDown : ChevronRight"
-            class="h-5 w-5 text-primary shrink-0 mt-0.5 lg:mt-0"
+            class="h-5 w-5 text-primary shrink-0 mt-0.5 lg:mt-0 transition-transform duration-300"
           />
           <div class="flex-1 min-w-0 text-left">
             <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2">
@@ -419,202 +419,208 @@ function formatDatePayed(dateStr: string | null): string {
         </button>
 
         <!-- Months (visible when year expanded) -->
-        <div v-if="yearVisibility[yearData.year]" class="ml-3 mt-2 space-y-3">
-          <div
-            v-for="[monthNum, monthData] in Object.entries(yearData.months).sort((a, b) => Number(b[0]) - Number(a[0]))"
-            :key="monthNum"
-          >
-            <!-- Month header -->
-            <button
-              @click="toggleMonth(yearData.year, Number(monthNum))"
-              class="w-full flex items-start lg:items-center gap-2 rounded-xl bg-white/50 border border-border px-4 py-3 hover:bg-accent transition-colors cursor-pointer"
+        <Transition name="collapse">
+          <div v-if="yearVisibility[yearData.year]" key="year" class="ml-3 mt-2 space-y-3">
+            <div
+              v-for="[monthNum, monthData] in Object.entries(yearData.months).sort((a, b) => Number(b[0]) - Number(a[0]))"
+              :key="monthNum"
             >
-              <component
-                :is="monthVisibility[`${yearData.year}-${monthNum}`] ? ChevronDown : ChevronRight"
-                class="h-4 w-4 text-muted-foreground shrink-0 mt-0.5 lg:mt-0"
-              />
-              <div class="flex-1 min-w-0 text-left">
-                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-1.5">
-                  <div class="text-left">
-                    <h3 class="font-semibold text-foreground">
-                      {{ monthNames[Number(monthNum)] }}
-                    </h3>
-                    <p class="text-xs text-muted-foreground">
-                      {{ (monthData.cnt_all + monthData.cnt_special) }} {{ pluralLessons(monthData.cnt_all + monthData.cnt_special) }}
-                      <span v-if="monthData.cnt_special" class="text-amber-600"> (особых: {{ monthData.cnt_special }})</span>
-                    </p>
-                  </div>
-                  <div class="flex items-center gap-1.5 flex-wrap shrink-0">
-                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700">
-                      {{ (monthData.sum + monthData.sum_special).toLocaleString('ru-RU') }} ₽
-                    </span>
-                    <span v-if="monthData.sum_special" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100 text-xs font-semibold text-amber-800">
-                      <Star class="h-3 w-3 fill-amber-500 text-amber-600" />
-                      {{ monthData.sum_special.toLocaleString('ru-RU') }} ₽
-                    </span>
-                    <span v-if="monthData.sum_not_payed" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-50 text-xs font-semibold text-red-600">
-                      Долг: {{ monthData.sum_not_payed.toLocaleString('ru-RU') }} ₽
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </button>
-
-            <!-- Students (visible when month expanded) -->
-            <div v-if="monthVisibility[`${yearData.year}-${monthNum}`]" class="mt-2 space-y-3">
-              <div v-for="studentGroup in sortedStudents(monthData.students)" :key="studentGroup.student.id">
-                <!-- Student header (collapsible) -->
-                <button
-                  @click="toggleStudent(yearData.year, Number(monthNum), studentGroup.student.id)"
-                  class="ml-3 w-full flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-accent transition-colors cursor-pointer text-left"
-                >
-                  <component
-                    :is="studentVisibility[`${yearData.year}-${monthNum}-${studentGroup.student.id}`] ? ChevronDown : ChevronRight"
-                    class="h-4 w-4 text-muted-foreground shrink-0"
-                  />
-                  <div
-                    :class="cn(
-                      'flex h-8 w-8 items-center justify-center rounded-full text-xs font-semibold text-white shadow shrink-0',
-                      studentGroup.student.type
-                        ? 'bg-gradient-to-br from-amber-500 to-orange-500'
-                        : 'bg-gradient-to-br from-blue-500 to-indigo-500',
-                    )"
-                  >
-                    {{ studentGroup.student.name.charAt(0) }}
-                  </div>
-                  <div class="flex-1 min-w-0">
-                    <p class="text-sm font-medium text-foreground truncate">
-                      {{ studentGroup.student.name }}
-                      <span v-if="studentGroup.student.current_class" class="text-muted-foreground font-normal">
-                        · {{ studentGroup.student.current_class }}
-                      </span>
-                    </p>
-                  </div>
-                  <div class="text-right shrink-0 space-y-1">
-                    <p class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-sm font-bold bg-emerald-100 text-emerald-700">
-                      {{ (studentGroup.sum + studentGroup.sum_special).toLocaleString('ru-RU') }} ₽
-                    </p>
-                    <p v-if="studentGroup.sum_special" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-100 text-xs font-semibold text-amber-700">
-                      <Star class="h-3 w-3" />
-                      {{ studentGroup.sum_special.toLocaleString('ru-RU') }} ₽
-                    </p>
-                    <p v-if="studentGroup.sum_not_payed" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-red-50 text-xs font-semibold text-red-600">
-                      Долг: {{ studentGroup.sum_not_payed.toLocaleString('ru-RU') }} ₽
-                    </p>
-                  </div>
-                  <!-- Add lesson button for this student -->
-                  <button
-                    @click.stop="openAddModalForStudent(studentGroup)"
-                    class="inline-flex items-center justify-center rounded-lg h-8 w-8 text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors cursor-pointer shrink-0"
-                    title="Добавить урок ученику"
-                  >
-                    <Plus class="h-4 w-4" />
-                  </button>
-                </button>
-
-                <!-- Lessons list (visible when student expanded) -->
-                <div v-if="studentVisibility[`${yearData.year}-${monthNum}-${studentGroup.student.id}`]" class="ml-11 space-y-2">
-                  <Card
-                    v-for="lesson in [...studentGroup.lessons].sort((a: Lesson, b: Lesson) => new Date(b.date).getTime() - new Date(a.date).getTime() || (b.time ?? '').localeCompare(a.time ?? ''))"
-                    :key="lesson.id"
-                    :class="cn(
-                      'p-4 transition-all duration-200 hover:shadow-sm',
-                      lesson.is_future && 'border-amber-300/50 bg-amber-50/30',
-                      !lesson.is_payed && !lesson.is_future && 'border-red-200/50 bg-red-50/20',
-                    )"
-                  >
-                    <div class="flex items-start justify-between gap-3">
-                      <div class="flex-1 min-w-0">
-                        <div class="flex items-center gap-2 flex-wrap">
-                          <p class="font-medium text-foreground">
-                            {{ formatDate(lesson.date) }}
-                          </p>
-                          <span
-                            v-if="lesson.time"
-                            class="inline-flex items-center gap-1 text-xs text-muted-foreground"
-                          >
-                            <Clock class="h-3 w-3" />
-                            {{ lesson.time.substring(0, 5) }}
-                          </span>
-                          <span
-                            v-if="lesson.duration"
-                            class="inline-flex items-center gap-1 text-xs text-muted-foreground"
-                          >
-                            <Timer class="h-3 w-3" />
-                            {{ lesson.duration }} мин
-                          </span>
-                        </div>
-                        <p class="text-sm text-muted-foreground mt-0.5">
-                          {{ subjectName(lesson.subject) }}
-                          <span v-if="lesson.theme">· {{ lesson.theme }}</span>
-                        </p>
-                        <div class="flex items-center gap-3 mt-1.5">
-                          <span
-                            :class="cn(
-                              'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-sm font-bold',
-                              lesson.is_payed
-                                ? 'bg-emerald-100 text-emerald-700'
-                                : !lesson.is_future
-                                  ? 'bg-red-50 text-red-600'
-                                  : 'bg-foreground/5 text-foreground',
-                            )"
-                          >
-                            {{ lesson.price.toLocaleString('ru-RU') }} ₽
-                          </span>
-                          <span
-                            :class="cn(
-                              'inline-flex items-center gap-1 text-xs font-medium',
-                              lesson.is_payed ? 'text-emerald-600' : 'text-red-500',
-                            )"
-                          >
-                            <CheckCircle2 v-if="lesson.is_payed" class="h-3.5 w-3.5" />
-                            <XCircle v-else class="h-3.5 w-3.5" />
-                            {{ lesson.is_payed ? (lesson.date_payed ? `Оплачен ${formatDatePayed(lesson.date_payed)}` : 'Оплачен') : 'Не оплачен' }}
-                          </span>
-                          <span
-                            v-if="lesson.is_future"
-                            class="inline-flex items-center gap-1 text-xs font-medium text-amber-600"
-                          >
-                            <Calendar class="h-3.5 w-3.5" />
-                            План
-                          </span>
-                        </div>
-                      </div>
-
-                      <!-- Actions -->
-                      <div class="flex items-center gap-1 shrink-0">
-                        <!-- Pay button -->
-                        <button
-                          v-if="!lesson.is_payed"
-                          @click="togglePayLesson(lesson.id)"
-                          class="inline-flex items-center gap-1.5 rounded-lg h-8 px-3 text-xs font-semibold bg-emerald-500 text-white hover:bg-emerald-600 transition-colors cursor-pointer"
-                          title="Оплатить урок"
-                        >
-                          <CheckCircle2 class="h-3.5 w-3.5" />
-                          Оплатить
-                        </button>
-                        <button
-                          @click="openEditModal(lesson)"
-                          class="inline-flex items-center justify-center rounded-lg h-8 w-8 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors cursor-pointer"
-                          title="Редактировать"
-                        >
-                          <Pencil class="h-4 w-4" />
-                        </button>
-                        <button
-                          @click="deleteLesson(lesson.id)"
-                          class="inline-flex items-center justify-center rounded-lg h-8 w-8 text-muted-foreground hover:bg-red-50 hover:text-red-600 transition-colors cursor-pointer"
-                          title="Удалить"
-                        >
-                          <Trash2 class="h-4 w-4" />
-                        </button>
-                      </div>
+              <!-- Month header -->
+              <button
+                @click="toggleMonth(yearData.year, Number(monthNum))"
+                class="w-full flex items-start lg:items-center gap-2 rounded-xl bg-white/50 border border-border px-4 py-3 hover:bg-accent transition-colors cursor-pointer"
+              >
+                <component
+                  :is="monthVisibility[`${yearData.year}-${monthNum}`] ? ChevronDown : ChevronRight"
+                  class="h-4 w-4 text-muted-foreground shrink-0 mt-0.5 lg:mt-0 transition-transform duration-300"
+                />
+                <div class="flex-1 min-w-0 text-left">
+                  <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-1.5">
+                    <div class="text-left">
+                      <h3 class="font-semibold text-foreground">
+                        {{ monthNames[Number(monthNum)] }}
+                      </h3>
+                      <p class="text-xs text-muted-foreground">
+                        {{ (monthData.cnt_all + monthData.cnt_special) }} {{ pluralLessons(monthData.cnt_all + monthData.cnt_special) }}
+                        <span v-if="monthData.cnt_special" class="text-amber-600"> (особых: {{ monthData.cnt_special }})</span>
+                      </p>
                     </div>
-                  </Card>
+                    <div class="flex items-center gap-1.5 flex-wrap shrink-0">
+                      <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700">
+                        {{ (monthData.sum + monthData.sum_special).toLocaleString('ru-RU') }} ₽
+                      </span>
+                      <span v-if="monthData.sum_special" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100 text-xs font-semibold text-amber-800">
+                        <Star class="h-3 w-3 fill-amber-500 text-amber-600" />
+                        {{ monthData.sum_special.toLocaleString('ru-RU') }} ₽
+                      </span>
+                      <span v-if="monthData.sum_not_payed" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-50 text-xs font-semibold text-red-600">
+                        Долг: {{ monthData.sum_not_payed.toLocaleString('ru-RU') }} ₽
+                      </span>
+                    </div>
+                  </div>
                 </div>
-              </div>
+              </button>
+
+              <!-- Students (visible when month expanded) -->
+              <Transition name="collapse">
+                <div v-if="monthVisibility[`${yearData.year}-${monthNum}`]" key="month" class="mt-2 space-y-3">
+                  <div v-for="studentGroup in sortedStudents(monthData.students)" :key="studentGroup.student.id">
+                    <!-- Student header (collapsible) -->
+                    <button
+                      @click="toggleStudent(yearData.year, Number(monthNum), studentGroup.student.id)"
+                      class="ml-3 w-full flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-accent transition-colors cursor-pointer text-left"
+                    >
+                      <component
+                        :is="studentVisibility[`${yearData.year}-${monthNum}-${studentGroup.student.id}`] ? ChevronDown : ChevronRight"
+                        class="h-4 w-4 text-muted-foreground shrink-0 transition-transform duration-300"
+                      />
+                      <div
+                        :class="cn(
+                          'flex h-8 w-8 items-center justify-center rounded-full text-xs font-semibold text-white shadow shrink-0',
+                          studentGroup.student.type
+                            ? 'bg-gradient-to-br from-amber-500 to-orange-500'
+                            : 'bg-gradient-to-br from-blue-500 to-indigo-500',
+                        )"
+                      >
+                        {{ studentGroup.student.name.charAt(0) }}
+                      </div>
+                      <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium text-foreground truncate">
+                          {{ studentGroup.student.name }}
+                          <span v-if="studentGroup.student.current_class" class="text-muted-foreground font-normal">
+                            · {{ studentGroup.student.current_class }}
+                          </span>
+                        </p>
+                      </div>
+                      <div class="text-right shrink-0 space-y-1">
+                        <p class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-sm font-bold bg-emerald-100 text-emerald-700">
+                          {{ (studentGroup.sum + studentGroup.sum_special).toLocaleString('ru-RU') }} ₽
+                        </p>
+                        <p v-if="studentGroup.sum_special" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-100 text-xs font-semibold text-amber-700">
+                          <Star class="h-3 w-3" />
+                          {{ studentGroup.sum_special.toLocaleString('ru-RU') }} ₽
+                        </p>
+                        <p v-if="studentGroup.sum_not_payed" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-red-50 text-xs font-semibold text-red-600">
+                          Долг: {{ studentGroup.sum_not_payed.toLocaleString('ru-RU') }} ₽
+                        </p>
+                      </div>
+                      <!-- Add lesson button for this student -->
+                      <button
+                        @click.stop="openAddModalForStudent(studentGroup)"
+                        class="inline-flex items-center justify-center rounded-lg h-8 w-8 text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors cursor-pointer shrink-0"
+                        title="Добавить урок ученику"
+                      >
+                        <Plus class="h-4 w-4" />
+                      </button>
+                    </button>
+
+                    <!-- Lessons list (visible when student expanded) -->
+                    <Transition name="collapse">
+                      <div v-if="studentVisibility[`${yearData.year}-${monthNum}-${studentGroup.student.id}`]" key="student" class="ml-11 mt-2 space-y-2">
+                        <Card
+                          v-for="lesson in [...studentGroup.lessons].sort((a: Lesson, b: Lesson) => new Date(b.date).getTime() - new Date(a.date).getTime() || (b.time ?? '').localeCompare(a.time ?? ''))"
+                          :key="lesson.id"
+                          :class="cn(
+                            'p-4 transition-all duration-200 hover:shadow-sm',
+                            lesson.is_future && 'border-amber-300/50 bg-amber-50/30',
+                            !lesson.is_payed && !lesson.is_future && 'border-red-200/50 bg-red-50/20',
+                          )"
+                        >
+                          <div class="flex items-start justify-between gap-3">
+                            <div class="flex-1 min-w-0">
+                              <div class="flex items-center gap-2 flex-wrap">
+                                <p class="font-medium text-foreground">
+                                  {{ formatDate(lesson.date) }}
+                                </p>
+                                <span
+                                  v-if="lesson.time"
+                                  class="inline-flex items-center gap-1 text-xs text-muted-foreground"
+                                >
+                                  <Clock class="h-3 w-3" />
+                                  {{ lesson.time.substring(0, 5) }}
+                                </span>
+                                <span
+                                  v-if="lesson.duration"
+                                  class="inline-flex items-center gap-1 text-xs text-muted-foreground"
+                                >
+                                  <Timer class="h-3 w-3" />
+                                  {{ lesson.duration }} мин
+                                </span>
+                              </div>
+                              <p class="text-sm text-muted-foreground mt-0.5">
+                                {{ subjectName(lesson.subject) }}
+                                <span v-if="lesson.theme">· {{ lesson.theme }}</span>
+                              </p>
+                              <div class="flex items-center gap-3 mt-1.5">
+                                <span
+                                  :class="cn(
+                                    'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-sm font-bold',
+                                    lesson.is_payed
+                                      ? 'bg-emerald-100 text-emerald-700'
+                                      : !lesson.is_future
+                                        ? 'bg-red-50 text-red-600'
+                                        : 'bg-foreground/5 text-foreground',
+                                  )"
+                                >
+                                  {{ lesson.price.toLocaleString('ru-RU') }} ₽
+                                </span>
+                                <span
+                                  :class="cn(
+                                    'inline-flex items-center gap-1 text-xs font-medium',
+                                    lesson.is_payed ? 'text-emerald-600' : 'text-red-500',
+                                  )"
+                                >
+                                  <CheckCircle2 v-if="lesson.is_payed" class="h-3.5 w-3.5" />
+                                  <XCircle v-else class="h-3.5 w-3.5" />
+                                  {{ lesson.is_payed ? (lesson.date_payed ? `Оплачен ${formatDatePayed(lesson.date_payed)}` : 'Оплачен') : 'Не оплачен' }}
+                                </span>
+                                <span
+                                  v-if="lesson.is_future"
+                                  class="inline-flex items-center gap-1 text-xs font-medium text-amber-600"
+                                >
+                                  <Calendar class="h-3.5 w-3.5" />
+                                  План
+                                </span>
+                              </div>
+                            </div>
+
+                            <!-- Actions -->
+                            <div class="flex items-center gap-1 shrink-0">
+                              <!-- Pay button -->
+                              <button
+                                v-if="!lesson.is_payed"
+                                @click="togglePayLesson(lesson.id)"
+                                class="inline-flex items-center gap-1.5 rounded-lg h-8 px-3 text-xs font-semibold bg-emerald-500 text-white hover:bg-emerald-600 transition-colors cursor-pointer"
+                                title="Оплатить урок"
+                              >
+                                <CheckCircle2 class="h-3.5 w-3.5" />
+                                Оплатить
+                              </button>
+                              <button
+                                @click="openEditModal(lesson)"
+                                class="inline-flex items-center justify-center rounded-lg h-8 w-8 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors cursor-pointer"
+                                title="Редактировать"
+                              >
+                                <Pencil class="h-4 w-4" />
+                              </button>
+                              <button
+                                @click="deleteLesson(lesson.id)"
+                                class="inline-flex items-center justify-center rounded-lg h-8 w-8 text-muted-foreground hover:bg-red-50 hover:text-red-600 transition-colors cursor-pointer"
+                                title="Удалить"
+                              >
+                                <Trash2 class="h-4 w-4" />
+                              </button>
+                            </div>
+                          </div>
+                        </Card>
+                      </div>
+                    </Transition>
+                  </div>
+                </div>
+              </Transition>
             </div>
           </div>
-        </div>
+        </Transition>
       </div>
     </div>
 
@@ -630,142 +636,143 @@ function formatDatePayed(dateStr: string | null): string {
 
     <!-- Add/Edit Modal Overlay -->
     <Teleport to="body">
-      <div
-        v-if="showModal"
-        class="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto"
-      >
-        <div class="fixed inset-0 bg-black/40 backdrop-blur-sm" @click="closeModal" />
-        <Card class="relative z-10 w-full max-w-lg p-6 shadow-xl">
-          <h2 class="text-2xl font-semibold text-foreground mb-5">
-            {{ modalMode === 'edit' ? 'Редактировать урок' : 'Новый урок' }}
-          </h2>
+      <div v-if="showModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto">
+        <Transition name="overlay">
+          <div v-if="showModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm" @click="closeModal" />
+        </Transition>
+        <Transition name="modal">
+          <Card v-if="showModal" class="relative z-10 w-full max-w-lg p-6 shadow-xl">
+            <h2 class="text-2xl font-semibold text-foreground mb-5">
+              {{ modalMode === 'edit' ? 'Редактировать урок' : 'Новый урок' }}
+            </h2>
 
-          <form @submit.prevent="submitLesson" class="space-y-4">
-            <!-- Student -->
-            <div>
-              <label class="block text-sm font-medium text-foreground mb-1.5">Ученик *</label>
-              <select
-                v-model="form.lesson_student_id"
-                required
-                class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
-              >
-                <option value="" disabled>Выберите ученика</option>
-                <option v-for="student in page.props.students" :key="student.id" :value="student.id">
-                  {{ student.name }}{{ student.current_class ? ` ${student.current_class}` : '' }}
-                </option>
-              </select>
-            </div>
-
-            <!-- Subject -->
-            <div>
-              <label class="block text-sm font-medium text-foreground mb-1.5">Предмет *</label>
-              <select
-                v-model="form.lesson_subject"
-                required
-                class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
-              >
-                <option value="" disabled>Выберите предмет</option>
-                <option v-for="subj in page.props.lessonsSubjects" :key="subj" :value="subj">
-                  {{ subjectName(subj) }}
-                </option>
-              </select>
-            </div>
-
-            <!-- Theme -->
-            <div>
-              <label class="block text-sm font-medium text-foreground mb-1.5">Тема</label>
-              <input
-                v-model="form.lesson_theme"
-                class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
-                placeholder="Тема урока"
-              />
-            </div>
-
-            <!-- Date & Time row -->
-            <div class="grid grid-cols-2 gap-4">
+            <form @submit.prevent="submitLesson" class="space-y-4">
+              <!-- Student -->
               <div>
-                <label class="block text-sm font-medium text-foreground mb-1.5">Дата *</label>
-                <input
-                  v-model="form.lesson_date"
-                  type="date"
+                <label class="block text-sm font-medium text-foreground mb-1.5">Ученик *</label>
+                <select
+                  v-model="form.lesson_student_id"
                   required
                   class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+                >
+                  <option value="" disabled>Выберите ученика</option>
+                  <option v-for="student in page.props.students" :key="student.id" :value="student.id">
+                    {{ student.name }}{{ student.current_class ? ` ${student.current_class}` : '' }}
+                  </option>
+                </select>
+              </div>
+
+              <!-- Subject -->
+              <div>
+                <label class="block text-sm font-medium text-foreground mb-1.5">Предмет *</label>
+                <select
+                  v-model="form.lesson_subject"
+                  required
+                  class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+                >
+                  <option value="" disabled>Выберите предмет</option>
+                  <option v-for="subj in page.props.lessonsSubjects" :key="subj" :value="subj">
+                    {{ subjectName(subj) }}
+                  </option>
+                </select>
+              </div>
+
+              <!-- Theme -->
+              <div>
+                <label class="block text-sm font-medium text-foreground mb-1.5">Тема</label>
+                <input
+                  v-model="form.lesson_theme"
+                  class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+                  placeholder="Тема урока"
                 />
               </div>
-              <div>
-                <label class="block text-sm font-medium text-foreground mb-1.5">Время</label>
+
+              <!-- Date & Time row -->
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-foreground mb-1.5">Дата *</label>
+                  <input
+                    v-model="form.lesson_date"
+                    type="date"
+                    required
+                    class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+                  />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-foreground mb-1.5">Время</label>
+                  <input
+                    v-model="form.lesson_time"
+                    type="time"
+                    class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+                  />
+                </div>
+              </div>
+
+              <!-- Price & Duration row -->
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-foreground mb-1.5">Цена (₽)</label>
+                  <input
+                    v-model.number="form.lesson_price"
+                    type="number"
+                    min="0"
+                    class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+                  />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-foreground mb-1.5">Длительность (мин)</label>
+                  <input
+                    v-model.number="form.lesson_duration"
+                    type="number"
+                    min="0"
+                    step="5"
+                    class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+                  />
+                </div>
+              </div>
+
+              <!-- Toggles -->
+              <div class="flex items-center gap-6">
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input
+                    v-model="form.lesson_is_payed"
+                    type="checkbox"
+                    class="rounded border-border text-primary focus:ring-primary/30"
+                  />
+                  <span class="text-sm text-foreground">Оплачен</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input
+                    v-model="form.lesson_is_future"
+                    type="checkbox"
+                    class="rounded border-border text-primary focus:ring-primary/30"
+                  />
+                  <span class="text-sm text-foreground">План</span>
+                </label>
+              </div>
+
+              <!-- Date payed (when is_payed checked) -->
+              <div v-if="form.lesson_is_payed">
+                <label class="block text-sm font-medium text-foreground mb-1.5">Дата оплаты</label>
                 <input
-                  v-model="form.lesson_time"
-                  type="time"
+                  v-model="form.lesson_date_payed"
+                  type="date"
                   class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
                 />
               </div>
-            </div>
 
-            <!-- Price & Duration row -->
-            <div class="grid grid-cols-2 gap-4">
-              <div>
-                <label class="block text-sm font-medium text-foreground mb-1.5">Цена (₽)</label>
-                <input
-                  v-model.number="form.lesson_price"
-                  type="number"
-                  min="0"
-                  class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
-                />
+              <!-- Actions -->
+              <div class="flex items-center gap-3 pt-2">
+                <Button type="submit" class="flex-1">
+                  {{ modalMode === 'edit' ? 'Сохранить' : 'Добавить' }}
+                </Button>
+                <Button type="button" variant="outline" class="flex-1" @click="closeModal">
+                  Отмена
+                </Button>
               </div>
-              <div>
-                <label class="block text-sm font-medium text-foreground mb-1.5">Длительность (мин)</label>
-                <input
-                  v-model.number="form.lesson_duration"
-                  type="number"
-                  min="0"
-                  step="5"
-                  class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
-                />
-              </div>
-            </div>
-
-            <!-- Toggles -->
-            <div class="flex items-center gap-6">
-              <label class="flex items-center gap-2 cursor-pointer">
-                <input
-                  v-model="form.lesson_is_payed"
-                  type="checkbox"
-                  class="rounded border-border text-primary focus:ring-primary/30"
-                />
-                <span class="text-sm text-foreground">Оплачен</span>
-              </label>
-              <label class="flex items-center gap-2 cursor-pointer">
-                <input
-                  v-model="form.lesson_is_future"
-                  type="checkbox"
-                  class="rounded border-border text-primary focus:ring-primary/30"
-                />
-                <span class="text-sm text-foreground">План</span>
-              </label>
-            </div>
-
-            <!-- Date payed (when is_payed checked) -->
-            <div v-if="form.lesson_is_payed">
-              <label class="block text-sm font-medium text-foreground mb-1.5">Дата оплаты</label>
-              <input
-                v-model="form.lesson_date_payed"
-                type="date"
-                class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
-              />
-            </div>
-
-            <!-- Actions -->
-            <div class="flex items-center gap-3 pt-2">
-              <Button type="submit" class="flex-1">
-                {{ modalMode === 'edit' ? 'Сохранить' : 'Добавить' }}
-              </Button>
-              <Button type="button" variant="outline" class="flex-1" @click="closeModal">
-                Отмена
-              </Button>
-            </div>
-          </form>
-        </Card>
+            </form>
+          </Card>
+        </Transition>
       </div>
     </Teleport>
   </div>
