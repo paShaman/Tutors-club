@@ -270,7 +270,7 @@ function openEditModal(lesson: Lesson) {
     lesson_duration: lesson.duration,
     lesson_date: lesson.date,
     lesson_time: lesson.time ?? '',
-    lesson_date_payed: lesson.date_payed ?? '',
+    lesson_date_payed: lesson.date_payed ? lesson.date_payed.substring(0, 10) : '',
     lesson_is_payed: !!lesson.is_payed,
     lesson_is_future: !!lesson.is_future,
   }

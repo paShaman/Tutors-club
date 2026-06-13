@@ -32,11 +32,10 @@ final class LessonController extends Controller
 
         $lessons = $lessonsQuery->orderBy('date', 'desc')->get()->toArray();
 
-        // Format dates for frontend (HTML date inputs require Y-m-d)
         foreach ($lessons as &$lesson) {
             $lesson['date'] = \Carbon\Carbon::parse($lesson['date'])->format('Y-m-d');
             $lesson['date_payed'] = $lesson['date_payed']
-                ? \Carbon\Carbon::parse($lesson['date_payed'])->format('Y-m-d')
+                ? \Carbon\Carbon::parse($lesson['date_payed'])->format('Y-m-d H:i')
                 : null;
         }
         unset($lesson);
