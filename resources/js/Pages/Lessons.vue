@@ -208,7 +208,25 @@ function closeAlert() {
 
 function openAddModal() {
   lessonPopupMode.value = 'add'
-  lessonPopupInitial.value = null
+
+  const now = new Date()
+  const todayStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0')
+  const previousHour = (now.getHours() - 1 + 24) % 24
+  const roundedHour = String(previousHour).padStart(2, '0') + ':00'
+
+  lessonPopupInitial.value = {
+    lesson_id: null,
+    lesson_student_id: '',
+    lesson_subject: '',
+    lesson_theme: '',
+    lesson_price: page.props.defaultPrice ?? 3000,
+    lesson_duration: page.props.defaultDuration ?? 60,
+    lesson_date: todayStr,
+    lesson_time: roundedHour,
+    lesson_date_payed: '',
+    lesson_is_payed: false,
+    lesson_is_future: false,
+  }
   showLessonPopup.value = true
 }
 
@@ -222,7 +240,8 @@ function openAddModalForStudent(studentGroup: StudentGroup) {
 
   const now = new Date()
   const todayStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0')
-  const roundedHour = String(now.getHours()).padStart(2, '0') + ':00'
+  const previousHour = (now.getHours() - 1 + 24) % 24
+  const roundedHour = String(previousHour).padStart(2, '0') + ':00'
 
   lessonPopupInitial.value = {
     lesson_id: null,
