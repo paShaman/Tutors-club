@@ -40,6 +40,8 @@ const showAddModal = ref(false)
 const showEditModal = ref(false)
 const editingStudent = ref<any>(null)
 
+const showModal = computed(() => showAddModal.value || showEditModal.value)
+
 const filteredStudents = computed(() => {
   return students.value.filter((s: any) => showDeleted.value ? !!s.is_deleted : !s.is_deleted)
 })
@@ -308,12 +310,12 @@ async function deleteStudent(student: any) {
 
     <!-- Add/Edit Modal Overlay -->
     <Teleport to="body">
-      <div
-        v-if="showAddModal || showEditModal"
-        class="fixed inset-0 z-50 flex items-center justify-center p-4"
-      >
-        <div class="fixed inset-0 bg-black/40 backdrop-blur-sm" @click="closeModals" />
-        <Card class="relative z-10 w-full max-w-md p-6 shadow-xl">
+      <Transition name="overlay">
+        <div v-if="showModal" class="fixed inset-0 z-60 bg-black/40 backdrop-blur-sm" @click="closeModals" />
+      </Transition>
+      <Transition name="modal">
+        <div v-if="showModal" class="fixed inset-0 z-70 flex items-center justify-center p-4 overflow-y-auto">
+          <Card class="relative w-full max-w-md p-6 shadow-xl">
           <h2 class="text-2xl font-semibold text-foreground mb-5">
             {{ showEditModal ? 'Редактировать ученика' : 'Новый ученик' }}
           </h2>
@@ -367,7 +369,8 @@ async function deleteStudent(student: any) {
             </div>
           </form>
         </Card>
-      </div>
+        </div>
+      </Transition>
     </Teleport>
   </div>
 </template>

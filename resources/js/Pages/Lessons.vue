@@ -636,12 +636,12 @@ function formatDatePayed(dateStr: string | null): string {
 
     <!-- Add/Edit Modal Overlay -->
     <Teleport to="body">
-      <div v-if="showModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto">
-        <Transition name="overlay">
-          <div v-if="showModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm" @click="closeModal" />
-        </Transition>
-        <Transition name="modal">
-          <Card v-if="showModal" class="relative z-10 w-full max-w-lg p-6 shadow-xl">
+      <Transition name="overlay">
+        <div v-if="showModal" class="fixed inset-0 z-60 bg-black/40 backdrop-blur-sm" @click="closeModal" />
+      </Transition>
+      <Transition name="modal">
+        <div v-if="showModal" class="fixed inset-0 z-70 flex items-center justify-center p-4 overflow-y-auto">
+          <Card class="relative w-full max-w-lg p-6 shadow-xl">
             <h2 class="text-2xl font-semibold text-foreground mb-5">
               {{ modalMode === 'edit' ? 'Редактировать урок' : 'Новый урок' }}
             </h2>
@@ -772,8 +772,8 @@ function formatDatePayed(dateStr: string | null): string {
               </div>
             </form>
           </Card>
-        </Transition>
-      </div>
+        </div>
+      </Transition>
     </Teleport>
   </div>
 </template>
