@@ -14,11 +14,13 @@ import {
   Clock,
   ChevronDown,
   ChevronRight,
-  GraduationCap,
-  Calendar,
   Timer,
   Star,
 } from 'lucide-vue-next'
+import LessonFormPopup from '@/components/popups/LessonFormPopup.vue'
+import type { LessonFormData } from '@/components/popups/LessonFormPopup.vue'
+import ConfirmDialog from '@/components/popups/ConfirmDialog.vue'
+import AlertPopup from '@/components/popups/AlertPopup.vue'
 
 defineOptions({ layout: AppLayout })
 
@@ -160,59 +162,69 @@ function toggleStudent(year: number, month: number, studentId: number) {
   studentVisibility.value[key] = !studentVisibility.value[key]
 }
 
-// Modal state
-const showModal = ref(false)
-const modalMode = ref<'add' | 'edit'>('add')
-const editingLesson = ref<Lesson | null>(null)
+// Popup state
+const showLessonPopup = ref(false)
+const lessonPopupMode = ref<'add' | 'edit'>('add')
+const lessonPopupInitial = ref<LessonFormData | null>(null)
 
-const form = ref({
-  lesson_id: null as number | null,
-  lesson_student_id: '' as string,
-  lesson_subject: '',
-  lesson_theme: '',
-  lesson_price: page.props.defaultPrice ?? 3000,
-  lesson_duration: page.props.defaultDuration ?? 60,
-  lesson_date: page.props.defaultDate ?? '',
-  lesson_time: '',
-  lesson_date_payed: '',
-  lesson_is_payed: false,
-  lesson_is_future: false,
-})
+// Confirm dialog state
+const showConfirm = ref(false)
+const confirmMessage = ref('')
+const confirmVariant = ref<'danger' | 'default'>('danger')
+let confirmCallback: (() => void) | null = null
+
+function openConfirm(message: string, variant: 'danger' | 'default', callback: () => void) {
+  confirmMessage.value = message
+  confirmVariant.value = variant
+  confirmCallback = callback
+  showConfirm.value = true
+}
+
+function onConfirm() {
+  showConfirm.value = false
+  if (confirmCallback) confirmCallback()
+  confirmCallback = null
+}
+
+function onCancel() {
+  showConfirm.value = false
+  confirmCallback = null
+}
+
+// Alert popup state
+const showAlert = ref(false)
+const alertMessage = ref('')
+const alertVariant = ref<'success' | 'error' | 'warning' | 'info'>('info')
+
+function openAlert(message: string, variant: 'success' | 'error' | 'warning' | 'info' = 'info') {
+  alertMessage.value = message
+  alertVariant.value = variant
+  showAlert.value = true
+}
+
+function closeAlert() {
+  showAlert.value = false
+}
 
 function openAddModal() {
-  modalMode.value = 'add'
-  form.value = {
-    lesson_id: null,
-    lesson_student_id: '',
-    lesson_subject: '',
-    lesson_theme: '',
-    lesson_price: page.props.defaultPrice ?? 3000,
-    lesson_duration: page.props.defaultDuration ?? 60,
-    lesson_date: page.props.defaultDate ?? '',
-    lesson_time: '',
-    lesson_date_payed: '',
-    lesson_is_payed: false,
-    lesson_is_future: false,
-  }
-  editingLesson.value = null
-  showModal.value = true
+  lessonPopupMode.value = 'add'
+  lessonPopupInitial.value = null
+  showLessonPopup.value = true
 }
 
 function openAddModalForStudent(studentGroup: StudentGroup) {
-  modalMode.value = 'add'
+  lessonPopupMode.value = 'add'
 
-  // Find the most recent lesson for this student to pre-fill data
   const sortedLessons = [...studentGroup.lessons].sort(
     (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime() || (b.time ?? '').localeCompare(a.time ?? '')
   )
   const lastLesson = sortedLessons[0] ?? null
 
-  // Current date and rounded hour for the new lesson
   const now = new Date()
   const todayStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0')
   const roundedHour = String(now.getHours()).padStart(2, '0') + ':00'
 
-  form.value = {
+  lessonPopupInitial.value = {
     lesson_id: null,
     lesson_student_id: String(studentGroup.student.id),
     lesson_subject: lastLesson?.subject ?? '',
@@ -225,13 +237,12 @@ function openAddModalForStudent(studentGroup: StudentGroup) {
     lesson_is_payed: false,
     lesson_is_future: false,
   }
-  editingLesson.value = null
-  showModal.value = true
+  showLessonPopup.value = true
 }
 
 function openEditModal(lesson: Lesson) {
-  modalMode.value = 'edit'
-  form.value = {
+  lessonPopupMode.value = 'edit'
+  lessonPopupInitial.value = {
     lesson_id: lesson.id,
     lesson_student_id: String(lesson.student_id),
     lesson_subject: lesson.subject,
@@ -244,54 +255,57 @@ function openEditModal(lesson: Lesson) {
     lesson_is_payed: !!lesson.is_payed,
     lesson_is_future: !!lesson.is_future,
   }
-  editingLesson.value = lesson
-  showModal.value = true
+  showLessonPopup.value = true
 }
 
-function closeModal() {
-  showModal.value = false
-  editingLesson.value = null
+function closeLessonPopup() {
+  showLessonPopup.value = false
 }
 
-async function submitLesson() {
+async function handleLessonSubmit(form: LessonFormData) {
   try {
     const response = await fetch('/lessons/edit', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-      body: JSON.stringify(form.value),
+      body: JSON.stringify(form),
     })
     const data = await response.json()
 
     if (data.success) {
-      closeModal()
+      closeLessonPopup()
       window.location.reload()
     } else {
-      alert(typeof data.data === 'string' ? data.data : Object.values(data.data).join('\n'))
+      openAlert(typeof data.data === 'string' ? data.data : Object.values(data.data).join('\n'), 'error')
     }
   } catch (e) {
-    alert('Ошибка сети')
+    openAlert('Ошибка сети', 'error')
   }
 }
 
-async function deleteLesson(lessonId: number) {
-  if (!confirm('Удалить урок?')) return
+async function handleLessonDelete() {
+  if (!lessonPopupInitial.value?.lesson_id) return
+  await deleteLesson(lessonPopupInitial.value.lesson_id)
+}
 
-  try {
-    const response = await fetch('/lessons/delete', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-      body: JSON.stringify({ lesson_id: lessonId }),
-    })
-    const data = await response.json()
+function deleteLesson(lessonId: number) {
+  openConfirm('Удалить урок?', 'danger', async () => {
+    try {
+      const response = await fetch('/lessons/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+        body: JSON.stringify({ lesson_id: lessonId }),
+      })
+      const data = await response.json()
 
-    if (data.success) {
-      window.location.reload()
-    } else {
-      alert(typeof data.data === 'string' ? data.data : Object.values(data.data).join('\n'))
+      if (data.success) {
+        window.location.reload()
+      } else {
+        openAlert(typeof data.data === 'string' ? data.data : Object.values(data.data).join('\n'), 'error')
+      }
+    } catch (e) {
+      openAlert('Ошибка сети', 'error')
     }
-  } catch (e) {
-    alert('Ошибка сети')
-  }
+  })
 }
 
 async function togglePayLesson(lessonId: number) {
@@ -306,10 +320,10 @@ async function togglePayLesson(lessonId: number) {
     if (data.success) {
       window.location.reload()
     } else {
-      alert(typeof data.data === 'string' ? data.data : Object.values(data.data).join('\n'))
+      openAlert(typeof data.data === 'string' ? data.data : Object.values(data.data).join('\n'), 'error')
     }
   } catch (e) {
-    alert('Ошибка сети')
+    openAlert('Ошибка сети', 'error')
   }
 }
 
@@ -671,146 +685,36 @@ function formatDatePayed(dateStr: string | null): string {
       </Button>
     </Card>
 
-    <!-- Add/Edit Modal Overlay -->
-    <Teleport to="body">
-      <Transition name="overlay">
-        <div v-if="showModal" class="fixed inset-0 z-60 bg-black/40 backdrop-blur-sm" @click="closeModal" />
-      </Transition>
-      <Transition name="modal">
-        <div v-if="showModal" class="fixed inset-0 z-70 flex items-center justify-center p-4 overflow-y-auto">
-          <Card class="relative w-full max-w-lg p-6 shadow-xl">
-            <h2 class="text-2xl font-semibold text-foreground mb-5">
-              {{ modalMode === 'edit' ? 'Редактировать урок' : 'Новый урок' }}
-            </h2>
+    <!-- Lesson Form Popup -->
+    <LessonFormPopup
+      :show="showLessonPopup"
+      :mode="lessonPopupMode"
+      :students="page.props.students.map(s => ({ id: s.id, name: s.name, current_class: s.current_class }))"
+      :subjects="page.props.lessonsSubjects"
+      :defaultPrice="page.props.defaultPrice"
+      :defaultDuration="page.props.defaultDuration"
+      :initialForm="lessonPopupInitial"
+      @close="closeLessonPopup"
+      @submit="handleLessonSubmit"
+      @delete="handleLessonDelete"
+    />
 
-            <form @submit.prevent="submitLesson" class="space-y-4">
-              <!-- Student -->
-              <div>
-                <label class="block text-sm font-medium text-foreground mb-1.5">Ученик *</label>
-                <select
-                  v-model="form.lesson_student_id"
-                  required
-                  class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
-                >
-                  <option value="" disabled>Выберите ученика</option>
-                  <option v-for="student in page.props.students" :key="student.id" :value="student.id">
-                    {{ student.name }}{{ student.current_class ? ` ${student.current_class}` : '' }}
-                  </option>
-                </select>
-              </div>
+    <!-- Confirm Dialog -->
+    <ConfirmDialog
+      :show="showConfirm"
+      :title="confirmMessage"
+      :variant="confirmVariant"
+      :confirmText="confirmVariant === 'danger' ? 'Удалить' : 'Подтвердить'"
+      @confirm="onConfirm"
+      @cancel="onCancel"
+    />
 
-              <!-- Subject -->
-              <div>
-                <label class="block text-sm font-medium text-foreground mb-1.5">Предмет *</label>
-                <select
-                  v-model="form.lesson_subject"
-                  required
-                  class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
-                >
-                  <option value="" disabled>Выберите предмет</option>
-                  <option v-for="subj in page.props.lessonsSubjects" :key="subj" :value="subj">
-                    {{ subjectName(subj) }}
-                  </option>
-                </select>
-              </div>
-
-              <!-- Theme -->
-              <div>
-                <label class="block text-sm font-medium text-foreground mb-1.5">Тема</label>
-                <input
-                  v-model="form.lesson_theme"
-                  class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
-                  placeholder="Тема урока"
-                />
-              </div>
-
-              <!-- Date & Time row -->
-              <div class="grid grid-cols-2 gap-4">
-                <div>
-                  <label class="block text-sm font-medium text-foreground mb-1.5">Дата *</label>
-                  <input
-                    v-model="form.lesson_date"
-                    type="date"
-                    required
-                    class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
-                  />
-                </div>
-                <div>
-                  <label class="block text-sm font-medium text-foreground mb-1.5">Время</label>
-                  <input
-                    v-model="form.lesson_time"
-                    type="time"
-                    class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
-                  />
-                </div>
-              </div>
-
-              <!-- Price & Duration row -->
-              <div class="grid grid-cols-2 gap-4">
-                <div>
-                  <label class="block text-sm font-medium text-foreground mb-1.5">Цена (₽)</label>
-                  <input
-                    v-model.number="form.lesson_price"
-                    type="number"
-                    min="0"
-                    class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
-                  />
-                </div>
-                <div>
-                  <label class="block text-sm font-medium text-foreground mb-1.5">Длительность (мин)</label>
-                  <input
-                    v-model.number="form.lesson_duration"
-                    type="number"
-                    min="0"
-                    step="5"
-                    class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
-                  />
-                </div>
-              </div>
-
-              <!-- Toggles -->
-              <div class="flex items-center gap-6">
-                <label class="flex items-center gap-2 cursor-pointer">
-                  <input
-                    v-model="form.lesson_is_payed"
-                    type="checkbox"
-                    class="rounded border-border text-primary focus:ring-primary/30"
-                  />
-                  <span class="text-sm text-foreground">Оплачен</span>
-                </label>
-                <label class="flex items-center gap-2 cursor-pointer">
-                  <input
-                    v-model="form.lesson_is_future"
-                    type="checkbox"
-                    class="rounded border-border text-primary focus:ring-primary/30"
-                  />
-                  <span class="text-sm text-foreground">План</span>
-                </label>
-              </div>
-
-              <!-- Date payed (when is_payed checked) -->
-              <div v-if="form.lesson_is_payed">
-                <label class="block text-sm font-medium text-foreground mb-1.5">Дата оплаты</label>
-                <input
-                  v-model="form.lesson_date_payed"
-                  type="date"
-                  class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
-                />
-              </div>
-
-              <!-- Actions -->
-              <div class="flex items-center gap-3 pt-2">
-                <Button type="submit" class="flex-1">
-                  {{ modalMode === 'edit' ? 'Сохранить' : 'Добавить' }}
-                </Button>
-                <Button type="button" variant="outline" class="flex-1" @click="closeModal">
-                  Отмена
-                </Button>
-              </div>
-            </form>
-          </Card>
-        </div>
-      </Transition>
-    </Teleport>
+    <!-- Alert Popup -->
+    <AlertPopup
+      :show="showAlert"
+      :message="alertMessage"
+      :variant="alertVariant"
+      @close="closeAlert"
+    />
   </div>
 </template>

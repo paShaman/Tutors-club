@@ -5,6 +5,10 @@ import Card from '@/components/ui/Card.vue'
 import Button from '@/components/ui/Button.vue'
 import { ref, computed } from 'vue'
 import { cn } from '@/lib/utils'
+import StudentFormPopup from '@/components/popups/StudentFormPopup.vue'
+import type { StudentFormData } from '@/components/popups/StudentFormPopup.vue'
+import ConfirmDialog from '@/components/popups/ConfirmDialog.vue'
+import AlertPopup from '@/components/popups/AlertPopup.vue'
 import {
   UserPlus,
   GraduationCap,
@@ -49,16 +53,49 @@ const filteredStudents = computed(() => {
 const specialStudents = computed(() => filteredStudents.value.filter((s: any) => !!s.type))
 const regularStudents = computed(() => filteredStudents.value.filter((s: any) => !s.type))
 
-const form = ref({
-  student_id: null as number | null,
-  student_name: '',
-  student_class: '',
-  student_type: '',
-  student_description: '',
-})
+const initialForm = ref<StudentFormData | null>(null)
+
+// Confirm dialog state
+const showConfirm = ref(false)
+const confirmMessage = ref('')
+const confirmVariant = ref<'danger' | 'default'>('danger')
+let confirmCallback: (() => void) | null = null
+
+function openConfirm(message: string, variant: 'danger' | 'default', callback: () => void) {
+  confirmMessage.value = message
+  confirmVariant.value = variant
+  confirmCallback = callback
+  showConfirm.value = true
+}
+
+function onConfirm() {
+  showConfirm.value = false
+  if (confirmCallback) confirmCallback()
+  confirmCallback = null
+}
+
+function onCancel() {
+  showConfirm.value = false
+  confirmCallback = null
+}
+
+// Alert popup state
+const showAlert = ref(false)
+const alertMessage = ref('')
+const alertVariant = ref<'success' | 'error' | 'warning' | 'info'>('info')
+
+function openAlert(message: string, variant: 'success' | 'error' | 'warning' | 'info' = 'info') {
+  alertMessage.value = message
+  alertVariant.value = variant
+  showAlert.value = true
+}
+
+function closeAlert() {
+  showAlert.value = false
+}
 
 function openAddModal() {
-  form.value = { student_id: null, student_name: '', student_class: '', student_type: '', student_description: '' }
+  initialForm.value = null
   showAddModal.value = true
 }
 
@@ -67,7 +104,7 @@ function openLessonsForStudent(student: any) {
 }
 
 function openEditModal(student: any) {
-  form.value = {
+  initialForm.value = {
     student_id: student.id,
     student_name: student.name,
     student_class: student.class ?? '',
@@ -84,12 +121,12 @@ function closeModals() {
   editingStudent.value = null
 }
 
-async function submitStudent() {
+async function submitStudent(formData: StudentFormData) {
   try {
     const response = await fetch('/students/edit', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-      body: JSON.stringify(form.value),
+      body: JSON.stringify(formData),
     })
     const data = await response.json()
 
@@ -97,32 +134,36 @@ async function submitStudent() {
       closeModals()
       window.location.reload()
     } else {
-      alert(typeof data.data === 'string' ? data.data : Object.values(data.data).join('\n'))
+      openAlert(typeof data.data === 'string' ? data.data : Object.values(data.data).join('\n'), 'error')
     }
   } catch (e) {
-    alert('Ошибка сети')
+    openAlert('Ошибка сети', 'error')
   }
 }
 
-async function deleteStudent(student: any) {
-  if (!confirm(student.is_deleted ? 'Восстановить ученика?' : 'Удалить ученика?')) return
+function deleteStudent(student: any) {
+  openConfirm(
+    student.is_deleted ? 'Восстановить ученика?' : 'Удалить ученика?',
+    'danger',
+    async () => {
+      try {
+        const response = await fetch('/students/delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+          body: JSON.stringify({ student_id: student.id, is_deleted: student.is_deleted ? 0 : 1 }),
+        })
+        const data = await response.json()
 
-  try {
-    const response = await fetch('/students/delete', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-      body: JSON.stringify({ student_id: student.id, is_deleted: student.is_deleted ? 0 : 1 }),
-    })
-    const data = await response.json()
-
-    if (data.success) {
-      window.location.reload()
-    } else {
-      alert(typeof data.data === 'string' ? data.data : Object.values(data.data).join('\n'))
-    }
-  } catch (e) {
-    alert('Ошибка сети')
-  }
+        if (data.success) {
+          window.location.reload()
+        } else {
+          openAlert(typeof data.data === 'string' ? data.data : Object.values(data.data).join('\n'), 'error')
+        }
+      } catch (e) {
+        openAlert('Ошибка сети', 'error')
+      }
+    },
+  )
 }
 </script>
 
@@ -314,69 +355,27 @@ async function deleteStudent(student: any) {
       </Button>
     </Card>
 
-    <!-- Add/Edit Modal Overlay -->
-    <Teleport to="body">
-      <Transition name="overlay">
-        <div v-if="showModal" class="fixed inset-0 z-60 bg-black/40 backdrop-blur-sm" @click="closeModals" />
-      </Transition>
-      <Transition name="modal">
-        <div v-if="showModal" class="fixed inset-0 z-70 flex items-center justify-center p-4 overflow-y-auto">
-          <Card class="relative w-full max-w-md p-6 shadow-xl">
-          <h2 class="text-2xl font-semibold text-foreground mb-5">
-            {{ showEditModal ? 'Редактировать ученика' : 'Новый ученик' }}
-          </h2>
+    <StudentFormPopup
+      :show="showModal"
+      :mode="showEditModal ? 'edit' : 'add'"
+      :initial-form="initialForm"
+      @close="closeModals"
+      @submit="submitStudent"
+    />
 
-          <form @submit.prevent="submitStudent" class="space-y-4">
-            <div>
-              <label class="block text-sm font-medium text-foreground mb-1.5">Имя *</label>
-              <input
-                v-model="form.student_name"
-                required
-                class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
-                placeholder="Имя ученика"
-              />
-            </div>
+    <ConfirmDialog
+      :show="showConfirm"
+      :title="confirmMessage"
+      :variant="confirmVariant"
+      @confirm="onConfirm"
+      @cancel="onCancel"
+    />
 
-            <div>
-              <label class="block text-sm font-medium text-foreground mb-1.5">Класс</label>
-              <input
-                v-model="form.student_class"
-                class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
-                placeholder="Например: 9Б"
-              />
-            </div>
-
-            <div>
-              <label class="block text-sm font-medium text-foreground mb-1.5">Тип</label>
-              <input
-                v-model="form.student_type"
-                class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
-                placeholder="Например: IELTS, ОГЭ, ЕГЭ"
-              />
-            </div>
-
-            <div>
-              <label class="block text-sm font-medium text-foreground mb-1.5">Описание</label>
-              <textarea
-                v-model="form.student_description"
-                rows="3"
-                class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors resize-none"
-                placeholder="Заметки об ученике"
-              />
-            </div>
-
-            <div class="flex items-center gap-3 pt-2">
-              <Button type="submit" class="flex-1">
-                {{ showEditModal ? 'Сохранить' : 'Добавить' }}
-              </Button>
-              <Button type="button" variant="outline" class="flex-1" @click="closeModals">
-                Отмена
-              </Button>
-            </div>
-          </form>
-        </Card>
-        </div>
-      </Transition>
-    </Teleport>
+    <AlertPopup
+      :show="showAlert"
+      :message="alertMessage"
+      :variant="alertVariant"
+      @close="closeAlert"
+    />
   </div>
 </template>

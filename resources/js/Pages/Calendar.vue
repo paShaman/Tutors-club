@@ -1,15 +1,18 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 import { Head, usePage } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import Card from '@/components/ui/Card.vue'
-import Button from '@/components/ui/Button.vue'
 import FullCalendar from '@fullcalendar/vue3'
 import dayGridPlugin from '@fullcalendar/daygrid'
 import timeGridPlugin from '@fullcalendar/timegrid'
 import interactionPlugin from '@fullcalendar/interaction'
 import ruLocale from '@fullcalendar/core/locales/ru'
 import type { EventClickArg, DatesSetArg } from '@fullcalendar/core'
+import LessonFormPopup from '@/components/popups/LessonFormPopup.vue'
+import type { LessonFormData } from '@/components/popups/LessonFormPopup.vue'
+import ConfirmDialog from '@/components/popups/ConfirmDialog.vue'
+import AlertPopup from '@/components/popups/AlertPopup.vue'
 
 defineOptions({ layout: AppLayout })
 
@@ -26,57 +29,56 @@ const page = usePage<{
   defaultDate: string
 }>()
 
-interface LessonEvent {
-  student_id: number
-  student_name: string
-  subject: string
-  theme: string | null
-  price: number
-  duration: number
-  is_payed: number
-  date: string
-  date_payed: string | null
-  time: string | null
-  is_future: number
-}
-
 const calendarRef = ref<InstanceType<typeof FullCalendar> | null>(null)
 const events = ref<any[]>([])
 
-// Modal state
-const showModal = ref(false)
-const modalMode = ref<'add' | 'edit'>('edit')
-const deletingLesson = ref<number | null>(null)
+// Popup state
+const showLessonPopup = ref(false)
+const lessonPopupInitial = ref<LessonFormData | null>(null)
 
-const subjectLabels: Record<string, string> = {
-  lesson_subject_maths: 'Математика',
-  lesson_subject_informatics: 'Информатика',
-  lesson_subject_english: 'Английский',
+// Confirm dialog state
+const showConfirm = ref(false)
+const confirmMessage = ref('')
+const confirmVariant = ref<'danger' | 'default'>('danger')
+let confirmCallback: (() => void) | null = null
+
+function openConfirm(message: string, variant: 'danger' | 'default', callback: () => void) {
+  confirmMessage.value = message
+  confirmVariant.value = variant
+  confirmCallback = callback
+  showConfirm.value = true
 }
 
-function subjectName(key: string): string {
-  return subjectLabels[key] ?? key
+function onConfirm() {
+  showConfirm.value = false
+  if (confirmCallback) confirmCallback()
+  confirmCallback = null
 }
 
-const form = ref({
-  lesson_id: null as number | null,
-  lesson_student_id: '' as string,
-  lesson_subject: '',
-  lesson_theme: '',
-  lesson_price: page.props.defaultPrice ?? 3000,
-  lesson_duration: page.props.defaultDuration ?? 60,
-  lesson_date: '',
-  lesson_time: '',
-  lesson_date_payed: '',
-  lesson_is_payed: false,
-  lesson_is_future: false,
-})
+function onCancel() {
+  showConfirm.value = false
+  confirmCallback = null
+}
+
+// Alert popup state
+const showAlert = ref(false)
+const alertMessage = ref('')
+const alertVariant = ref<'success' | 'error' | 'warning' | 'info'>('info')
+
+function openAlert(message: string, variant: 'success' | 'error' | 'warning' | 'info' = 'info') {
+  alertMessage.value = message
+  alertVariant.value = variant
+  showAlert.value = true
+}
+
+function closeAlert() {
+  showAlert.value = false
+}
 
 function handleEventClick(arg: EventClickArg) {
-  const props = arg.event.extendedProps as LessonEvent
+  const props = arg.event.extendedProps
 
-  modalMode.value = 'edit'
-  form.value = {
+  lessonPopupInitial.value = {
     lesson_id: Number(arg.event.id),
     lesson_student_id: String(props.student_id),
     lesson_subject: props.subject,
@@ -90,7 +92,7 @@ function handleEventClick(arg: EventClickArg) {
     lesson_is_future: !!props.is_future,
   }
 
-  showModal.value = true
+  showLessonPopup.value = true
 }
 
 function handleDatesSet(arg: DatesSetArg) {
@@ -106,11 +108,11 @@ function handleDatesSet(arg: DatesSetArg) {
     })
 }
 
-function closeModal() {
-  showModal.value = false
+function closeLessonPopup() {
+  showLessonPopup.value = false
 }
 
-async function submitLesson() {
+async function handleLessonSubmit(form: LessonFormData) {
   try {
     const response = await fetch('/lessons/edit', {
       method: 'POST',
@@ -119,53 +121,52 @@ async function submitLesson() {
         'Accept': 'application/json',
         'X-Requested-With': 'XMLHttpRequest',
       },
-      body: JSON.stringify(form.value),
+      body: JSON.stringify(form),
     })
     const data = await response.json()
 
     if (data.success) {
-      closeModal()
-      // Reload calendar events
+      closeLessonPopup()
       const calendarApi = calendarRef.value?.getApi()
       if (calendarApi) {
         calendarApi.refetchEvents()
       }
     } else {
-      alert(typeof data.data === 'string' ? data.data : Object.values(data.data).join('\n'))
+      openAlert(typeof data.data === 'string' ? data.data : Object.values(data.data).join('\n'), 'error')
     }
   } catch (e) {
-    alert('Ошибка сети')
+    openAlert('Ошибка сети', 'error')
   }
 }
 
-async function deleteLesson() {
-  if (!form.value.lesson_id) return
-  if (!confirm('Удалить урок?')) return
+function handleLessonDelete() {
+  if (!lessonPopupInitial.value?.lesson_id) return
+  openConfirm('Удалить урок?', 'danger', async () => {
+    try {
+      const response = await fetch('/lessons/delete', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest',
+        },
+        body: JSON.stringify({ lesson_id: lessonPopupInitial.value!.lesson_id }),
+      })
+      const data = await response.json()
 
-  try {
-    const response = await fetch('/lessons/delete', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'X-Requested-With': 'XMLHttpRequest',
-      },
-      body: JSON.stringify({ lesson_id: form.value.lesson_id }),
-    })
-    const data = await response.json()
-
-    if (data.success) {
-      closeModal()
-      const calendarApi = calendarRef.value?.getApi()
-      if (calendarApi) {
-        calendarApi.refetchEvents()
+      if (data.success) {
+        closeLessonPopup()
+        const calendarApi = calendarRef.value?.getApi()
+        if (calendarApi) {
+          calendarApi.refetchEvents()
+        }
+      } else {
+        openAlert(typeof data.data === 'string' ? data.data : Object.values(data.data).join('\n'), 'error')
       }
-    } else {
-      alert(typeof data.data === 'string' ? data.data : Object.values(data.data).join('\n'))
+    } catch (e) {
+      openAlert('Ошибка сети', 'error')
     }
-  } catch (e) {
-    alert('Ошибка сети')
-  }
+  })
 }
 </script>
 
@@ -218,150 +219,34 @@ async function deleteLesson() {
       />
     </Card>
 
-    <!-- Edit Modal Overlay -->
-    <Teleport to="body">
-      <Transition name="overlay">
-        <div v-if="showModal" class="fixed inset-0 z-60 bg-black/40 backdrop-blur-sm" @click="closeModal" />
-      </Transition>
-      <Transition name="modal">
-        <div v-if="showModal" class="fixed inset-0 z-70 flex items-center justify-center p-4 overflow-y-auto">
-          <Card class="relative w-full max-w-lg p-6 shadow-xl">
-            <h2 class="text-2xl font-semibold text-foreground mb-5">
-              Редактировать урок
-            </h2>
+    <!-- Lesson Form Popup -->
+    <LessonFormPopup
+      :show="showLessonPopup"
+      mode="edit"
+      :students="page.props.students.map(s => ({ id: s.id, name: s.name, current_class: s.current_class }))"
+      :subjects="page.props.lessonsSubjects"
+      :defaultPrice="page.props.defaultPrice"
+      :defaultDuration="page.props.defaultDuration"
+      :initialForm="lessonPopupInitial"
+      @close="closeLessonPopup"
+      @submit="handleLessonSubmit"
+      @delete="handleLessonDelete"
+    />
 
-            <form @submit.prevent="submitLesson" class="space-y-4">
-              <!-- Student -->
-              <div>
-                <label class="block text-sm font-medium text-foreground mb-1.5">Ученик *</label>
-                <select
-                  v-model="form.lesson_student_id"
-                  required
-                  class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
-                >
-                  <option value="" disabled>Выберите ученика</option>
-                  <option v-for="student in page.props.students" :key="student.id" :value="student.id">
-                    {{ student.name }}{{ student.current_class ? ` ${student.current_class}` : '' }}
-                  </option>
-                </select>
-              </div>
+    <ConfirmDialog
+      :show="showConfirm"
+      :title="confirmMessage"
+      :variant="confirmVariant"
+      @confirm="onConfirm"
+      @cancel="onCancel"
+    />
 
-              <!-- Subject -->
-              <div>
-                <label class="block text-sm font-medium text-foreground mb-1.5">Предмет *</label>
-                <select
-                  v-model="form.lesson_subject"
-                  required
-                  class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
-                >
-                  <option value="" disabled>Выберите предмет</option>
-                  <option v-for="subj in page.props.lessonsSubjects" :key="subj" :value="subj">
-                    {{ subjectName(subj) }}
-                  </option>
-                </select>
-              </div>
-
-              <!-- Theme -->
-              <div>
-                <label class="block text-sm font-medium text-foreground mb-1.5">Тема</label>
-                <input
-                  v-model="form.lesson_theme"
-                  class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
-                  placeholder="Тема урока"
-                />
-              </div>
-
-              <!-- Date & Time row -->
-              <div class="grid grid-cols-2 gap-4">
-                <div>
-                  <label class="block text-sm font-medium text-foreground mb-1.5">Дата *</label>
-                  <input
-                    v-model="form.lesson_date"
-                    type="date"
-                    required
-                    class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
-                  />
-                </div>
-                <div>
-                  <label class="block text-sm font-medium text-foreground mb-1.5">Время</label>
-                  <input
-                    v-model="form.lesson_time"
-                    type="time"
-                    class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
-                  />
-                </div>
-              </div>
-
-              <!-- Price & Duration row -->
-              <div class="grid grid-cols-2 gap-4">
-                <div>
-                  <label class="block text-sm font-medium text-foreground mb-1.5">Цена (₽)</label>
-                  <input
-                    v-model.number="form.lesson_price"
-                    type="number"
-                    min="0"
-                    class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
-                  />
-                </div>
-                <div>
-                  <label class="block text-sm font-medium text-foreground mb-1.5">Длительность (мин)</label>
-                  <input
-                    v-model.number="form.lesson_duration"
-                    type="number"
-                    min="0"
-                    step="5"
-                    class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
-                  />
-                </div>
-              </div>
-
-              <!-- Toggles -->
-              <div class="flex items-center gap-6">
-                <label class="flex items-center gap-2 cursor-pointer">
-                  <input
-                    v-model="form.lesson_is_payed"
-                    type="checkbox"
-                    class="rounded border-border text-primary focus:ring-primary/30"
-                  />
-                  <span class="text-sm text-foreground">Оплачен</span>
-                </label>
-                <label class="flex items-center gap-2 cursor-pointer">
-                  <input
-                    v-model="form.lesson_is_future"
-                    type="checkbox"
-                    class="rounded border-border text-primary focus:ring-primary/30"
-                  />
-                  <span class="text-sm text-foreground">План</span>
-                </label>
-              </div>
-
-              <!-- Date payed (when is_payed checked) -->
-              <div v-if="form.lesson_is_payed">
-                <label class="block text-sm font-medium text-foreground mb-1.5">Дата оплаты</label>
-                <input
-                  v-model="form.lesson_date_payed"
-                  type="date"
-                  class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
-                />
-              </div>
-
-              <!-- Actions -->
-              <div class="flex items-center gap-3 pt-2">
-                <Button type="submit" class="flex-1">
-                  Сохранить
-                </Button>
-                <Button type="button" variant="destructive" class="flex-1" @click="deleteLesson">
-                  Удалить
-                </Button>
-                <Button type="button" variant="outline" class="flex-1" @click="closeModal">
-                  Отмена
-                </Button>
-              </div>
-            </form>
-          </Card>
-        </div>
-      </Transition>
-    </Teleport>
+    <AlertPopup
+      :show="showAlert"
+      :message="alertMessage"
+      :variant="alertVariant"
+      @close="closeAlert"
+    />
   </div>
 </template>
 
