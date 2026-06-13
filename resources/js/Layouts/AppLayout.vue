@@ -12,8 +12,10 @@ import {
   Menu,
   X,
   ChevronDown,
+  GitCommit,
 } from 'lucide-vue-next'
 import Button from '@/components/ui/Button.vue'
+import ChangelogModal from '@/components/popups/ChangelogModal.vue'
 import { cn } from '@/lib/utils'
 
 const page = usePage<SharedProps>()
@@ -21,6 +23,7 @@ const page = usePage<SharedProps>()
 const sidebarOpen = ref(false)
 const userMenuOpen = ref(false)
 const userMenuRef = ref<HTMLElement | null>(null)
+const changelogOpen = ref(false)
 
 // Compact sidebar (1024px – 1199px)
 const sidebarCompact = ref(false)
@@ -185,8 +188,16 @@ onUnmounted(() => {
           </Link>
         </nav>
 
-        <!-- Copyright -->
-        <div class="mt-auto pt-3 px-2">
+        <!-- Changelog button -->
+        <div class="mt-auto pt-3 px-2 space-y-1.5">
+          <button
+            v-if="!sidebarCompact"
+            class="flex items-center gap-2 rounded-xl px-2.5 py-2 text-xs font-medium text-muted-foreground hover:bg-accent hover:text-foreground transition-colors cursor-pointer w-full"
+            @click="changelogOpen = true"
+          >
+            <GitCommit class="h-3.5 w-3.5" />
+            <span class="whitespace-nowrap">История изменений</span>
+          </button>
           <p
             :class="cn(
               'text-xs text-muted-foreground/60 whitespace-nowrap transition-opacity duration-200',
@@ -288,5 +299,8 @@ onUnmounted(() => {
         <slot />
       </main>
     </div>
+
+    <!-- Changelog Modal -->
+    <ChangelogModal v-if="changelogOpen" @close="changelogOpen = false" />
   </div>
 </template>

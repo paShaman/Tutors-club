@@ -11,6 +11,7 @@ use App\Http\Controllers\StudentController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\Social\GoogleController;
 use App\Http\Controllers\Admin\PanelController;
+use App\Http\Controllers\ChangelogController;
 use App\Http\Controllers\Admin\PaymentController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use Illuminate\Support\Facades\Route;
@@ -63,6 +64,10 @@ Route::post('/admin/payment/add', [PaymentController::class, 'paymentAdd'])->mid
 Route::get('/students', [StudentController::class, 'getStudents'])->middleware('auth');
 Route::post('/students/edit', [StudentController::class, 'editStudent'])->middleware('auth');
 Route::post('/students/delete', [StudentController::class, 'deleteStudent'])->middleware('auth');
+
+// ─── Changelog ──────────────────────────────────────────
+Route::get('/changelog', [ChangelogController::class, 'getChangelog'])
+    ->middleware('auth');
 
 // ─── Lessons ────────────────────────────────────────────────
 Route::get('/lessons', [LessonController::class, 'getLessons'])->middleware('auth')->name('lessons');
