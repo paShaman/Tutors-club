@@ -392,15 +392,15 @@ function formatDatePayed(dateStr: string | null): string {
             :is="yearVisibility[yearData.year] ? ChevronDown : ChevronRight"
             class="h-5 w-5 text-primary shrink-0 mt-0.5 lg:mt-0 transition-transform duration-300"
           />
-          <div class="flex-1 min-w-0 text-left">
-            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2">
-              <div class="text-left">
-                <h2 class="text-xl font-bold text-foreground">{{ yearData.year }}</h2>
-                <p class="text-sm text-muted-foreground mt-0.5">
-                  {{ (yearData.cnt_all + yearData.cnt_special) }} {{ pluralLessons(yearData.cnt_all + yearData.cnt_special) }}
-                  <span v-if="yearData.cnt_special" class="text-amber-600"> (особых: {{ yearData.cnt_special }})</span>
-                </p>
-              </div>
+              <div class="flex-1 min-w-0 text-left">
+                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2">
+                  <div class="flex items-center gap-2.5 flex-wrap text-left">
+                    <h2 class="text-xl font-bold text-foreground">{{ yearData.year }}</h2>
+                    <p class="text-sm text-muted-foreground">
+                      {{ (yearData.cnt_all + yearData.cnt_special) }} {{ pluralLessons(yearData.cnt_all + yearData.cnt_special) }}
+                      <span v-if="yearData.cnt_special" class="text-amber-600"> (особых: {{ yearData.cnt_special }})</span>
+                    </p>
+                  </div>
               <div class="flex items-center gap-2 flex-wrap shrink-0">
                 <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-sm font-bold bg-emerald-100 text-emerald-700">
                   {{ (yearData.sum + yearData.sum_special).toLocaleString('ru-RU') }} ₽
@@ -435,7 +435,7 @@ function formatDatePayed(dateStr: string | null): string {
                 />
                 <div class="flex-1 min-w-0 text-left">
                   <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-1.5">
-                    <div class="text-left">
+                    <div class="flex items-center gap-2.5 flex-wrap text-left">
                       <h3 class="font-semibold text-foreground">
                         {{ monthNames[Number(monthNum)] }}
                       </h3>
@@ -483,25 +483,25 @@ function formatDatePayed(dateStr: string | null): string {
                       >
                         {{ studentGroup.student.name.charAt(0) }}
                       </div>
-                      <div class="flex-1 min-w-0">
+                      <div class="flex-1 min-w-0 flex flex-col lg:flex-row lg:items-center gap-1.5 lg:gap-3">
                         <p class="text-sm font-medium text-foreground truncate">
                           {{ studentGroup.student.name }}
                           <span v-if="studentGroup.student.current_class" class="text-muted-foreground font-normal">
                             · {{ studentGroup.student.current_class }}
                           </span>
                         </p>
-                      </div>
-                      <div class="text-right shrink-0 space-y-1">
-                        <p class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-sm font-bold bg-emerald-100 text-emerald-700">
-                          {{ (studentGroup.sum + studentGroup.sum_special).toLocaleString('ru-RU') }} ₽
-                        </p>
-                        <p v-if="studentGroup.sum_special" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-100 text-xs font-semibold text-amber-700">
-                          <Star class="h-3 w-3" />
-                          {{ studentGroup.sum_special.toLocaleString('ru-RU') }} ₽
-                        </p>
-                        <p v-if="studentGroup.sum_not_payed" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-red-50 text-xs font-semibold text-red-600">
-                          <span class="hidden sm:inline">Долг: </span>{{ studentGroup.sum_not_payed.toLocaleString('ru-RU') }} ₽
-                        </p>
+                        <div class="flex items-center gap-1.5 flex-wrap shrink-0">
+                          <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-sm font-bold bg-emerald-100 text-emerald-700">
+                            {{ (studentGroup.sum + studentGroup.sum_special).toLocaleString('ru-RU') }} ₽
+                          </span>
+                          <span v-if="studentGroup.sum_special" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-100 text-xs font-semibold text-amber-700">
+                            <Star class="h-3 w-3" />
+                            {{ studentGroup.sum_special.toLocaleString('ru-RU') }} ₽
+                          </span>
+                          <span v-if="studentGroup.sum_not_payed" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-red-50 text-xs font-semibold text-red-600">
+                            <span class="hidden sm:inline">Долг: </span>{{ studentGroup.sum_not_payed.toLocaleString('ru-RU') }} ₽
+                          </span>
+                        </div>
                       </div>
                       <!-- Add lesson button for this student -->
                       <button
