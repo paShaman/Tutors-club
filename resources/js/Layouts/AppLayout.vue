@@ -22,6 +22,13 @@ const sidebarOpen = ref(false)
 const userMenuOpen = ref(false)
 const userMenuRef = ref<HTMLElement | null>(null)
 
+// Compact sidebar (1024px – 1199px)
+const sidebarCompact = ref(false)
+
+function onSidebarResize() {
+  sidebarCompact.value = window.innerWidth >= 1024 && window.innerWidth < 1280
+}
+
 interface NavItem {
   label: string
   href: string
@@ -92,38 +99,52 @@ function handleClickOutside(e: MouseEvent) {
   }
 }
 
-onMounted(() => document.addEventListener('click', handleClickOutside))
-onUnmounted(() => document.removeEventListener('click', handleClickOutside))
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside)
+  window.addEventListener('resize', onSidebarResize)
+  onSidebarResize()
+})
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside)
+  window.removeEventListener('resize', onSidebarResize)
+})
 </script>
 
 <template>
   <div class="min-h-screen bg-gradient-to-br from-slate-50 via-purple-50/20 to-white">
-    <!-- Mobile overlay -->
+    <!-- Mobile overlay (below 1024px) -->
     <div
       v-if="sidebarOpen"
-      class="fixed inset-0 z-40 bg-black/20 backdrop-blur-sm lg:hidden"
+      class="fixed inset-0 z-40 bg-black/20 backdrop-blur-sm transition-opacity"
       @click="sidebarOpen = false"
     />
 
     <!-- Sidebar -->
     <aside
       :class="cn(
-        'fixed inset-y-0 left-0 z-50 flex w-64 flex-col transition-transform duration-300 lg:translate-x-0',
-        sidebarOpen ? 'translate-x-0' : '-translate-x-full',
+        'fixed inset-y-0 left-0 z-50 flex flex-col transition-all duration-300',
+        sidebarCompact ? 'w-16' : (sidebarOpen ? 'w-64 translate-x-0' : 'w-64 -translate-x-full'),
+        !sidebarCompact && 'lg:translate-x-0',
       )"
     >
       <div class="glass flex h-full flex-col border-r border-white/20 px-3 py-4">
         <!-- Logo -->
-        <div class="flex items-center justify-between px-2 mb-8">
+        <div class="flex items-center px-2 mb-8" :class="sidebarCompact ? 'justify-center' : 'justify-between'">
           <Link href="/" class="flex items-center gap-2.5">
-            <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-primary shadow-lg shadow-primary/25">
+            <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary shadow-lg shadow-primary/25">
               <GraduationCap class="h-5 w-5 text-primary-foreground" />
             </div>
-            <span class="text-lg font-semibold tracking-tight text-foreground">
+            <span
+              :class="cn(
+                'text-lg font-semibold tracking-tight text-foreground whitespace-nowrap transition-opacity duration-200',
+                sidebarCompact ? 'hidden' : 'opacity-100',
+              )"
+            >
               Tutors Club
             </span>
           </Link>
           <button
+            v-if="!sidebarCompact"
             class="rounded-lg p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground lg:hidden cursor-pointer"
             @click="sidebarOpen = false"
           >
@@ -138,20 +159,40 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside))
             :key="item.href"
             :href="item.href"
             :class="cn(
-              'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200',
+              'group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200',
+              sidebarCompact && 'justify-center px-2',
               isActive(item.activeRoute)
                 ? 'bg-primary/10 text-primary'
                 : 'text-muted-foreground hover:bg-accent hover:text-foreground cursor-pointer',
             )"
           >
-            <component :is="item.icon" class="h-5 w-5 flex-shrink-0" />
-            {{ item.label }}
+            <component :is="item.icon" class="h-5 w-5 shrink-0" />
+            <span
+              :class="cn(
+                'whitespace-nowrap transition-opacity duration-200',
+                sidebarCompact ? 'hidden' : 'opacity-100',
+              )"
+            >
+              {{ item.label }}
+            </span>
+            <!-- Tooltip в компактном режиме -->
+            <span
+              v-if="sidebarCompact"
+              class="pointer-events-none absolute left-full ml-3 z-[100] rounded-lg bg-gray-900 px-2.5 py-1.5 text-xs font-medium text-white whitespace-nowrap opacity-0 transition-opacity duration-150 group-hover:opacity-100 shadow-lg"
+            >
+              {{ item.label }}
+            </span>
           </Link>
         </nav>
 
         <!-- Copyright -->
         <div class="mt-auto pt-3 px-2">
-          <p class="text-xs text-muted-foreground/60">
+          <p
+            :class="cn(
+              'text-xs text-muted-foreground/60 whitespace-nowrap transition-opacity duration-200',
+              sidebarCompact ? 'opacity-0' : 'opacity-100',
+            )"
+          >
             © {{ new Date().getFullYear() }} Tutors Club
           </p>
         </div>
@@ -159,11 +200,19 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside))
     </aside>
 
     <!-- Main content -->
-    <div class="lg:pl-64">
+    <div
+      :class="cn(
+        'transition-all duration-300',
+        sidebarCompact ? 'lg:pl-16' : 'lg:pl-64',
+      )"
+    >
       <!-- Top bar -->
       <header class="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-border/50 bg-white/60 backdrop-blur-xl px-4 sm:px-6">
         <button
-          class="rounded-lg p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground lg:hidden cursor-pointer"
+          :class="cn(
+            'rounded-lg p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground cursor-pointer',
+            sidebarCompact ? 'hidden' : 'lg:hidden',
+          )"
           @click="sidebarOpen = true"
         >
           <Menu class="h-6 w-6" />

@@ -212,12 +212,12 @@ const barChartOptions = computed(() => ({
             <p class="text-xs font-medium text-muted-foreground uppercase tracking-wider">
               Часов на этой неделе
             </p>
-            <p class="mt-2 text-3xl font-bold text-foreground">
+            <p class="mt-2 text-2xl xl:text-3xl font-bold text-foreground whitespace-nowrap">
               {{ totalHoursThisWeek }}
             </p>
           </div>
-          <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10">
-            <Clock class="h-5 w-5 text-primary" />
+          <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+            <Clock class="h-5 w-5 shrink-0 text-primary" />
           </div>
         </div>
       </Card>
@@ -228,12 +228,12 @@ const barChartOptions = computed(() => ({
             <p class="text-xs font-medium text-muted-foreground uppercase tracking-wider">
               Активных учеников
             </p>
-            <p class="mt-2 text-3xl font-bold text-foreground">
+            <p class="mt-2 text-2xl xl:text-3xl font-bold text-foreground whitespace-nowrap">
               {{ students.length }}
             </p>
           </div>
-          <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-500/10">
-            <GraduationCap class="h-5 w-5 text-emerald-600" />
+          <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10">
+            <GraduationCap class="h-5 w-5 shrink-0 text-emerald-600" />
           </div>
         </div>
       </Card>
@@ -244,11 +244,11 @@ const barChartOptions = computed(() => ({
             <p class="text-xs font-medium text-muted-foreground uppercase tracking-wider">
               Заработано за месяц
             </p>
-            <p class="mt-2 text-3xl font-bold text-foreground">
+            <p class="mt-2 text-2xl xl:text-3xl font-bold text-foreground whitespace-nowrap">
               {{ totalEarnings.toLocaleString('ru-RU') }} ₽
             </p>
           </div>
-          <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-500/10">
+          <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-500/10">
             <span class="text-xl font-bold text-blue-600">₽</span>
           </div>
         </div>
@@ -260,12 +260,12 @@ const barChartOptions = computed(() => ({
             <p class="text-xs font-medium text-muted-foreground uppercase tracking-wider">
               Оплачено уроков
             </p>
-            <p class="mt-2 text-3xl font-bold text-foreground">
+            <p class="mt-2 text-2xl xl:text-3xl font-bold text-foreground whitespace-nowrap">
               {{ paidPercent }}%
             </p>
           </div>
-          <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-500/10">
-            <TrendingUp class="h-5 w-5 text-amber-600" />
+          <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-500/10">
+            <TrendingUp class="h-5 w-5 shrink-0 text-amber-600" />
           </div>
         </div>
       </Card>
