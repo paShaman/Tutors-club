@@ -32,6 +32,15 @@ final class LessonController extends Controller
 
         $lessons = $lessonsQuery->orderBy('date', 'desc')->get()->toArray();
 
+        // Format dates for frontend (HTML date inputs require Y-m-d)
+        foreach ($lessons as &$lesson) {
+            $lesson['date'] = \Carbon\Carbon::parse($lesson['date'])->format('Y-m-d');
+            $lesson['date_payed'] = $lesson['date_payed']
+                ? \Carbon\Carbon::parse($lesson['date_payed'])->format('Y-m-d')
+                : null;
+        }
+        unset($lesson);
+
         $sortedLessons = [];
 
         $flYearOpen = true;
@@ -174,8 +183,8 @@ final class LessonController extends Controller
             'date'          => $post['lesson_date'] ?? null,
             'time'          => $post['lesson_time'] ?? null,
             'date_payed'    => $post['lesson_date_payed'] ?? null,
-            'is_payed'      => isset($post['lesson_is_payed']) && $post['lesson_is_payed'] == 'on' ? 1 : 0,
-            'is_future'     => isset($post['lesson_is_future']) && $post['lesson_is_future'] == 'on' ? 1 : 0,
+            'is_payed'      => !empty($post['lesson_is_payed']) ? 1 : 0,
+            'is_future'     => !empty($post['lesson_is_future']) ? 1 : 0,
         ];
 
         if (!empty($post['lesson_id'])) {
