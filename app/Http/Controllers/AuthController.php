@@ -23,21 +23,21 @@ class AuthController extends Controller
             'password_confirmation' => 'required|same:password',
         ];
 
-        $post = $request->post();
-
         $request->validate($rules);
 
-        $existing = User::where('email', $post['email'])->first();
+        $email = mb_strtolower(trim((string) $request->input('email')));
+
+        $existing = User::where('email', $email)->first();
         if (!empty($existing)) {
             return redirect()->back()->with('error', lng('duplicate_email'));
         }
 
         $user = new User();
-        $user->email       = $post['email'];
-        $user->password    = Hash::make($post['password']);
-        $user->first_name  = $post['first_name'] ?? '';
-        $user->last_name   = $post['last_name'] ?? '';
-        $user->middle_name = $post['middle_name'] ?? '';
+        $user->email       = $email;
+        $user->password    = Hash::make((string) $request->input('password'));
+        $user->first_name  = $request->input('first_name', '');
+        $user->last_name   = $request->input('last_name', '');
+        $user->middle_name = $request->input('middle_name', '');
         $user->date_agree  = DB::raw('now()');
 
         try {
@@ -65,7 +65,12 @@ class AuthController extends Controller
 
         $request->validate($rules);
 
-        if (Auth::attempt($request->only('email', 'password'), true)) {
+        $credentials = [
+            'email'    => mb_strtolower(trim((string) $request->input('email'))),
+            'password' => (string) $request->input('password'),
+        ];
+
+        if (Auth::attempt($credentials, true)) {
             $request->session()->regenerate();
 
             return redirect()->intended(route('home'));
