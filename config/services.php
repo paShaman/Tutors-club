@@ -42,4 +42,10 @@ return [
         'server_key' => env('SMARTCAPTCHA_SERVER_KEY'),
     ],
 
+    'vkid' => [
+        'app_id'       => env('VK_ID_APP_ID'),
+        'redirect_url' => env('VK_ID_REDIRECT_URL'),
+        'base_url'     => env('VK_ID_BASE_URL', 'https://id.vk.com'),
+    ],
+
 ];

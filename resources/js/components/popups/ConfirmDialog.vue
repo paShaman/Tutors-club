@@ -5,7 +5,7 @@ import Button from '@/components/ui/Button.vue'
 defineProps<{
   show: boolean
   title?: string
-  message: string
+  message?: string
   confirmText?: string
   cancelText?: string
   variant?: 'danger' | 'default'
@@ -30,33 +30,34 @@ function onCancel() {
     <Transition name="overlay">
       <div
         v-if="show"
-        class="fixed inset-0 z-[80] flex items-center justify-center bg-black/50 p-4"
-        @click.self="onCancel"
+        class="fixed inset-0 z-[80] overflow-y-auto bg-black/50"
       >
-        <Transition name="modal">
-          <div
-            v-if="show"
-            class="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl z-[90]"
-          >
-            <h3 v-if="title" class="text-lg font-semibold text-foreground">
-              {{ title }}
-            </h3>
-            <p class="mt-2 text-sm text-muted-foreground">
-              {{ message }}
-            </p>
-            <div class="mt-6 flex justify-end gap-3">
-              <Button variant="outline" @click="onCancel">
-                {{ cancelText ?? 'Отмена' }}
-              </Button>
-              <Button
-                :variant="variant === 'danger' ? 'destructive' : 'primary'"
-                @click="onConfirm"
-              >
-                {{ confirmText ?? 'Подтвердить' }}
-              </Button>
+        <div class="flex min-h-full items-center justify-center p-4" @click.self="onCancel">
+          <Transition name="modal">
+            <div
+              v-if="show"
+              class="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl z-[90]"
+            >
+              <h3 v-if="title" class="text-lg font-semibold text-foreground">
+                {{ title }}
+              </h3>
+              <p v-if="message" class="mt-2 text-sm text-muted-foreground">
+                {{ message }}
+              </p>
+              <div class="mt-6 flex justify-end gap-3">
+                <Button variant="outline" @click="onCancel">
+                  {{ cancelText ?? 'Отмена' }}
+                </Button>
+                <Button
+                  :variant="variant === 'danger' ? 'destructive' : 'default'"
+                  @click="onConfirm"
+                >
+                  {{ confirmText ?? 'Подтвердить' }}
+                </Button>
+              </div>
             </div>
-          </div>
-        </Transition>
+          </Transition>
+        </div>
       </div>
     </Transition>
   </Teleport>

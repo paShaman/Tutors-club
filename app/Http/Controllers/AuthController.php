@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Model\User;
+use App\Services\VkIdService;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -95,6 +96,100 @@ class AuthController extends Controller
         Auth::loginUsingId($userId, true);
 
         return redirect(route('home'));
+    }
+
+    /**
+     * Авторизация через VK ID.
+     *
+     * Клиент обменивает авторизационный код на токены (VKID.Auth.exchangeCode)
+     * и присылает сюда access_token. Сервер проверяет токен у VK и находит
+     * либо создаёт пользователя, привязанного к аккаунту VK.
+     */
+    public function vkontakte(Request $request): RedirectResponse
+    {
+        $accessToken = (string) $request->input('access_token');
+
+        if ($accessToken === '') {
+            return redirect()->back()->with('error', lng('error.vk'));
+        }
+
+        $profile = app(VkIdService::class)->fetchUserInfo($accessToken);
+
+        if ($profile === null || empty($profile['user_id'])) {
+            return redirect()->back()->with('error', lng('error.vk'));
+        }
+
+        $socialId = (string) $profile['user_id'];
+        $email = isset($profile['email']) && $profile['email'] !== ''
+            ? mb_strtolower(trim((string) $profile['email']))
+            : null;
+
+        $user = $this->findUserByVkAccount($socialId, $email);
+
+        if ($user === null) {
+            $user = new User();
+            $user->email      = $this->buildUniqueEmail($email, $socialId);
+            $user->password   = '';
+            $user->first_name = isset($profile['first_name']) ? (string) $profile['first_name'] : '';
+            $user->last_name  = isset($profile['last_name']) ? (string) $profile['last_name'] : '';
+            $user->middle_name = '';
+            $user->date_agree = DB::raw('now()');
+
+            try {
+                $user->save();
+            } catch (\Exception $e) {
+                return redirect()->back()->with('error', lng('error.register'));
+            }
+        }
+
+        // Привязываем аккаунт VK к пользователю.
+        DB::table('users_social')->updateOrInsert(
+            ['social' => VkIdService::SOCIAL_VKONTAKTE, 'social_id' => $socialId],
+            ['user_id' => $user->id, 'updated_at' => now()]
+        );
+
+        Auth::login($user, true);
+        $request->session()->regenerate();
+
+        return redirect()->intended(route('home'));
+    }
+
+    /**
+     * Поиск пользователя по привязке VK либо по email из профиля VK.
+     */
+    private function findUserByVkAccount(string $socialId, ?string $email): ?User
+    {
+        $vkUserId = DB::table('users_social')
+            ->where('social', VkIdService::SOCIAL_VKONTAKTE)
+            ->where('social_id', $socialId)
+            ->value('user_id');
+
+        if ($vkUserId) {
+            $user = User::find($vkUserId);
+            if ($user) {
+                return $user;
+            }
+        }
+
+        if ($email !== null) {
+            return User::where('email', $email)->first();
+        }
+
+        return null;
+    }
+
+    /**
+     * Формирует уникальный email для аккаунта без email в профиле VK.
+     */
+    private function buildUniqueEmail(?string $email, string $socialId): string
+    {
+        if ($email !== null && User::where('email', $email)->doesntExist()) {
+            return $email;
+        }
+
+        $host = parse_url((string) config('app.url'), PHP_URL_HOST) ?: 'tutors-club.ru';
+
+        return 'vk-' . $socialId . '@' . $host;
     }
 
     /**

@@ -23,43 +23,44 @@ function onClose() {
     <Transition name="overlay">
       <div
         v-if="show"
-        class="fixed inset-0 z-[80] flex items-center justify-center bg-black/50 p-4"
-        @click.self="onClose"
+        class="fixed inset-0 z-[80] overflow-y-auto bg-black/50"
       >
-        <Transition name="modal">
-          <div
-            v-if="show"
-            class="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl z-[90]"
-          >
-            <div class="flex flex-col items-center text-center">
-              <div
-                :class="{
-                  'text-emerald-500': variant === 'success',
-                  'text-red-500': variant === 'error',
-                  'text-amber-500': variant === 'warning',
-                  'text-blue-500': variant === 'info' || !variant,
-                }"
-                class="mb-4"
-              >
-                <CheckCircle2 v-if="variant === 'success'" class="h-10 w-10" />
-                <XCircle v-else-if="variant === 'error'" class="h-10 w-10" />
-                <AlertTriangle v-else-if="variant === 'warning'" class="h-10 w-10" />
-                <Info v-else class="h-10 w-10" />
+        <div class="flex min-h-full items-center justify-center p-4" @click.self="onClose">
+          <Transition name="modal">
+            <div
+              v-if="show"
+              class="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl z-[90]"
+            >
+              <div class="flex flex-col items-center text-center">
+                <div
+                  :class="{
+                    'text-emerald-500': variant === 'success',
+                    'text-red-500': variant === 'error',
+                    'text-amber-500': variant === 'warning',
+                    'text-blue-500': variant === 'info' || !variant,
+                  }"
+                  class="mb-4"
+                >
+                  <CheckCircle2 v-if="variant === 'success'" class="h-10 w-10" />
+                  <XCircle v-else-if="variant === 'error'" class="h-10 w-10" />
+                  <AlertTriangle v-else-if="variant === 'warning'" class="h-10 w-10" />
+                  <Info v-else class="h-10 w-10" />
+                </div>
+                <p class="text-sm text-foreground whitespace-pre-wrap">
+                  {{ message }}
+                </p>
               </div>
-              <p class="text-sm text-foreground whitespace-pre-wrap">
-                {{ message }}
-              </p>
+              <div class="mt-6 flex justify-center">
+                <Button
+                  :variant="variant === 'error' || variant === 'warning' ? 'destructive' : 'default'"
+                  @click="onClose"
+                >
+                  OK
+                </Button>
+              </div>
             </div>
-            <div class="mt-6 flex justify-center">
-              <Button
-                :variant="variant === 'error' || variant === 'warning' ? 'destructive' : 'primary'"
-                @click="onClose"
-              >
-                OK
-              </Button>
-            </div>
-          </div>
-        </Transition>
+          </Transition>
+        </div>
       </div>
     </Transition>
   </Teleport>

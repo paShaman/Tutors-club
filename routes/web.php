@@ -44,11 +44,14 @@ Route::get('/calendar/events', [CalendarController::class, 'getEvents'])
 // ─── Auth ───────────────────────────────────────────────────
 Route::post('/register', [AuthController::class, 'register'])->middleware('guest');
 Route::post('/login', [AuthController::class, 'login'])->middleware('guest');
+Route::post('/auth/vk', [AuthController::class, 'vkontakte'])->middleware('guest');
 Route::get('/logout', [AuthController::class, 'logout'])->middleware('auth');
 Route::get('/auth', [AuthController::class, 'auth'])->name('auth')->middleware('signed');
 
 // ─── User ───────────────────────────────────────────────────
 Route::post('/user/settings', [UserController::class, 'settings'])->middleware('auth');
+Route::post('/user/socials/link', [UserController::class, 'socialLink'])->middleware('auth');
+Route::post('/user/socials/unlink', [UserController::class, 'socialUnlink'])->middleware('auth');
 
 // ─── Avatar ─────────────────────────────────────────────────
 Route::post('/avatar/upload', [AvatarController::class, 'upload'])->middleware('auth');

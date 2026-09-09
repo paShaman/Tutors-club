@@ -17,6 +17,10 @@ export interface SharedProps {
     success: string | null
     error: string | null
   }
+  vkid: {
+    app: number | null
+    redirectUrl: string | null
+  } | null
 }
 
 declare module '@inertiajs/vue3' {

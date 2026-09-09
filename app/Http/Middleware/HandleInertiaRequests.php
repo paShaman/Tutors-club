@@ -39,6 +39,10 @@ final class HandleInertiaRequests extends Middleware
                 'success' => fn (): ?string => $request->session()->get('success'),
                 'error'   => fn (): ?string => $request->session()->get('error'),
             ],
+            'vkid' => [
+                'app'         => config('services.vkid.app_id') ? (int) config('services.vkid.app_id') : null,
+                'redirectUrl' => config('services.vkid.redirect_url') ?: null,
+            ],
         ];
     }
 }

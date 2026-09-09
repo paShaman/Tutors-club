@@ -162,94 +162,96 @@ const zoomPercent = () => Math.round(zoom.value * 100)
       <div class="fixed inset-0 z-80 bg-black/40 backdrop-blur-sm" @click="emit('cancel')" />
     </Transition>
     <Transition name="modal">
-      <div class="fixed inset-0 z-90 flex items-center justify-center p-4 overflow-y-auto" @click.self="emit('cancel')">
-        <div class="w-full max-w-sm rounded-2xl border border-border bg-white p-5 shadow-xl">
-          <div class="flex items-center justify-between mb-4">
-            <h2 class="text-xl font-semibold text-foreground">Область фото</h2>
-            <button
-              type="button"
-              class="rounded-lg p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors cursor-pointer"
-              @click="emit('cancel')"
-            >
-              <X class="h-5 w-5" />
-            </button>
-          </div>
+      <div class="fixed inset-0 z-90 overflow-y-auto">
+        <div class="flex min-h-full items-center justify-center p-4" @click.self="emit('cancel')">
+          <div class="w-full max-w-sm rounded-2xl border border-border bg-white p-5 shadow-xl">
+            <div class="flex items-center justify-between mb-4">
+              <h2 class="text-xl font-semibold text-foreground">Область фото</h2>
+              <button
+                type="button"
+                class="rounded-lg p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors cursor-pointer"
+                @click="emit('cancel')"
+              >
+                <X class="h-5 w-5" />
+              </button>
+            </div>
 
-          <p class="text-sm text-muted-foreground mb-4">
-            Перетащите фото, чтобы выбрать область. Лицо можно выровнять по кругу и изменить масштаб.
-          </p>
+            <p class="text-sm text-muted-foreground mb-4">
+              Перетащите фото, чтобы выбрать область. Лицо можно выровнять по кругу и изменить масштаб.
+            </p>
 
-          <!-- Circular viewport -->
-          <div
-            ref="containerRef"
-            class="relative mx-auto cursor-grab touch-none select-none overflow-hidden rounded-full shadow-inner ring-4 ring-white/60 active:cursor-grabbing"
-            :style="{ width: `${view}px`, height: `${view}px` }"
-            @pointerdown="onPointerDown"
-            @pointermove="onPointerMove"
-            @pointerup="onPointerUp"
-            @pointercancel="onPointerUp"
-          >
-            <img
-              v-if="loadedImage"
-              :src="src ?? ''"
-              draggable="false"
-              alt=""
-              class="absolute max-w-none select-none"
-              :style="{
-                width: `${dispW()}px`,
-                height: `${dispH()}px`,
-                left: `${(view - dispW()) / 2 + pan.x}px`,
-                top: `${(view - dispH()) / 2 + pan.y}px`,
-              }"
-            />
-          </div>
+            <!-- Circular viewport -->
+            <div
+              ref="containerRef"
+              class="relative mx-auto cursor-grab touch-none select-none overflow-hidden rounded-full shadow-inner ring-4 ring-white/60 active:cursor-grabbing"
+              :style="{ width: `${view}px`, height: `${view}px` }"
+              @pointerdown="onPointerDown"
+              @pointermove="onPointerMove"
+              @pointerup="onPointerUp"
+              @pointercancel="onPointerUp"
+            >
+              <img
+                v-if="loadedImage"
+                :src="src ?? ''"
+                draggable="false"
+                alt=""
+                class="absolute max-w-none select-none"
+                :style="{
+                  width: `${dispW()}px`,
+                  height: `${dispH()}px`,
+                  left: `${(view - dispW()) / 2 + pan.x}px`,
+                  top: `${(view - dispH()) / 2 + pan.y}px`,
+                }"
+              />
+            </div>
 
-          <!-- Zoom controls -->
-          <div class="mt-5 flex items-center gap-3">
-            <button
-              type="button"
-              class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-input bg-background text-muted-foreground transition-colors hover:bg-accent hover:text-foreground cursor-pointer disabled:opacity-40"
-              :disabled="zoom <= 1"
-              @click="applyZoom(zoom - 0.5)"
-            >
-              <ZoomOut class="h-4 w-4" />
-            </button>
-            <input
-              type="range"
-              min="1"
-              :max="MAX_ZOOM"
-              step="0.01"
-              :value="zoom"
-              style="accent-color: hsl(252 87% 67%)"
-              class="h-2 w-full cursor-pointer"
-              @input="applyZoom(Number(($event.target as HTMLInputElement).value))"
-            />
-            <button
-              type="button"
-              class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-input bg-background text-muted-foreground transition-colors hover:bg-accent hover:text-foreground cursor-pointer disabled:opacity-40"
-              :disabled="zoom >= MAX_ZOOM"
-              @click="applyZoom(zoom + 0.5)"
-            >
-              <ZoomIn class="h-4 w-4" />
-            </button>
-            <span class="w-11 text-right text-xs tabular-nums text-muted-foreground">{{ zoomPercent() }}%</span>
-            <button
-              type="button"
-              class="ml-auto inline-flex h-8 w-8 items-center justify-center rounded-full border border-input bg-background text-muted-foreground transition-colors hover:bg-accent hover:text-foreground cursor-pointer shrink-0"
-              title="Сбросить"
-              @click="resetView"
-            >
-              <RotateCcw class="h-4 w-4" />
-            </button>
-          </div>
+            <!-- Zoom controls -->
+            <div class="mt-5 flex items-center gap-3">
+              <button
+                type="button"
+                class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-input bg-background text-muted-foreground transition-colors hover:bg-accent hover:text-foreground cursor-pointer disabled:opacity-40"
+                :disabled="zoom <= 1"
+                @click="applyZoom(zoom - 0.5)"
+              >
+                <ZoomOut class="h-4 w-4" />
+              </button>
+              <input
+                type="range"
+                min="1"
+                :max="MAX_ZOOM"
+                step="0.01"
+                :value="zoom"
+                style="accent-color: hsl(252 87% 67%)"
+                class="h-2 w-full cursor-pointer"
+                @input="applyZoom(Number(($event.target as HTMLInputElement).value))"
+              />
+              <button
+                type="button"
+                class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-input bg-background text-muted-foreground transition-colors hover:bg-accent hover:text-foreground cursor-pointer disabled:opacity-40"
+                :disabled="zoom >= MAX_ZOOM"
+                @click="applyZoom(zoom + 0.5)"
+              >
+                <ZoomIn class="h-4 w-4" />
+              </button>
+              <span class="w-11 text-right text-xs tabular-nums text-muted-foreground">{{ zoomPercent() }}%</span>
+              <button
+                type="button"
+                class="ml-auto inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-input bg-background text-muted-foreground transition-colors hover:bg-accent hover:text-foreground cursor-pointer"
+                title="Сбросить"
+                @click="resetView"
+              >
+                <RotateCcw class="h-4 w-4" />
+              </button>
+            </div>
 
-          <div class="mt-5 flex items-center gap-3">
-            <Button type="button" variant="outline" class="flex-1" @click="emit('cancel')">
-              Отмена
-            </Button>
-            <Button type="button" class="flex-1" @click="apply">
-              Применить
-            </Button>
+            <div class="mt-5 flex items-center gap-3">
+              <Button type="button" variant="outline" class="flex-1" @click="emit('cancel')">
+                Отмена
+              </Button>
+              <Button type="button" class="flex-1" @click="apply">
+                Применить
+              </Button>
+            </div>
           </div>
         </div>
       </div>

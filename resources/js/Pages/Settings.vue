@@ -1,20 +1,42 @@
 <script setup lang="ts">
 import { Head, router, usePage, useForm } from '@inertiajs/vue3'
-import { Settings, User, Bell, Shield, Save } from 'lucide-vue-next'
+import { Settings, User, Shield, Save, Link2, Unlink } from 'lucide-vue-next'
 import Button from '@/components/ui/Button.vue'
 import Card from '@/components/ui/Card.vue'
 import CardHeader from '@/components/ui/CardHeader.vue'
 import CardTitle from '@/components/ui/CardTitle.vue'
-import { computed, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import type { SharedProps } from '@/types'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import AvatarPicker from '@/components/ui/AvatarPicker.vue'
+import VkIdAuth from '@/components/social/VkIdAuth.vue'
+import ConfirmDialog from '@/components/popups/ConfirmDialog.vue'
+
+interface SocialBinding {
+  provider: string
+  social_id: string
+  created_at: string | null
+}
+
+interface SettingsPageProps extends SharedProps {
+  socials: SocialBinding[]
+}
+
+const SOCIAL_LABELS: Record<string, string> = {
+  vkontakte: 'VK ID',
+  facebook: 'Facebook',
+  google: 'Google',
+}
 
 defineOptions({ layout: AppLayout })
 
-const page = usePage<SharedProps>()
+const page = usePage<SettingsPageProps>()
 
 const user = computed(() => page.props.auth?.user ?? null)
+const socials = computed(() => page.props.socials ?? [])
+const vkBinding = computed(() => socials.value.find((s) => s.provider === 'vkontakte') ?? null)
+const otherBindings = computed(() => socials.value.filter((s) => s.provider !== 'vkontakte'))
+const vkConfigured = computed(() => Boolean(page.props.vkid?.app))
 
 const form = useForm({
   last_name: user.value?.last_name ?? '',
@@ -45,6 +67,38 @@ function submit(): void {
 function logout(): void {
   router.visit('/logout', { method: 'get' })
 }
+
+// Unlink confirm state
+const showUnlinkConfirm = ref(false)
+const unlinkProvider = ref<string | null>(null)
+
+function requestUnlink(provider: string): void {
+  unlinkProvider.value = provider
+  showUnlinkConfirm.value = true
+}
+
+function confirmUnlink(): void {
+  const provider = unlinkProvider.value
+  showUnlinkConfirm.value = false
+  unlinkProvider.value = null
+
+  if (!provider) {
+    return
+  }
+
+  router.post('/user/socials/unlink', { provider }, {
+    preserveScroll: true,
+  })
+}
+
+function cancelUnlink(): void {
+  showUnlinkConfirm.value = false
+  unlinkProvider.value = null
+}
+
+function socialLabel(provider: string): string {
+  return SOCIAL_LABELS[provider] ?? provider
+}
 </script>
 
 <template>
@@ -59,6 +113,14 @@ function logout(): void {
       <p class="mt-1 text-muted-foreground">
         Управление аккаунтом и уведомлениями
       </p>
+    </div>
+
+    <!-- Error flash -->
+    <div
+      v-if="page.props.flash?.error"
+      class="rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive border border-destructive/20"
+    >
+      {{ page.props.flash.error }}
     </div>
 
     <!-- Success flash -->
@@ -162,6 +224,75 @@ function logout(): void {
       </form>
     </Card>
 
+    <!-- Social section -->
+    <Card>
+      <CardHeader>
+        <div class="flex items-center gap-3">
+          <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-500/10">
+            <Link2 class="h-5 w-5 text-sky-500" />
+          </div>
+          <div>
+            <CardTitle>Соцсети</CardTitle>
+            <p class="text-sm text-muted-foreground">Вход в аккаунт через VK ID</p>
+          </div>
+        </div>
+      </CardHeader>
+
+      <div class="px-6 pb-6 space-y-3">
+        <!-- VK ID binding -->
+        <div class="flex items-center justify-between gap-4 rounded-xl border border-border/60 bg-white/40 px-4 py-3">
+          <div class="flex items-center gap-3">
+            <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-[#0077FF]/10">
+              <span class="text-sm font-bold text-[#0077FF]">VK</span>
+            </div>
+            <div>
+              <p class="text-sm font-medium text-foreground">VK ID</p>
+              <p v-if="vkBinding" class="text-xs text-muted-foreground">
+                Привязан (id: {{ vkBinding.social_id }})
+              </p>
+              <p v-else class="text-xs text-muted-foreground">
+                {{ vkConfigured ? 'Не привязан' : 'Не настроено' }}
+              </p>
+            </div>
+          </div>
+          <Button
+            v-if="vkBinding"
+            variant="outline"
+            size="sm"
+            class="text-destructive hover:text-destructive"
+            @click="requestUnlink('vkontakte')"
+          >
+            <Unlink class="h-4 w-4" />
+            Отвязать
+          </Button>
+        </div>
+
+        <!-- Link VK widget -->
+        <VkIdAuth v-if="!vkBinding && vkConfigured" mode="link" />
+
+        <!-- Other bound socials -->
+        <div
+          v-for="binding in otherBindings"
+          :key="binding.provider"
+          class="flex items-center justify-between gap-4 rounded-xl border border-border/60 bg-white/40 px-4 py-3"
+        >
+          <div>
+            <p class="text-sm font-medium text-foreground">{{ socialLabel(binding.provider) }}</p>
+            <p class="text-xs text-muted-foreground">Привязан (id: {{ binding.social_id }})</p>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            class="text-destructive hover:text-destructive"
+            @click="requestUnlink(binding.provider)"
+          >
+            <Unlink class="h-4 w-4" />
+            Отвязать
+          </Button>
+        </div>
+      </div>
+    </Card>
+
     <!-- Security section -->
     <Card>
       <CardHeader>
@@ -181,5 +312,15 @@ function logout(): void {
         </Button>
       </div>
     </Card>
+
+    <!-- Unlink confirm -->
+    <ConfirmDialog
+      :show="showUnlinkConfirm"
+      title="Отвязать соцсеть?"
+      confirmText="Отвязать"
+      variant="danger"
+      @confirm="confirmUnlink"
+      @cancel="cancelUnlink"
+    />
   </div>
 </template>
