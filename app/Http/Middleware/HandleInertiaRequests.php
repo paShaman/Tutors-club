@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
+use App\Services\VkIdService;
+use App\Services\YandexIdService;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -22,6 +24,9 @@ final class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $vkConfigured = (int) config('services.vkid.app_id') > 0
+            && (string) config('services.vkid.redirect_url') !== '';
+
         return [
             ...parent::share($request),
             'auth' => [
@@ -33,15 +38,24 @@ final class HandleInertiaRequests extends Middleware
                     'last_name'   => $request->user()->last_name,
                     'middle_name' => $request->user()->middle_name,
                     'name'        => $request->user()->name,
+                    'has_password' => $request->user()->password !== '',
                 ] : null,
             ],
             'flash' => [
                 'success' => fn (): ?string => $request->session()->get('success'),
                 'error'   => fn (): ?string => $request->session()->get('error'),
             ],
-            'vkid' => [
-                'app'         => config('services.vkid.app_id') ? (int) config('services.vkid.app_id') : null,
-                'redirectUrl' => config('services.vkid.redirect_url') ?: null,
+            'social' => [
+                [
+                    'key'         => VkIdService::SOCIAL_VKONTAKTE,
+                    'configured'  => $vkConfigured,
+                    'app'         => $vkConfigured ? (int) config('services.vkid.app_id') : null,
+                    'redirectUrl' => $vkConfigured ? (string) config('services.vkid.redirect_url') : null,
+                ],
+                [
+                    'key'        => YandexIdService::SOCIAL_YANDEX,
+                    'configured' => app(YandexIdService::class)->configured(),
+                ],
             ],
         ];
     }

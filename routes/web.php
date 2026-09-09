@@ -26,6 +26,7 @@ Route::get('/login', [PageController::class, 'login'])
     ->middleware('guest');
 
 Route::get('/register', [PageController::class, 'register'])
+    ->name('register')
     ->middleware('guest');
 
 Route::get('/settings', [PageController::class, 'settings'])
@@ -45,12 +46,21 @@ Route::get('/calendar/events', [CalendarController::class, 'getEvents'])
 Route::post('/register', [AuthController::class, 'register'])->middleware('guest');
 Route::post('/login', [AuthController::class, 'login'])->middleware('guest');
 Route::post('/auth/vk', [AuthController::class, 'vkontakte'])->middleware('guest');
+Route::get('/auth/yandex', [AuthController::class, 'yandex'])
+    ->name('auth.yandex')
+    ->middleware('guest');
+Route::get('/auth/yandex/callback', [AuthController::class, 'yandexCallback'])
+    ->name('auth.yandex.callback');
 Route::get('/logout', [AuthController::class, 'logout'])->middleware('auth');
 Route::get('/auth', [AuthController::class, 'auth'])->name('auth')->middleware('signed');
 
 // ─── User ───────────────────────────────────────────────────
 Route::post('/user/settings', [UserController::class, 'settings'])->middleware('auth');
+Route::post('/user/password', [UserController::class, 'password'])->middleware('auth');
 Route::post('/user/socials/link', [UserController::class, 'socialLink'])->middleware('auth');
+Route::get('/user/socials/link/yandex', [AuthController::class, 'yandexLink'])
+    ->name('auth.yandex.link')
+    ->middleware('auth');
 Route::post('/user/socials/unlink', [UserController::class, 'socialUnlink'])->middleware('auth');
 
 // ─── Avatar ─────────────────────────────────────────────────

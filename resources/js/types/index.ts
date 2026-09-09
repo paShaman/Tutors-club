@@ -6,6 +6,14 @@ export interface User {
   first_name?: string
   last_name?: string
   middle_name?: string
+  has_password?: boolean
+}
+
+export interface SocialProviderConfig {
+  key: string
+  configured: boolean
+  app?: number | null
+  redirectUrl?: string | null
 }
 
 export interface SharedProps {
@@ -17,10 +25,7 @@ export interface SharedProps {
     success: string | null
     error: string | null
   }
-  vkid: {
-    app: number | null
-    redirectUrl: string | null
-  } | null
+  social: SocialProviderConfig[]
 }
 
 declare module '@inertiajs/vue3' {

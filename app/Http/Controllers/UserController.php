@@ -3,11 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Image;
+use App\Services\SocialAccountService;
 use App\Services\VkIdService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
@@ -45,6 +47,41 @@ class UserController extends Controller
     }
 
     /**
+     * Установка или смена пароля.
+     */
+    public function password(Request $request): RedirectResponse
+    {
+        $user = Auth::user();
+
+        $rules = [
+            'password'              => ['required'],
+            'password_confirmation' => ['required', 'same:password'],
+        ];
+
+        $messages = [
+            'password.required'              => 'Введите новый пароль',
+            'password_confirmation.required' => 'Повторите новый пароль',
+            'password_confirmation.same'     => 'Пароли не совпадают',
+        ];
+
+        if ((string) $user->password !== '') {
+            $rules['current_password'] = ['required', function ($attribute, $value, $fail) use ($user) {
+                if (!Hash::check((string) $value, (string) $user->password)) {
+                    $fail(lng('error.password_current'));
+                }
+            }];
+            $messages['current_password.required'] = 'Укажите текущий пароль';
+        }
+
+        $request->validate($rules, $messages);
+
+        $user->password = Hash::make((string) $request->input('password'));
+        $user->save();
+
+        return redirect()->back()->with('success', lng('success.password'));
+    }
+
+    /**
      * Привязка VK ID к текущему аккаунту.
      */
     public function socialLink(Request $request): RedirectResponse
@@ -63,19 +100,13 @@ class UserController extends Controller
 
         $social = VkIdService::SOCIAL_VKONTAKTE;
         $socialId = (string) $profile['user_id'];
-        $ownerId = DB::table('users_social')
-            ->where('social', $social)
-            ->where('social_id', $socialId)
-            ->value('user_id');
+        $ownerId = app(SocialAccountService::class)->bindingOwner($social, $socialId);
 
-        if ($ownerId && (int) $ownerId !== Auth::id()) {
-            return redirect()->back()->with('error', lng('error.social_link_used'));
+        if ($ownerId !== null && $ownerId !== Auth::id()) {
+            return redirect()->back()->with('error', lng('error.social_link_used', ['provider' => app(SocialAccountService::class)->label($social)]));
         }
 
-        DB::table('users_social')->updateOrInsert(
-            ['social' => $social, 'social_id' => $socialId],
-            ['user_id' => Auth::id(), 'updated_at' => now()]
-        );
+        app(SocialAccountService::class)->linkToUser(Auth::id(), $social, $socialId);
 
         return redirect()->back()->with('success', lng('success.social_link'));
     }
@@ -87,7 +118,7 @@ class UserController extends Controller
     {
         $social = (string) $request->input('provider');
 
-        if (!in_array($social, ['vkontakte', 'facebook', 'google'], true)) {
+        if (!app(SocialAccountService::class)->supports($social)) {
             return redirect()->back()->with('error', lng('error.social_unlink'));
         }
 

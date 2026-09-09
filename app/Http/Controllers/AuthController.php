@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Image;
 use App\Model\User;
+use App\Services\SocialAccountService;
+use App\Services\SocialOAuthProvider;
 use App\Services\VkIdService;
+use App\Services\YandexIdService;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -12,12 +14,12 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
-    /**
-     * Регистрация пользователя.
-     */
+    private const OAUTH_SESSION_KEY = 'social_oauth_flow';
+
     public function register(Request $request): RedirectResponse
     {
         $rules = [
@@ -41,8 +43,7 @@ class AuthController extends Controller
 
         $email = mb_strtolower(trim((string) $request->input('email')));
 
-        $existing = User::where('email', $email)->first();
-        if (!empty($existing)) {
+        if (User::where('email', $email)->exists()) {
             return redirect()->back()->with('error', lng('duplicate_email'));
         }
 
@@ -67,9 +68,6 @@ class AuthController extends Controller
         return redirect()->intended(route('home'));
     }
 
-    /**
-     * Авторизация пользователя.
-     */
     public function login(Request $request): RedirectResponse
     {
         $rules = [
@@ -93,9 +91,6 @@ class AuthController extends Controller
         return redirect()->back()->with('error', lng('error.login'));
     }
 
-    /**
-     * Принудительная авторизация по ссылке с подписью.
-     */
     public function auth(): RedirectResponse
     {
         $userId = request()->get('user');
@@ -105,144 +100,95 @@ class AuthController extends Controller
         return redirect(route('home'));
     }
 
-    /**
-     * Авторизация через VK ID.
-     *
-     * Клиент обменивает авторизационный код на токены (VKID.Auth.exchangeCode)
-     * и присылает сюда access_token. Сервер проверяет токен у VK и находит
-     * либо создаёт пользователя, привязанного к аккаунту VK.
-     */
     public function vkontakte(Request $request): RedirectResponse
     {
+        $socials = app(SocialAccountService::class);
+        $provider = VkIdService::SOCIAL_VKONTAKTE;
+        $label = $socials->label($provider);
+
         $accessToken = (string) $request->input('access_token');
 
         if ($accessToken === '') {
-            return redirect()->back()->with('error', lng('error.vk'));
+            return $this->socialFail(null, lng('error.social_login', ['provider' => $label]));
         }
 
         $profile = app(VkIdService::class)->fetchUserInfo($accessToken);
 
         if ($profile === null || empty($profile['user_id'])) {
-            return redirect()->back()->with('error', lng('error.vk'));
+            return $this->socialFail(null, lng('error.social_login', ['provider' => $label]));
         }
 
-        $socialId = (string) $profile['user_id'];
-        $email = isset($profile['email']) && $profile['email'] !== ''
-            ? mb_strtolower(trim((string) $profile['email']))
-            : null;
-
-        $user = $this->findUserByVkAccount($socialId, $email);
-
-        if ($user === null) {
-            if (!$request->boolean('register')) {
-                return redirect()->back()->with('error', lng('error.vk_not_registered'));
-            }
-
-            if (!$request->boolean('agreement')) {
-                return redirect()->back()->with('error', lng('error.agreement'));
-            }
-
-            $user = new User();
-            $user->email      = $this->buildUniqueEmail($email, $socialId);
-            $user->password   = '';
-            $user->first_name = isset($profile['first_name']) ? (string) $profile['first_name'] : '';
-            $user->last_name  = isset($profile['last_name']) ? (string) $profile['last_name'] : '';
-            $user->middle_name = '';
-            $user->avatar     = isset($profile['avatar']) && $profile['avatar'] !== ''
-                ? Image::createImgUrl((string) $profile['avatar'], ['fit' => Image::AVATAR_SIZE])
-                : null;
-            $user->date_agree = DB::raw('now()');
-
-            try {
-                $user->save();
-            } catch (\Exception $e) {
-                return redirect()->back()->with('error', lng('error.register'));
-            }
-        } elseif ($email !== null && $this->isSyntheticVkEmail((string) $user->email, $socialId)) {
-            $this->replaceVkEmail($user, $email);
-        }
-
-        // Привязываем аккаунт VK к пользователю.
-        DB::table('users_social')->updateOrInsert(
-            ['social' => VkIdService::SOCIAL_VKONTAKTE, 'social_id' => $socialId],
-            ['user_id' => $user->id, 'updated_at' => now()]
+        return $this->socialLogin(
+            $request,
+            $provider,
+            $profile,
+            $request->boolean('register'),
+            $request->boolean('agreement')
         );
-
-        Auth::login($user, true);
-        $request->session()->regenerate();
-
-        return redirect()->intended(route('home'));
     }
 
-    /**
-     * Поиск пользователя по привязке VK либо по email из профиля VK.
-     */
-    private function findUserByVkAccount(string $socialId, ?string $email): ?User
+    public function yandex(Request $request): RedirectResponse
     {
-        $vkUserId = DB::table('users_social')
-            ->where('social', VkIdService::SOCIAL_VKONTAKTE)
-            ->where('social_id', $socialId)
-            ->value('user_id');
+        $service = app(YandexIdService::class);
 
-        if ($vkUserId) {
-            $user = User::find($vkUserId);
-            if ($user) {
-                return $user;
-            }
+        if (!$service->configured()) {
+            return redirect()->route('login');
         }
 
-        if ($email !== null) {
-            return User::where('email', $email)->first();
+        return $this->beginOauthFlow($request, $service, $request->boolean('register') ? 'register' : 'login');
+    }
+
+    public function yandexLink(): RedirectResponse
+    {
+        $service = app(YandexIdService::class);
+
+        if (!$service->configured()) {
+            return redirect()->back()->with('error', lng('error.social_link'));
         }
 
-        return null;
+        return $this->beginOauthFlow(request(), $service, 'link');
     }
 
-    /**
-     * Формирует уникальный email для аккаунта без email в профиле VK.
-     */
-    private function buildUniqueEmail(?string $email, string $socialId): string
+    public function yandexCallback(Request $request): RedirectResponse
     {
-        if ($email !== null && User::where('email', $email)->doesntExist()) {
-            return $email;
+        $service = app(YandexIdService::class);
+        $socials = app(SocialAccountService::class);
+
+        $flow = $request->session()->pull(self::OAUTH_SESSION_KEY);
+
+        if (!is_array($flow) || ($flow['provider'] ?? null) !== $service->key()) {
+            return redirect()->route('login');
         }
 
-        $host = parse_url((string) config('app.url'), PHP_URL_HOST) ?: 'tutors-club.ru';
+        $mode = in_array($flow['mode'], ['login', 'register', 'link'], true) ? $flow['mode'] : 'login';
+        $failRoute = $this->oauthModeRoute($mode);
+        $label = $socials->label($service->key());
 
-        return 'vk-' . $socialId . '@' . $host;
-    }
-
-    /**
-     * Является ли email сгенерированным для аккаунта VK без почты.
-     */
-    private function isSyntheticVkEmail(string $email, string $socialId): bool
-    {
-        $host = parse_url((string) config('app.url'), PHP_URL_HOST) ?: 'tutors-club.ru';
-
-        return $email === 'vk-' . $socialId . '@' . $host;
-    }
-
-    /**
-     * Заменяет сгенерированный email аккаунта VK на почту из профиля VK.
-     * Почта не трогается, если уже занята другим пользователем.
-     */
-    private function replaceVkEmail(User $user, string $email): void
-    {
-        $occupied = User::where('email', $email)
-            ->where('id', '!=', $user->id)
-            ->exists();
-
-        if ($occupied) {
-            return;
+        if ($request->filled('error') || !hash_equals((string) $flow['state'], (string) $request->query('state'))) {
+            return $this->socialFail($failRoute, $mode === 'link' ? lng('error.social_link') : lng('error.social_login', ['provider' => $label]));
         }
 
-        $user->email = $email;
-        $user->save();
+        $code = (string) $request->query('code');
+        $profile = $code !== '' ? $service->profileFromCode($code) : null;
+
+        if ($profile === null || empty($profile['user_id'])) {
+            return $this->socialFail($failRoute, $mode === 'link' ? lng('error.social_link') : lng('error.social_login', ['provider' => $label]));
+        }
+
+        if ($mode === 'link') {
+            return $this->linkSocialAccount($service->key(), $profile);
+        }
+
+        return $this->socialLogin(
+            $request,
+            $service->key(),
+            $profile,
+            $mode === 'register',
+            (bool) $flow['agreement'],
+            $failRoute
+        );
     }
 
-    /**
-     * Выход.
-     */
     public function logout(): RedirectResponse
     {
         Auth::logout();
@@ -253,9 +199,112 @@ class AuthController extends Controller
         return redirect(route('login'));
     }
 
-    /**
-     * Проверка токена Yandex SmartCaptcha.
-     */
+    private function beginOauthFlow(Request $request, SocialOAuthProvider $service, string $mode): RedirectResponse
+    {
+        $socials = app(SocialAccountService::class);
+        $label = $socials->label($service->key());
+
+        if (!$service->configured()) {
+            return $this->socialFail($this->oauthModeRoute($mode), $mode === 'link' ? lng('error.social_link') : lng('error.social_login', ['provider' => $label]));
+        }
+
+        $agreement = $request->boolean('agreement');
+
+        if ($mode === 'register' && !$agreement) {
+            return $this->socialFail($this->oauthModeRoute('register'), lng('error.agreement'));
+        }
+
+        $state = Str::random(40);
+        $url = $service->authorizeUrl($state);
+
+        if ($url === null) {
+            return $this->socialFail($this->oauthModeRoute($mode), $mode === 'link' ? lng('error.social_link') : lng('error.social_login', ['provider' => $label]));
+        }
+
+        $request->session()->put(self::OAUTH_SESSION_KEY, [
+            'provider'  => $service->key(),
+            'state'     => $state,
+            'mode'      => $mode,
+            'agreement' => $agreement,
+        ]);
+
+        return redirect()->away($url);
+    }
+
+    private function socialLogin(Request $request, string $provider, array $profile, bool $allowRegister, bool $agreement, ?string $failRoute = null): RedirectResponse
+    {
+        $socials = app(SocialAccountService::class);
+        $label = $socials->label($provider);
+        $socialId = (string) $profile['user_id'];
+        $email = $socials->normalizeEmail($profile['email'] ?? null);
+
+        $user = $socials->findUser($provider, $socialId, $email);
+
+        if ($user === null) {
+            if (!$allowRegister) {
+                return $this->socialFail($failRoute, lng('error.social_not_registered', ['provider' => $label]));
+            }
+
+            if (!$agreement) {
+                return $this->socialFail($failRoute, lng('error.agreement'));
+            }
+
+            try {
+                $user = $socials->createUser($provider, $socialId, $profile);
+            } catch (\Exception $e) {
+                return $this->socialFail($failRoute, lng('error.register'));
+            }
+        } elseif ($email !== null && $socials->isSyntheticEmail($provider, (string) $user->email, $socialId)) {
+            $socials->replaceSyntheticEmail($user, $email);
+        }
+
+        $socials->linkToUser($user->id, $provider, $socialId);
+
+        Auth::login($user, true);
+        $request->session()->regenerate();
+
+        return redirect()->intended(route('home'));
+    }
+
+    private function linkSocialAccount(string $provider, array $profile): RedirectResponse
+    {
+        $socials = app(SocialAccountService::class);
+        $socialId = (string) $profile['user_id'];
+        $user = Auth::user();
+
+        if ($user === null) {
+            return redirect()->route('login')->with('error', lng('unauthorized'));
+        }
+
+        $ownerId = $socials->bindingOwner($provider, $socialId);
+
+        if ($ownerId !== null && $ownerId !== $user->id) {
+            return redirect()->route('settings')->with('error', lng('error.social_link_used', ['provider' => $socials->label($provider)]));
+        }
+
+        $socials->linkToUser($user->id, $provider, $socialId);
+
+        return redirect()->route('settings')->with('success', lng('success.social_link'));
+    }
+
+    private function oauthModeRoute(string $mode): string
+    {
+        return match ($mode) {
+            'register' => 'register',
+            'link'     => 'settings',
+            default    => 'login',
+        };
+    }
+
+    private function socialFail(?string $route, string $message): RedirectResponse
+    {
+        if ($route !== null) {
+            return redirect()->route($route)->with('error', $message);
+        }
+
+        return redirect()->back()->with('error', $message);
+    }
+
     private function verifySmartCaptcha(string $token, string $ip): bool
     {
         $secret = config('services.yandex_smartcaptcha.server_key');

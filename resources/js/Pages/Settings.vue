@@ -10,7 +10,9 @@ import type { SharedProps } from '@/types'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import AvatarPicker from '@/components/ui/AvatarPicker.vue'
 import VkIdAuth from '@/components/social/VkIdAuth.vue'
+import YandexAuth from '@/components/social/YandexAuth.vue'
 import ConfirmDialog from '@/components/popups/ConfirmDialog.vue'
+import { providerMeta } from '@/lib/social'
 
 interface SocialBinding {
   provider: string
@@ -22,27 +24,49 @@ interface SettingsPageProps extends SharedProps {
   socials: SocialBinding[]
 }
 
-const SOCIAL_LABELS: Record<string, string> = {
-  vkontakte: 'VK ID',
-  facebook: 'Facebook',
-  google: 'Google',
-}
-
 defineOptions({ layout: AppLayout })
 
 const page = usePage<SettingsPageProps>()
 
 const user = computed(() => page.props.auth?.user ?? null)
 const socials = computed(() => page.props.socials ?? [])
-const vkBinding = computed(() => socials.value.find((s) => s.provider === 'vkontakte') ?? null)
-const otherBindings = computed(() => socials.value.filter((s) => s.provider !== 'vkontakte'))
-const vkConfigured = computed(() => Boolean(page.props.vkid?.app))
+const configuredProviders = computed(() => (page.props.social ?? []).filter((p) => p.configured))
+
+function binding(provider: string): SocialBinding | null {
+  return socials.value.find((s) => s.provider === provider) ?? null
+}
+
+function isConfigured(provider: string): boolean {
+  return configuredProviders.value.some((p) => p.key === provider)
+}
+
+const socialRows = computed(() => {
+  const keys: string[] = []
+
+  for (const provider of configuredProviders.value) {
+    keys.push(provider.key)
+  }
+
+  for (const item of socials.value) {
+    if (!keys.includes(item.provider)) {
+      keys.push(item.provider)
+    }
+  }
+
+  return keys
+})
 
 const form = useForm({
   last_name: user.value?.last_name ?? '',
   first_name: user.value?.first_name ?? '',
   middle_name: user.value?.middle_name ?? '',
   avatar: user.value?.avatar ?? null,
+})
+
+const passwordForm = useForm({
+  current_password: '',
+  password: '',
+  password_confirmation: '',
 })
 
 // Sync form fields when user data arrives asynchronously
@@ -60,6 +84,15 @@ function submit(): void {
     preserveScroll: true,
     onSuccess: () => {
       // form is automatically reset to current values
+    },
+  })
+}
+
+function submitPassword(): void {
+  passwordForm.post('/user/password', {
+    preserveScroll: true,
+    onSuccess: () => {
+      passwordForm.reset()
     },
   })
 }
@@ -94,10 +127,6 @@ function confirmUnlink(): void {
 function cancelUnlink(): void {
   showUnlinkConfirm.value = false
   unlinkProvider.value = null
-}
-
-function socialLabel(provider: string): string {
-  return SOCIAL_LABELS[provider] ?? provider
 }
 </script>
 
@@ -233,62 +262,53 @@ function socialLabel(provider: string): string {
           </div>
           <div>
             <CardTitle>Соцсети</CardTitle>
-            <p class="text-sm text-muted-foreground">Вход в аккаунт через VK ID</p>
+            <p class="text-sm text-muted-foreground">Вход в аккаунт через соцсети</p>
           </div>
         </div>
       </CardHeader>
 
-      <div class="px-6 pb-6 space-y-3">
-        <!-- VK ID binding -->
-        <div class="flex items-center justify-between gap-4 rounded-xl border border-border/60 bg-white/40 px-4 py-3">
-          <div class="flex items-center gap-3">
-            <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-[#0077FF]/10">
-              <span class="text-sm font-bold text-[#0077FF]">VK</span>
+      <div class="px-6 pb-6 space-y-4">
+        <div v-for="key in socialRows" :key="key" class="space-y-3">
+          <!-- Provider row -->
+          <div class="flex items-center justify-between gap-4 rounded-xl border border-border/60 bg-white/40 px-4 py-3">
+            <div class="flex items-center gap-3">
+              <div
+                class="flex h-9 w-9 items-center justify-center rounded-lg"
+                :class="providerMeta(key).badgeClass"
+              >
+                <span class="text-xs font-bold">{{ providerMeta(key).badge }}</span>
+              </div>
+              <div>
+                <p class="text-sm font-medium text-foreground">{{ providerMeta(key).label }}</p>
+                <p v-if="binding(key)" class="text-xs text-muted-foreground">
+                  Привязан (id: {{ binding(key)!.social_id }})
+                </p>
+                <p v-else class="text-xs text-muted-foreground">
+                  Не привязан
+                </p>
+              </div>
             </div>
-            <div>
-              <p class="text-sm font-medium text-foreground">VK ID</p>
-              <p v-if="vkBinding" class="text-xs text-muted-foreground">
-                Привязан (id: {{ vkBinding.social_id }})
-              </p>
-              <p v-else class="text-xs text-muted-foreground">
-                {{ vkConfigured ? 'Не привязан' : 'Не настроено' }}
-              </p>
-            </div>
+            <Button
+              v-if="binding(key)"
+              variant="outline"
+              size="sm"
+              class="text-destructive hover:text-destructive"
+              @click="requestUnlink(key)"
+            >
+              <Unlink class="h-4 w-4" />
+              Отвязать
+            </Button>
           </div>
-          <Button
-            v-if="vkBinding"
-            variant="outline"
-            size="sm"
-            class="text-destructive hover:text-destructive"
-            @click="requestUnlink('vkontakte')"
-          >
-            <Unlink class="h-4 w-4" />
-            Отвязать
-          </Button>
-        </div>
 
-        <!-- Link VK widget -->
-        <VkIdAuth v-if="!vkBinding && vkConfigured" mode="link" />
-
-        <!-- Other bound socials -->
-        <div
-          v-for="binding in otherBindings"
-          :key="binding.provider"
-          class="flex items-center justify-between gap-4 rounded-xl border border-border/60 bg-white/40 px-4 py-3"
-        >
-          <div>
-            <p class="text-sm font-medium text-foreground">{{ socialLabel(binding.provider) }}</p>
-            <p class="text-xs text-muted-foreground">Привязан (id: {{ binding.social_id }})</p>
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            class="text-destructive hover:text-destructive"
-            @click="requestUnlink(binding.provider)"
-          >
-            <Unlink class="h-4 w-4" />
-            Отвязать
-          </Button>
+          <!-- Link control for configured providers -->
+          <VkIdAuth
+            v-if="key === 'vkontakte' && !binding(key) && isConfigured(key)"
+            mode="link"
+          />
+          <YandexAuth
+            v-else-if="key === 'yandex' && !binding(key) && isConfigured(key)"
+            mode="link"
+          />
         </div>
       </div>
     </Card>
@@ -306,7 +326,70 @@ function socialLabel(provider: string): string {
           </div>
         </div>
       </CardHeader>
-      <div class="px-6 pb-6">
+      <div class="px-6 pb-6 space-y-4">
+        <!-- Password -->
+        <div class="border-b border-border/60 pb-5">
+          <p class="block text-sm font-medium text-foreground mb-1">
+            Пароль
+          </p>
+          <p class="mb-3 text-xs text-muted-foreground">
+            <template v-if="user?.has_password">
+              Изменение пароля для входа по email
+            </template>
+            <template v-else>
+              Задайте пароль — после этого можно будет отвязать соцсеть
+            </template>
+          </p>
+
+          <form class="space-y-3" @submit.prevent="submitPassword">
+            <div v-if="user?.has_password">
+              <label for="current_password" class="block text-sm font-medium text-foreground mb-1.5">
+                Текущий пароль
+              </label>
+              <input
+                id="current_password"
+                v-model="passwordForm.current_password"
+                type="password"
+                autocomplete="current-password"
+                class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+              />
+              <p v-if="passwordForm.errors.current_password" class="mt-1 text-xs text-destructive">{{ passwordForm.errors.current_password }}</p>
+            </div>
+
+            <div>
+              <label for="new_password" class="block text-sm font-medium text-foreground mb-1.5">
+                Новый пароль
+              </label>
+              <input
+                id="new_password"
+                v-model="passwordForm.password"
+                type="password"
+                autocomplete="new-password"
+                class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+              />
+              <p v-if="passwordForm.errors.password" class="mt-1 text-xs text-destructive">{{ passwordForm.errors.password }}</p>
+            </div>
+
+            <div>
+              <label for="password_confirmation" class="block text-sm font-medium text-foreground mb-1.5">
+                Повторите пароль
+              </label>
+              <input
+                id="password_confirmation"
+                v-model="passwordForm.password_confirmation"
+                type="password"
+                autocomplete="new-password"
+                class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+              />
+              <p v-if="passwordForm.errors.password_confirmation" class="mt-1 text-xs text-destructive">{{ passwordForm.errors.password_confirmation }}</p>
+            </div>
+
+            <Button type="submit" :disabled="passwordForm.processing">
+              {{ passwordForm.processing ? 'Сохранение...' : (user?.has_password ? 'Сменить пароль' : 'Задать пароль') }}
+            </Button>
+          </form>
+        </div>
+
         <Button variant="outline" @click="logout">
           Выйти из аккаунта
         </Button>

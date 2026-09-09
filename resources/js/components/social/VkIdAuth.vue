@@ -27,8 +27,8 @@ const container = ref<HTMLElement | null>(null)
 const error = ref('')
 const processing = ref(false)
 
-const vkid = computed(() => page.props.vkid ?? null)
-const enabled = computed(() => Boolean(vkid.value?.app && vkid.value?.redirectUrl))
+const vk = computed(() => page.props.social?.find((p) => p.key === 'vkontakte') ?? null)
+const enabled = computed(() => Boolean(vk.value?.configured && vk.value?.app && vk.value?.redirectUrl))
 
 let oneTap: VKID.OneTap | null = null
 let destroyed = false
@@ -78,8 +78,8 @@ onMounted(() => {
   }
 
   VKID.Config.init({
-    app: vkid.value!.app!,
-    redirectUrl: vkid.value!.redirectUrl!,
+    app: vk.value!.app!,
+    redirectUrl: vk.value!.redirectUrl!,
     responseMode: VKID.ConfigResponseMode.Callback,
     source: VKID.ConfigSource.LOWCODE,
     scope: 'vkid.personal_info email',

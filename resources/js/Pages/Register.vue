@@ -2,7 +2,7 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3'
 import { UserPlus } from 'lucide-vue-next'
 import Button from '@/components/ui/Button.vue'
-import VkIdAuth from '@/components/social/VkIdAuth.vue'
+import SocialAuth from '@/components/social/SocialAuth.vue'
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 import type { SharedProps } from '@/types'
 
@@ -165,22 +165,13 @@ function submit(): void {
         class="glass rounded-2xl border border-white/20 p-6 space-y-5"
         @submit.prevent="submit"
       >
-        <!-- VK ID -->
-        <VkIdAuth
-          v-if="page.props.vkid?.app"
+        <!-- Соцсети -->
+        <SocialAuth
+          mode="login"
           register
           agreement-required
           :agreement="form.agreement"
         />
-
-        <div
-          v-if="page.props.vkid?.app"
-          class="flex items-center gap-3 text-xs uppercase tracking-wide text-muted-foreground"
-        >
-          <span class="h-px flex-1 bg-border/70"></span>
-          или
-          <span class="h-px flex-1 bg-border/70"></span>
-        </div>
 
         <!-- Consent -->
         <div>
