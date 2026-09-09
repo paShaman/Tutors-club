@@ -2,8 +2,27 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3'
 import { UserPlus } from 'lucide-vue-next'
 import Button from '@/components/ui/Button.vue'
-import { ref } from 'vue'
+import { onBeforeUnmount, onMounted, ref } from 'vue'
 import type { SharedProps } from '@/types'
+
+interface SmartCaptchaApi {
+  render: (container: HTMLElement | string, params: SmartCaptchaParams) => number
+  reset?: (widgetId?: number) => void
+  destroy?: (widgetId?: number) => void
+}
+
+interface SmartCaptchaParams {
+  sitekey: string
+  hl?: string
+  callback?: (token: string) => void
+}
+
+interface SmartCaptchaWindow extends Window {
+  smartCaptcha?: SmartCaptchaApi
+  __smartCaptchaReady?: () => void
+}
+
+const CAPTCHA_SITEKEY = 'ysc1_JArb9tRxzTMqOzXyeT01wYKXoYLtCQK5DPmkB10x200589eb'
 
 const page = usePage<SharedProps>()
 
@@ -13,13 +32,110 @@ const form = useForm({
   email: '',
   password: '',
   password_confirmation: '',
+  'smart-token': '',
 })
 
 const showPassword = ref(false)
+const captchaContainer = ref<HTMLElement | null>(null)
+const captchaToken = ref('')
+const captchaError = ref('')
+let captchaWidgetId: number | undefined
+
+function captchaWindow(): SmartCaptchaWindow {
+  return window as SmartCaptchaWindow
+}
+
+function smartCaptchaApi(): SmartCaptchaApi | undefined {
+  return captchaWindow().smartCaptcha
+}
+
+function loadCaptchaScript(): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (smartCaptchaApi()) {
+      resolve()
+      return
+    }
+
+    const existing = document.getElementById('smartcaptcha-script') as HTMLScriptElement | null
+    if (existing) {
+      existing.addEventListener('load', () => resolve())
+      existing.addEventListener('error', () => reject(new Error('Captcha load failed')))
+      return
+    }
+
+    captchaWindow().__smartCaptchaReady = () => {
+      delete captchaWindow().__smartCaptchaReady
+    }
+
+    const script = document.createElement('script')
+    script.id = 'smartcaptcha-script'
+    script.src = 'https://smartcaptcha.cloud.yandex.ru/captcha.js?render=onload&onload=__smartCaptchaReady'
+    script.async = true
+    script.addEventListener('load', () => resolve())
+    script.addEventListener('error', () => reject(new Error('Captcha load failed')))
+    document.head.appendChild(script)
+  })
+}
+
+function initCaptcha(): void {
+  if (!captchaContainer.value) {
+    return
+  }
+
+  loadCaptchaScript()
+    .then(() => {
+      if (!captchaContainer.value || !smartCaptchaApi()) {
+        return
+      }
+
+      captchaWidgetId = smartCaptchaApi()!.render(captchaContainer.value, {
+        sitekey: CAPTCHA_SITEKEY,
+        hl: 'ru',
+        callback: (token: string) => {
+          captchaToken.value = token
+          captchaError.value = ''
+        },
+      })
+    })
+    .catch(() => {
+      captchaError.value = 'Не удалось загрузить проверку «Я не робот»'
+    })
+}
+
+function resetCaptcha(): void {
+  captchaToken.value = ''
+  captchaError.value = ''
+  form['smart-token'] = ''
+
+  if (!captchaContainer.value?.isConnected) {
+    return
+  }
+
+  smartCaptchaApi()?.reset?.(captchaWidgetId)
+}
+
+onMounted(initCaptcha)
+
+onBeforeUnmount(() => {
+  if (smartCaptchaApi() && captchaWidgetId !== undefined) {
+    smartCaptchaApi()!.destroy?.(captchaWidgetId)
+  }
+})
 
 function submit(): void {
+  if (!captchaToken.value) {
+    captchaError.value = 'Подтвердите, что вы не робот'
+    return
+  }
+
+  captchaError.value = ''
+  form['smart-token'] = captchaToken.value
+
   form.post('/register', {
-    onFinish: () => form.reset('password', 'password_confirmation'),
+    onFinish: () => {
+      form.reset('password', 'password_confirmation')
+      resetCaptcha()
+    },
   })
 }
 </script>
@@ -138,6 +254,17 @@ function submit(): void {
             placeholder="••••••••"
           />
           <p v-if="form.errors.password_confirmation" class="mt-1 text-xs text-destructive">{{ form.errors.password_confirmation }}</p>
+        </div>
+
+        <!-- Captcha -->
+        <div>
+          <div
+            ref="captchaContainer"
+            class="w-full rounded-xl bg-white/50"
+            style="height: 100px"
+          ></div>
+          <p v-if="captchaError" class="mt-1 text-xs text-destructive">{{ captchaError }}</p>
+          <p v-else-if="form.errors['smart-token']" class="mt-1 text-xs text-destructive">{{ form.errors['smart-token'] }}</p>
         </div>
 
         <!-- Error flash -->

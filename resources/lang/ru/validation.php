@@ -10,6 +10,7 @@ return [
         'password_confirmation' => 'Повторите пароль',
         'policy_agree'          => 'Политика конфеденциальности',
         'student_name'          => 'Имя',
+        'smart-token'           => 'Капча',
     ],
     'required'  => 'Обязательное поле ":attribute"',
     'email'     => 'Некорректный email',

@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 
 class AuthController extends Controller
 {
@@ -21,9 +22,14 @@ class AuthController extends Controller
             'email'                 => 'required|email',
             'password'              => 'required',
             'password_confirmation' => 'required|same:password',
+            'smart-token'           => 'required|string',
         ];
 
         $request->validate($rules);
+
+        if (!$this->verifySmartCaptcha((string) $request->input('smart-token'), (string) $request->ip())) {
+            return redirect()->back()->with('error', lng('error.captcha'));
+        }
 
         $email = mb_strtolower(trim((string) $request->input('email')));
 
@@ -102,5 +108,35 @@ class AuthController extends Controller
         request()->session()->regenerateToken();
 
         return redirect(route('login'));
+    }
+
+    /**
+     * Проверка токена Yandex SmartCaptcha.
+     */
+    private function verifySmartCaptcha(string $token, string $ip): bool
+    {
+        $secret = config('services.yandex_smartcaptcha.server_key');
+
+        if (empty($secret) || $token === '') {
+            return false;
+        }
+
+        try {
+            $response = Http::asForm()
+                ->timeout(5)
+                ->post('https://smartcaptcha.cloud.yandex.ru/validate', [
+                    'secret' => $secret,
+                    'token'  => $token,
+                    'ip'     => $ip,
+                ]);
+
+            if (!$response->successful()) {
+                return false;
+            }
+
+            return $response->json('status') === 'ok';
+        } catch (\Throwable $e) {
+            return false;
+        }
     }
 }

@@ -37,4 +37,9 @@ return [
         ],
     ],
 
+    'yandex_smartcaptcha' => [
+        'site_key'   => env('SMARTCAPTCHA_SITE_KEY'),
+        'server_key' => env('SMARTCAPTCHA_SERVER_KEY'),
+    ],
+
 ];
