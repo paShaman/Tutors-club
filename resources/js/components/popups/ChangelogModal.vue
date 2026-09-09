@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import axios from 'axios'
-import { X, GitFork, Loader2 } from 'lucide-vue-next'
+import { X, GitFork, ChevronDown, Loader2 } from 'lucide-vue-next'
 import Button from '@/components/ui/Button.vue'
 
 defineProps<{
@@ -17,22 +17,63 @@ interface ChangelogCategory {
   items: string[]
 }
 
-const categories = ref<ChangelogCategory[]>([])
+interface ChangelogVersion {
+  version: string
+  date: string
+  categories: ChangelogCategory[]
+}
+
+const versions = ref<ChangelogVersion[]>([])
+const openVersions = ref<Set<string>>(new Set())
 const loading = ref(true)
 const error = ref('')
+
+const latest = computed(() => versions.value[0] ?? null)
+
+const latestDateLabel = computed(() => {
+  const v = latest.value
+  return v ? `${formatDate(v.date)}` : ''
+})
 
 async function loadChangelog() {
   loading.value = true
   error.value = ''
   try {
-    const { data } = await axios.get('/changelog', { params: { days: 1 } })
-    categories.value = data.changelog ?? []
+    const { data } = await axios.get('/changelog')
+    versions.value = data.changelog ?? []
+    const first = versions.value[0]
+    openVersions.value = new Set(first ? [first.version] : [])
   } catch (e: any) {
     error.value = 'Не удалось загрузить список изменений'
     console.error(e)
   } finally {
     loading.value = false
   }
+}
+
+function isOpen(version: string): boolean {
+  return openVersions.value.has(version)
+}
+
+function toggle(version: string): void {
+  const next = new Set(openVersions.value)
+  if (next.has(version)) {
+    next.delete(version)
+  } else {
+    next.add(version)
+  }
+  openVersions.value = next
+}
+
+function formatDate(isoDate: string): string {
+  const [year, month, day] = isoDate.split('-').map(Number)
+  const date = new Date(year, (month ?? 1) - 1, day ?? 1)
+  const label = date.toLocaleDateString('ru-RU', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  })
+  return label.charAt(0).toUpperCase() + label.slice(1)
 }
 
 onMounted(loadChangelog)
@@ -59,7 +100,10 @@ onMounted(loadChangelog)
             </div>
             <div>
               <h3 class="text-base font-semibold text-foreground">История изменений</h3>
-              <p class="text-xs text-muted-foreground">Сегодня</p>
+              <p class="text-xs text-muted-foreground">
+                <template v-if="latest">Версия {{ latest.version }} · {{ latestDateLabel }}</template>
+                <template v-else>Обновления приложения</template>
+              </p>
             </div>
           </div>
           <button
@@ -83,28 +127,59 @@ onMounted(loadChangelog)
           </div>
 
           <!-- Empty -->
-          <div v-else-if="categories.length === 0" class="text-center py-8">
+          <div v-else-if="versions.length === 0" class="text-center py-8">
             <div class="flex justify-center mb-3">
               <div class="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
                 <GitFork class="h-5 w-5 text-muted-foreground" />
               </div>
             </div>
-            <p class="text-sm text-muted-foreground">Нет изменений за сегодня</p>
+            <p class="text-sm text-muted-foreground">Список изменений пока пуст</p>
           </div>
 
-          <!-- Changelog -->
-          <div v-else class="space-y-5">
-            <div v-for="cat in categories" :key="cat.title">
-              <h4 class="text-sm font-semibold text-foreground mb-2">{{ cat.title }}</h4>
-              <ul class="space-y-1.5">
-                <li
-                  v-for="(item, i) in cat.items"
-                  :key="i"
-                  class="text-sm text-foreground/85 leading-snug pl-3 relative before:absolute before:left-0 before:top-[0.6em] before:h-1 before:w-1 before:rounded-full before:bg-primary/60"
-                >
-                  {{ item }}
-                </li>
-              </ul>
+          <!-- Versioned accordion -->
+          <div v-else class="space-y-3">
+            <div
+              v-for="ver in versions"
+              :key="ver.version"
+              class="overflow-hidden rounded-xl border border-border/60 bg-white/50"
+            >
+              <!-- Version header -->
+              <button
+                class="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-accent/50 transition-colors cursor-pointer"
+                @click="toggle(ver.version)"
+              >
+                <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                  <span class="text-xs font-bold text-primary">{{ ver.version }}</span>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-2">
+                    <p class="text-sm font-semibold text-foreground">Версия {{ ver.version }}</p>
+                  </div>
+                  <p class="text-xs text-muted-foreground">{{ formatDate(ver.date) }}</p>
+                </div>
+                <ChevronDown
+                  class="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-300"
+                  :class="isOpen(ver.version) && 'rotate-180'"
+                />
+              </button>
+
+              <!-- Version body -->
+              <Transition name="collapse">
+                <div v-if="isOpen(ver.version)" class="border-t border-border/50 px-4 py-4 space-y-4">
+                  <div v-for="cat in ver.categories" :key="cat.title">
+                    <h4 class="text-sm font-semibold text-foreground mb-2">{{ cat.title }}</h4>
+                    <ul class="space-y-1.5">
+                      <li
+                        v-for="(item, i) in cat.items"
+                        :key="i"
+                        class="text-sm text-foreground/85 leading-snug pl-3 relative before:absolute before:left-0 before:top-[0.6em] before:h-1 before:w-1 before:rounded-full before:bg-primary/60"
+                      >
+                        {{ item }}
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </Transition>
             </div>
           </div>
         </div>
