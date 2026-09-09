@@ -25,9 +25,15 @@ class AuthController extends Controller
             'password'              => 'required',
             'password_confirmation' => 'required|same:password',
             'smart-token'           => 'required|string',
+            'agreement'             => 'required|accepted',
         ];
 
-        $request->validate($rules);
+        $messages = [
+            'agreement.required' => lng('error.agreement'),
+            'agreement.accepted' => lng('error.agreement'),
+        ];
+
+        $request->validate($rules, $messages);
 
         if (!$this->verifySmartCaptcha((string) $request->input('smart-token'), (string) $request->ip())) {
             return redirect()->back()->with('error', lng('error.captcha'));
@@ -128,6 +134,14 @@ class AuthController extends Controller
         $user = $this->findUserByVkAccount($socialId, $email);
 
         if ($user === null) {
+            if (!$request->boolean('register')) {
+                return redirect()->back()->with('error', lng('error.vk_not_registered'));
+            }
+
+            if (!$request->boolean('agreement')) {
+                return redirect()->back()->with('error', lng('error.agreement'));
+            }
+
             $user = new User();
             $user->email      = $this->buildUniqueEmail($email, $socialId);
             $user->password   = '';

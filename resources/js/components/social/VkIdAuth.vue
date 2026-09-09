@@ -11,8 +11,14 @@ interface VkLoginPayload {
 
 const props = withDefaults(defineProps<{
   mode?: 'login' | 'link'
+  register?: boolean
+  agreementRequired?: boolean
+  agreement?: boolean
 }>(), {
   mode: 'login',
+  register: false,
+  agreementRequired: false,
+  agreement: false,
 })
 
 const page = usePage<SharedProps>()
@@ -32,6 +38,11 @@ async function handleLoginSuccess(payload: VkLoginPayload): Promise<void> {
     return
   }
 
+  if (props.agreementRequired && props.agreement !== true) {
+    error.value = 'Необходимо согласие на обработку персональных данных'
+    return
+  }
+
   processing.value = true
   error.value = ''
 
@@ -40,6 +51,8 @@ async function handleLoginSuccess(payload: VkLoginPayload): Promise<void> {
 
     router.post(props.mode === 'link' ? '/user/socials/link' : '/auth/vk', {
       access_token: tokens.access_token,
+      ...(props.register ? { register: true } : {}),
+      ...(props.agreementRequired ? { agreement: props.agreement === true } : {}),
     }, {
       preserveScroll: true,
       onError: () => {

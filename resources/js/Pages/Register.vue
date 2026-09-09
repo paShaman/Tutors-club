@@ -34,6 +34,7 @@ const form = useForm({
   password: '',
   password_confirmation: '',
   'smart-token': '',
+  agreement: false,
 })
 
 const showPassword = ref(false)
@@ -165,7 +166,12 @@ function submit(): void {
         @submit.prevent="submit"
       >
         <!-- VK ID -->
-        <VkIdAuth v-if="page.props.vkid?.app" />
+        <VkIdAuth
+          v-if="page.props.vkid?.app"
+          register
+          agreement-required
+          :agreement="form.agreement"
+        />
 
         <div
           v-if="page.props.vkid?.app"
@@ -174,6 +180,24 @@ function submit(): void {
           <span class="h-px flex-1 bg-border/70"></span>
           или
           <span class="h-px flex-1 bg-border/70"></span>
+        </div>
+
+        <!-- Consent -->
+        <div>
+          <label class="flex cursor-pointer items-start gap-2.5 text-xs leading-relaxed text-muted-foreground">
+            <input
+              v-model="form.agreement"
+              type="checkbox"
+              class="mt-0.5 h-4 w-4 shrink-0 cursor-pointer rounded border-border accent-primary"
+            />
+            <span>
+              Я согласен на обработку персональных данных и принимаю условия
+              <a href="#" class="font-medium text-primary hover:underline transition-colors">Политики обработки персональных данных</a>
+              и
+              <a href="#" class="font-medium text-primary hover:underline transition-colors">Пользовательского соглашения</a>
+            </span>
+          </label>
+          <p v-if="form.errors.agreement" class="mt-1 text-xs text-destructive">{{ form.errors.agreement }}</p>
         </div>
 
         <!-- Last Name -->
