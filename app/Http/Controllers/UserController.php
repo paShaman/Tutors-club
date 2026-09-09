@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Image;
 use Illuminate\Support\Facades\Auth;
 
 
@@ -25,7 +26,17 @@ class UserController extends Controller
             $user->middle_name = trim((string) $post['middle_name']);
         }
 
+        $oldAvatar = $user->avatar;
+
+        if (array_key_exists('avatar', $post)) {
+            $user->avatar = !empty($post['avatar']) ? (string) $post['avatar'] : null;
+        }
+
         $user->save();
+
+        if ($oldAvatar !== $user->avatar) {
+            Image::deleteStoredAvatar($oldAvatar);
+        }
 
         return back()->with('success', lng('success.settings'));
     }

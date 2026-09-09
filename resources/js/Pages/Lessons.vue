@@ -19,6 +19,7 @@ import {
 } from 'lucide-vue-next'
 import LessonFormPopup from '@/components/popups/LessonFormPopup.vue'
 import type { LessonFormData } from '@/components/popups/LessonFormPopup.vue'
+import UserAvatar from '@/components/ui/UserAvatar.vue'
 import ConfirmDialog from '@/components/popups/ConfirmDialog.vue'
 import AlertPopup from '@/components/popups/AlertPopup.vue'
 
@@ -44,6 +45,7 @@ interface StudentData {
   class: string | null
   current_class: string
   type: string | null
+  avatar: string | null
 }
 
 interface StudentGroup {
@@ -541,16 +543,16 @@ function formatDatePayed(dateStr: string | null): string {
                         :is="studentVisibility[`${yearData.year}-${monthNum}-${studentGroup.student.id}`] ? ChevronDown : ChevronRight"
                         class="h-4 w-4 text-muted-foreground shrink-0 transition-transform duration-300"
                       />
-                      <div
+                      <UserAvatar
+                        :name="studentGroup.student.name"
+                        :src="studentGroup.student.avatar"
                         :class="cn(
-                          'flex h-8 w-8 items-center justify-center rounded-full text-xs font-semibold text-white shadow shrink-0',
+                          'h-8 w-8 text-xs font-semibold text-white shadow',
                           studentGroup.student.type
                             ? 'bg-gradient-to-br from-amber-500 to-orange-500'
                             : 'bg-gradient-to-br from-blue-500 to-indigo-500',
                         )"
-                      >
-                        {{ studentGroup.student.name.charAt(0) }}
-                      </div>
+                      />
                       <div class="flex-1 min-w-0 flex flex-col lg:flex-row lg:items-center gap-1.5 lg:gap-3">
                         <p class="text-sm font-medium text-foreground truncate">
                           {{ studentGroup.student.name }}

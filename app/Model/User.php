@@ -236,6 +236,7 @@ class User extends Authenticatable
                 'name'            => $params['name'],
                 'class'           => $params['class'] ?? '',
                 'description'     => $params['description'] ?? '',
+                'avatar'          => $params['avatar'] ?? null,
             ]);
 
             $this->students()->save($student);

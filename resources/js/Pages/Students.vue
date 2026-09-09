@@ -7,6 +7,7 @@ import { ref, computed } from 'vue'
 import { cn } from '@/lib/utils'
 import StudentFormPopup from '@/components/popups/StudentFormPopup.vue'
 import type { StudentFormData } from '@/components/popups/StudentFormPopup.vue'
+import UserAvatar from '@/components/ui/UserAvatar.vue'
 import ConfirmDialog from '@/components/popups/ConfirmDialog.vue'
 import AlertPopup from '@/components/popups/AlertPopup.vue'
 import {
@@ -29,6 +30,7 @@ const page = usePage<{
     type: string | null
     description: string | null
     is_deleted: number
+    avatar: string | null
   }>
   deletedFlag: boolean
   specialFlag: boolean
@@ -110,6 +112,7 @@ function openEditModal(student: any) {
     student_class: student.class ?? '',
     student_type: student.type ?? '',
     student_description: student.description ?? '',
+    student_avatar: student.avatar ?? '',
   }
   editingStudent.value = student
   showEditModal.value = true
@@ -238,9 +241,11 @@ function deleteStudent(student: any) {
           >
             <div class="flex items-start justify-between">
               <div class="flex items-center gap-3">
-                <div class="flex h-11 w-11 items-center justify-center rounded-full text-sm font-semibold text-white shadow shrink-0 bg-gradient-to-br from-blue-500 to-indigo-500">
-                  {{ student.name.charAt(0).toUpperCase() }}
-                </div>
+                <UserAvatar
+                  :name="student.name"
+                  :src="student.avatar"
+                  class="h-11 w-11 bg-gradient-to-br from-blue-500 to-indigo-500 text-sm font-semibold text-white shadow"
+                />
                 <div>
                   <h3 class="font-medium text-foreground">{{ student.name }}</h3>
                   <p class="text-xs text-muted-foreground">
@@ -298,9 +303,11 @@ function deleteStudent(student: any) {
           >
             <div class="flex items-start justify-between">
               <div class="flex items-center gap-3">
-                <div class="flex h-11 w-11 items-center justify-center rounded-full text-sm font-semibold text-white shadow shrink-0 bg-gradient-to-br from-amber-500 to-orange-500">
-                  {{ student.name.charAt(0).toUpperCase() }}
-                </div>
+                <UserAvatar
+                  :name="student.name"
+                  :src="student.avatar"
+                  class="h-11 w-11 bg-gradient-to-br from-amber-500 to-orange-500 text-sm font-semibold text-white shadow"
+                />
                 <div>
                   <div class="flex items-center gap-2">
                     <h3 class="font-medium text-foreground">{{ student.name }}</h3>

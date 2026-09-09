@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Student extends Model
 {
     protected $fillable = [
-        'name', 'description', 'is_deleted', 'class', 'type'
+        'name', 'description', 'is_deleted', 'class', 'type', 'avatar'
     ];
 
     protected $appends = ['current_class'];

@@ -15,6 +15,7 @@ import {
   GitCommit,
 } from 'lucide-vue-next'
 import Button from '@/components/ui/Button.vue'
+import UserAvatar from '@/components/ui/UserAvatar.vue'
 import ChangelogModal from '@/components/popups/ChangelogModal.vue'
 import { cn } from '@/lib/utils'
 
@@ -254,11 +255,11 @@ onUnmounted(() => {
             class="flex items-center gap-2.5 rounded-xl px-2.5 py-1.5 text-sm transition-colors hover:bg-accent cursor-pointer"
             @click="userMenuOpen = !userMenuOpen"
           >
-            <div
-              class="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-primary to-purple-500 text-xs font-semibold text-white shadow"
-            >
-              {{ (user.last_name?.charAt(0) || user.first_name?.charAt(0) || 'U').toUpperCase() }}
-            </div>
+            <UserAvatar
+              :name="`${user.last_name ?? ''} ${user.first_name ?? ''}`"
+              :src="user.avatar ?? null"
+              class="h-8 w-8 bg-gradient-to-br from-primary to-purple-500 text-xs font-semibold text-white shadow"
+            />
             <span class="hidden sm:inline font-medium text-foreground">
               {{ user.last_name }} {{ user.first_name }}
             </span>

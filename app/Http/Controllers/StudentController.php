@@ -67,6 +67,7 @@ final class StudentController extends Controller
             'class'         => $post['student_class'] ?? null,
             'type'          => $post['student_type'] ?? null,
             'description'   => $post['student_description'] ?? '',
+            'avatar'        => !empty($post['student_avatar']) ? (string) $post['student_avatar'] : null,
         ];
 
         $str = 'add_student';
@@ -76,12 +77,19 @@ final class StudentController extends Controller
 
             $student = Student::findOrFail($post['student_id']);
 
+            $oldAvatar = $student->avatar;
+
             $student->name = $params['name'];
             $student->class = $params['class'];
             $student->type = $params['type'];
             $student->description = $params['description'];
+            $student->avatar = $params['avatar'];
 
             $result = $student->save();
+
+            if ($result && $oldAvatar !== $student->avatar) {
+                \App\Image::deleteStoredAvatar($oldAvatar);
+            }
         } else {
             $result = Auth::user()->addStudent($params);
         }

@@ -92,6 +92,7 @@ final class DashboardController
                 'studentClass' => $student->current_class,
                 'totalLessons' => $totalLessons,
                 'paidLessons'  => $paidLessons,
+                'avatar'       => $student->avatar,
                 'avatarColor'  => $avatarColors[$colorIdx % count($avatarColors)],
             ];
             $colorIdx++;

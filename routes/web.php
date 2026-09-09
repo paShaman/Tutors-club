@@ -6,6 +6,7 @@ use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\AvatarController;
 use App\Http\Controllers\LessonController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\UserController;
@@ -48,6 +49,9 @@ Route::get('/auth', [AuthController::class, 'auth'])->name('auth')->middleware('
 
 // ─── User ───────────────────────────────────────────────────
 Route::post('/user/settings', [UserController::class, 'settings'])->middleware('auth');
+
+// ─── Avatar ─────────────────────────────────────────────────
+Route::post('/avatar/upload', [AvatarController::class, 'upload'])->middleware('auth');
 
 // ─── Admin ──────────────────────────────────────────────────
 Route::get('/admin', [PanelController::class, 'index'])->middleware('admin');

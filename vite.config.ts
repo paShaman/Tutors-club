@@ -26,7 +26,7 @@ export default defineConfig({
     resolve: {
         alias: {
             // Используем абсолютный путь через path для стабильности на сервере
-            '@': path.resolve(__dirname, './resources/js'),
+            '@': path.resolve(import.meta.dirname, './resources/js'),
         },
     },
     build: {

@@ -7,3 +7,4 @@ composer.phar
 /public_html/build
 /.codegraph
 /bootstrap/cache
+/composer.lock

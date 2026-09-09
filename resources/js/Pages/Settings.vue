@@ -8,6 +8,7 @@ import CardTitle from '@/components/ui/CardTitle.vue'
 import { computed, watch } from 'vue'
 import type { SharedProps } from '@/types'
 import AppLayout from '@/Layouts/AppLayout.vue'
+import AvatarPicker from '@/components/ui/AvatarPicker.vue'
 
 defineOptions({ layout: AppLayout })
 
@@ -19,6 +20,7 @@ const form = useForm({
   last_name: user.value?.last_name ?? '',
   first_name: user.value?.first_name ?? '',
   middle_name: user.value?.middle_name ?? '',
+  avatar: user.value?.avatar ?? null,
 })
 
 // Sync form fields when user data arrives asynchronously
@@ -27,6 +29,7 @@ watch(user, (u) => {
     form.last_name = u.last_name ?? ''
     form.first_name = u.first_name ?? ''
     form.middle_name = u.middle_name ?? ''
+    form.avatar = u.avatar ?? null
   }
 }, { immediate: true })
 
@@ -81,6 +84,18 @@ function logout(): void {
       </CardHeader>
 
       <form class="px-6 pb-6 space-y-4" @submit.prevent="submit">
+        <!-- Фото профиля -->
+        <div class="border-b border-border/60 pb-5">
+          <p class="block text-sm font-medium text-foreground mb-3">
+            Фотография профиля
+          </p>
+          <AvatarPicker
+            v-model="form.avatar"
+            :name="`${form.last_name ?? ''} ${form.first_name ?? ''} ${form.middle_name ?? ''}`"
+            :show-remove="!!user?.avatar || !!form.avatar"
+          />
+        </div>
+
         <!-- Фамилия -->
         <div>
           <label for="last_name" class="block text-sm font-medium text-foreground mb-1.5">

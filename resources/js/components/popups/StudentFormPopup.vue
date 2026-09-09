@@ -2,6 +2,7 @@
 import { ref, watch, computed } from 'vue'
 import Card from '@/components/ui/Card.vue'
 import Button from '@/components/ui/Button.vue'
+import AvatarPicker from '@/components/ui/AvatarPicker.vue'
 
 export interface StudentFormData {
   student_id: number | null
@@ -9,6 +10,7 @@ export interface StudentFormData {
   student_class: string
   student_type: string
   student_description: string
+  student_avatar: string
 }
 
 const props = withDefaults(defineProps<{
@@ -28,6 +30,7 @@ const emptyForm = (): StudentFormData => ({
   student_class: '',
   student_type: '',
   student_description: '',
+  student_avatar: '',
 })
 
 const form = ref<StudentFormData>(emptyForm())
@@ -60,6 +63,15 @@ const title = computed(() => props.mode === 'edit' ? 'Редактировать
           </h2>
 
           <form @submit.prevent="emit('submit', form)" class="space-y-4">
+            <div v-if="form.student_id" class="border-b border-border/60 pb-4">
+              <p class="block text-sm font-medium text-foreground mb-3">Фотография</p>
+              <AvatarPicker
+                v-model="form.student_avatar"
+                :name="form.student_name"
+                :show-remove="true"
+              />
+            </div>
+
             <div>
               <label class="block text-sm font-medium text-foreground mb-1.5">Имя *</label>
               <input
