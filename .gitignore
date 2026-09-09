@@ -8,3 +8,4 @@ composer.phar
 /.codegraph
 /bootstrap/cache
 /composer.lock
+/package-lock.json
