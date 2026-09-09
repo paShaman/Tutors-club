@@ -16,6 +16,11 @@ export interface SocialProviderConfig {
   redirectUrl?: string | null
 }
 
+export interface AgreementDocument {
+  label: string
+  url: string
+}
+
 export interface SharedProps {
   [key: string]: unknown
   auth: {
@@ -26,6 +31,7 @@ export interface SharedProps {
     error: string | null
   }
   social: SocialProviderConfig[]
+  agreements: AgreementDocument[]
 }
 
 declare module '@inertiajs/vue3' {

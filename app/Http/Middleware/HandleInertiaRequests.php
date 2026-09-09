@@ -45,6 +45,7 @@ final class HandleInertiaRequests extends Middleware
                 'success' => fn (): ?string => $request->session()->get('success'),
                 'error'   => fn (): ?string => $request->session()->get('error'),
             ],
+            'agreements' => config('agreements.documents', []),
             'social' => [
                 [
                     'key'         => VkIdService::SOCIAL_VKONTAKTE,

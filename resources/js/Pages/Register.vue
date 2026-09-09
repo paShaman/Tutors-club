@@ -3,7 +3,7 @@ import { Head, Link, useForm, usePage } from '@inertiajs/vue3'
 import { UserPlus } from 'lucide-vue-next'
 import Button from '@/components/ui/Button.vue'
 import SocialAuth from '@/components/social/SocialAuth.vue'
-import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import type { SharedProps } from '@/types'
 
 interface SmartCaptchaApi {
@@ -26,6 +26,8 @@ interface SmartCaptchaWindow extends Window {
 const CAPTCHA_SITEKEY = 'ysc1_JArb9tRxzTMqOzXyeT01wYKXoYLtCQK5DPmkB10x200589eb'
 
 const page = usePage<SharedProps>()
+
+const agreements = computed(() => page.props.agreements ?? [])
 
 const form = useForm({
   last_name: '',
@@ -183,9 +185,17 @@ function submit(): void {
             />
             <span>
               Я согласен на обработку персональных данных и принимаю условия
-              <a href="#" class="font-medium text-primary hover:underline transition-colors">Политики обработки персональных данных</a>
-              и
-              <a href="#" class="font-medium text-primary hover:underline transition-colors">Пользовательского соглашения</a>
+              <template v-for="(doc, index) in agreements" :key="index">
+                <span v-if="index > 0"> и </span>
+                <a
+                  v-if="doc.url"
+                  :href="doc.url"
+                  target="_blank"
+                  rel="noopener"
+                  class="font-medium text-primary hover:underline transition-colors"
+                >{{ doc.label }}</a>
+                <span v-else class="font-medium text-primary">{{ doc.label }}</span>
+              </template>
             </span>
           </label>
           <p v-if="form.errors.agreement" class="mt-1 text-xs text-destructive">{{ form.errors.agreement }}</p>
