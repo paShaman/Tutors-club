@@ -69,7 +69,7 @@ onMounted(() => {
     redirectUrl: vkid.value!.redirectUrl!,
     responseMode: VKID.ConfigResponseMode.Callback,
     source: VKID.ConfigSource.LOWCODE,
-    scope: '',
+    scope: 'vkid.personal_info email',
   })
 
   oneTap = new VKID.OneTap()

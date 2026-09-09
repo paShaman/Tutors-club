@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Image;
 use App\Model\User;
 use App\Services\VkIdService;
 use Illuminate\Auth\Events\Registered;
@@ -133,6 +134,9 @@ class AuthController extends Controller
             $user->first_name = isset($profile['first_name']) ? (string) $profile['first_name'] : '';
             $user->last_name  = isset($profile['last_name']) ? (string) $profile['last_name'] : '';
             $user->middle_name = '';
+            $user->avatar     = isset($profile['avatar']) && $profile['avatar'] !== ''
+                ? Image::createImgUrl((string) $profile['avatar'], ['fit' => Image::AVATAR_SIZE])
+                : null;
             $user->date_agree = DB::raw('now()');
 
             try {
@@ -140,6 +144,8 @@ class AuthController extends Controller
             } catch (\Exception $e) {
                 return redirect()->back()->with('error', lng('error.register'));
             }
+        } elseif ($email !== null && $this->isSyntheticVkEmail((string) $user->email, $socialId)) {
+            $this->replaceVkEmail($user, $email);
         }
 
         // Привязываем аккаунт VK к пользователю.
@@ -190,6 +196,34 @@ class AuthController extends Controller
         $host = parse_url((string) config('app.url'), PHP_URL_HOST) ?: 'tutors-club.ru';
 
         return 'vk-' . $socialId . '@' . $host;
+    }
+
+    /**
+     * Является ли email сгенерированным для аккаунта VK без почты.
+     */
+    private function isSyntheticVkEmail(string $email, string $socialId): bool
+    {
+        $host = parse_url((string) config('app.url'), PHP_URL_HOST) ?: 'tutors-club.ru';
+
+        return $email === 'vk-' . $socialId . '@' . $host;
+    }
+
+    /**
+     * Заменяет сгенерированный email аккаунта VK на почту из профиля VK.
+     * Почта не трогается, если уже занята другим пользователем.
+     */
+    private function replaceVkEmail(User $user, string $email): void
+    {
+        $occupied = User::where('email', $email)
+            ->where('id', '!=', $user->id)
+            ->exists();
+
+        if ($occupied) {
+            return;
+        }
+
+        $user->email = $email;
+        $user->save();
     }
 
     /**
