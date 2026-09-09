@@ -10,10 +10,7 @@ use App\Http\Controllers\AvatarController;
 use App\Http\Controllers\LessonController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\Admin\PanelController;
 use App\Http\Controllers\ChangelogController;
-use App\Http\Controllers\Admin\PaymentController;
-use App\Http\Controllers\Admin\UserController as AdminUserController;
 use Illuminate\Support\Facades\Route;
 
 // ─── Pages ──────────────────────────────────────────────────
@@ -65,12 +62,6 @@ Route::post('/user/socials/unlink', [UserController::class, 'socialUnlink'])->mi
 
 // ─── Avatar ─────────────────────────────────────────────────
 Route::post('/avatar/upload', [AvatarController::class, 'upload'])->middleware('auth');
-
-// ─── Admin ──────────────────────────────────────────────────
-Route::get('/admin', [PanelController::class, 'index'])->middleware('admin');
-Route::get('/admin/user/list', [AdminUserController::class, 'usersList'])->middleware('admin');
-Route::get('/admin/payment/list', [PaymentController::class, 'paymentsList'])->middleware('admin');
-Route::post('/admin/payment/add', [PaymentController::class, 'paymentAdd'])->middleware('admin');
 
 // ─── Students ───────────────────────────────────────────────
 Route::get('/students', [StudentController::class, 'getStudents'])->middleware('auth');
