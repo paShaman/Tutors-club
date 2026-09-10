@@ -6,7 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Model\Lesson;
 use App\Model\Student;
-use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Inertia\Inertia;
@@ -156,7 +156,7 @@ final class LessonController extends Controller
     /**
      * Add or edit a lesson.
      */
-    public function editLesson(): JsonResponse
+    public function editLesson(): RedirectResponse
     {
         $rules = [
             'lesson_student_id' => 'required',
@@ -169,7 +169,7 @@ final class LessonController extends Controller
         $validator = Validator::make($post, $rules);
 
         if ($validator->fails()) {
-            return ControllerHelper::resultError($validator);
+            return back()->withErrors($validator)->withInput();
         }
 
         $str = 'add_lesson';
@@ -198,16 +198,16 @@ final class LessonController extends Controller
         }
 
         if (empty($result)) {
-            return ControllerHelper::resultError(lng('error.' . $str));
+            return back()->with('error', lng('error.' . $str));
         }
 
-        return ControllerHelper::resultSuccess(lng('success.' . $str));
+        return back()->with('success', lng('success.' . $str));
     }
 
     /**
      * Delete a lesson.
      */
-    public function deleteLesson(): JsonResponse
+    public function deleteLesson(): RedirectResponse
     {
         $rules = [
             'lesson_id' => 'required|integer',
@@ -218,22 +218,22 @@ final class LessonController extends Controller
         $validator = Validator::make($post, $rules);
 
         if ($validator->fails()) {
-            return ControllerHelper::resultError($validator);
+            return back()->withErrors($validator)->withInput();
         }
 
         $result = (new Lesson())->deleteLesson($post['lesson_id']);
 
         if (empty($result)) {
-            return ControllerHelper::resultError(lng('error.del_lesson'));
+            return back()->with('error', lng('error.del_lesson'));
         }
 
-        return ControllerHelper::resultSuccess(lng('success.del_lesson'));
+        return back()->with('success', lng('success.del_lesson'));
     }
 
     /**
      * Toggle lesson payment status.
      */
-    public function payLesson(): JsonResponse
+    public function payLesson(): RedirectResponse
     {
         $rules = [
             'lesson_id' => 'required|integer',
@@ -244,20 +244,15 @@ final class LessonController extends Controller
         $validator = Validator::make($post, $rules);
 
         if ($validator->fails()) {
-            return ControllerHelper::resultError($validator);
+            return back()->withErrors($validator)->withInput();
         }
 
         $result = (new Lesson())->payLesson($post['lesson_id']);
 
         if (empty($result)) {
-            return ControllerHelper::resultError(lng('error.del_lesson'));
+            return back()->with('error', lng('error.del_lesson'));
         }
 
-        $lesson = Lesson::find($post['lesson_id']);
-
-        return ControllerHelper::resultSuccess([
-            'is_payed'   => $lesson->is_payed,
-            'date_payed' => \Carbon\Carbon::parse($lesson->date_payed)->format('d.m.Y'),
-        ]);
+        return back();
     }
 }

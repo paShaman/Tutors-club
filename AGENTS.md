@@ -25,7 +25,7 @@ The user-facing UI is Russian; backend locale is `ru` (with `en` translation fil
 - **Do not write tests.** There is no `tests/` directory, no test script, and tests are intentionally not part of the workflow yet. Do not scaffold PHPUnit/Pest/component-test infrastructure.
 - **Do not refactor legacy code** (`app/Model`, `App\Common`, `App\Access`, `App\Notification`, `App\Form`, `App\Image`, old controllers/models) unless the task explicitly requires it. Match the surrounding file's style when you do edit one.
 - **Do not update the changelog** (hardcoded in `ChangelogController`) unless explicitly asked.
-- **Do not add new `window.location.reload()` calls** and prefer migrating touched flows away from full reloads (see §8).
+- **Do not add new `window.location.reload()` calls** and prefer migrating touched flows away from full reloads (see §7).
 
 ## 3. Tech stack
 
@@ -75,25 +75,27 @@ resources/
 ├── lang/{ru,en}/              # messages.php (backend strings), validation.php, js.php, mail.php
 ├── views/app.blade.php        # single Blade shell (@routes, @vite, @inertia)
 └── js/
-    ├── app.ts                 # createInertiaApp entry (import.meta.glob Pages)
+    ├── app.ts                 # createInertiaApp entry (import.meta.glob Pages);
+    │                          # mounts <Toaster/> globally next to <App>
     ├── Pages/                 # one .vue per route component: Dashboard, Students,
     │                          # Lessons, Calendar, Settings, Login, Register
     ├── Layouts/AppLayout.vue  # sidebar + layout; pages opt in via defineOptions
     ├── components/
     │   ├── ui/                # Button, Card, CardHeader, CardTitle, UserAvatar,
-    │   │                      # AvatarPicker, ImageCropper
-    │   ├── popups/            # AlertPopup, ConfirmDialog, ChangelogModal,
+    │   │                      # AvatarPicker, ImageCropper, Toaster + ToastItem
+    │   ├── popups/            # ConfirmDialog, ChangelogModal,
     │   │                      # StudentFormPopup, LessonFormPopup
     │   └── social/            # SocialAuth, VkIdAuth, YandexAuth
-    ├── lib/                   # utils.ts (cn), upload.ts (avatar upload), social.ts
+    ├── lib/                   # utils.ts (cn), upload.ts (avatar upload), social.ts,
+    │                          # toast.ts (useToast — global toasts)
     └── types/index.ts         # SharedProps + PageProps augmentation
 public_html/                   # web root (Laravel public dir via usePublicPath)
 ```
 
 ## 5. Backend conventions (PHP)
 
-- **Routing**: everything lives in `routes/web.php`. Page endpoints render Inertia; CRUD/payload endpoints historically return JSON (see §8). Route names use dot notation (`auth.yandex`, `lessons`).
-- **Controllers** live in `App\Http\Controllers`. Page methods return `Inertia::render('PageName', props)`. `ControllerHelper::resultSuccess()` / `resultError()` wrap JSON as `{ success: bool, data: ... }`; validation failures are `{ success: false, data: { field: message } }`.
+- **Routing**: everything lives in `routes/web.php`. Page endpoints render Inertia; student/lesson mutations are Inertia POST routes that `redirect()->back()` (see §7). Route names use dot notation (`auth.yandex`, `lessons`).
+- **Controllers** live in `App\Http\Controllers`. Page methods return `Inertia::render('PageName', props)`. Student/lesson mutation methods return `Illuminate\Http\RedirectResponse` via `back()->with('success'|'error', lng(...))`, or `back()->withErrors($validator)->withInput()` on validation failure. `ControllerHelper::resultSuccess()` / `resultError()` (`{ success, data }`) remain only for the intentional JSON endpoints (`/avatar/upload`, `/changelog`).
 - **Models** use the legacy namespace `App\Model` (singular). Keep using it for new models. Relations: `User` ↔ `Student` (many-to-many via `students_to_users`), `Student` has many `Lesson`.
 - **Localization**: user-facing backend strings MUST go through the `lng('...')` helper (dot key under `messages.php`), e.g. `lng('success.add_student')`. **Every new key must be added to BOTH `resources/lang/ru/messages.php` and `resources/lang/en/messages.php`.** Group keys under `success.*`, `error.*`, `title`, etc. See existing usage in controllers.
 - **Roles**: `roles`/`roles_to_users` tables and `Access` constants are an unused rudiment from an old version and are not part of the current product. Do not introduce new role logic; if roles return later, this is where it goes.
@@ -105,7 +107,8 @@ public_html/                   # web root (Laravel public dir via usePublicPath)
 - A **page** = `resources/js/Pages/<Name>.vue`, referenced by the controller's `Inertia::render('<Name>', ...)`. Layout opt-in: `defineOptions({ layout: AppLayout })`. Set page title with `<Head title="..."/>` (Russian).
 - Use `<script setup lang="ts">`. Type props with `defineProps<{...}>()`; typing is **pragmatic** — an occasional local `any` is acceptable, but keep shared/global types in `types/index.ts`.
 - Import with the `@/` alias for `Layouts/`, `components/`, `lib/`; use relative paths within a directory.
-- **Reuse existing UI**, don't restyle components: `components/ui/*` (Button with variants, Card/CardHeader/CardTitle, UserAvatar), `components/popups/*` (AlertPopup, ConfirmDialog, form popups). Buttons are `Button`; forms live in popups bound to local refs.
+- **Reuse existing UI**, don't restyle components: `components/ui/*` (Button with variants, Card/CardHeader/CardTitle, UserAvatar, Toaster), `components/popups/*` (ConfirmDialog, form popups). Buttons are `Button`; forms live in popups bound to local refs.
+- **User feedback = toasts.** Use `useToast()` from `lib/toast.ts` (`toast.success/error/warning/info`) instead of inline flash banners or a blocking alert modal. The global `<Toaster/>` (mounted in `app.ts`, so it also works on auth pages without `AppLayout`) renders the stack bottom-right and auto-surfaces Inertia `flash.success`/`flash.error` — do not re-add per-page flash markup. Success/info auto-dismiss after 4 s, warning after 6 s, **error stays until closed manually** (never auto-hide errors). Form **field** validation errors stay inline next to the input (`form.errors.*`); the `onError` toast is a fallback channel.
 - Styling: Tailwind utility classes with the design-token palette from `resources/css/app.css` (`bg-background`, `text-foreground`, `bg-primary/...`, `border-border`, tokens like `--color-primary: hsl(252 87% 67%)`, radius 0.75rem). Do not introduce ad-hoc hex colors; extend the `@theme` block if a token is genuinely needed.
 - Icons: `lucide-vue-next`. Charts: register ChartJS modules where used. Calendar: `@fullcalendar/vue3`.
 - Vue components are single-file with `lang="ts"`; no CSS-in-JS. Shared helpers: `cn()` in `lib/utils.ts`, `uploadAvatar()` in `lib/upload.ts`.
@@ -113,15 +116,21 @@ public_html/                   # web root (Laravel public dir via usePublicPath)
 
 ## 7. Request/data flows
 
-**How pages get data today (hybrid, legacy).**
+**How pages get data.**
 - Page GET endpoints (e.g. `GET /students`, `GET /lessons`, `GET /calendar`, `GET /`) return an Inertia page with props computed server-side.
 - Navigation and list **filtering** use Inertia: `<Link>` or `router.get('/lessons', { student_id })` (server re-renders the page with filtered props).
-- **Mutations** (student/lesson create/edit/delete/pay) historically go through raw `fetch()` POSTs to literal JSON endpoints (`/students/edit`, `/students/delete`, `/lessons/edit`, `/lessons/delete`, `/lessons/pay`) returning `{ success, data }`; on success the page does `window.location.reload()`. **Social linking/unlinking is NOT part of this legacy pattern** — it already uses Inertia `router.post` (see below).
+- **Mutations are Inertia-native (post → redirect → get).** Student/lesson create/edit/delete/pay submit with `router.post('/students/edit', payload, { preserveScroll: true, onSuccess, onError })`; the controller returns `back()->with('success'|'error', lng(...))`, or on validation failure `back()->withErrors($validator)->withInput()`. The resulting Inertia visit refreshes the page props (`students`, `sortedLessons`, …) and shows the success/error **toast** (via the global `Toaster`, see §6) **without any browser reload**. `router.post` defaults to `preserveState: true`, so local component state (expanded groups, FullCalendar view) is preserved. Inertia handles CSRF automatically — no manual `X-XSRF-TOKEN`/`_token`. `payLesson` is a toggle and returns a bare `back()` (no flash).
+- **Form payload types must be `type` aliases, not `interface`** (e.g. `LessonFormData`/`StudentFormData` in `components/popups/*`); TS interfaces lack the implicit index signature Inertia's `RequestPayload` (`Record<string, FormDataConvertible>`) requires.
 
-**Target conventions for NEW code (and when you touch an existing flow).**
-- New screens/operations should be **Inertia-native**: render the page with props, submit with Inertia (`router.post`/`router.put`/`router.delete`, `useForm`), surface errors via Inertia/validation, and update the UI without a full page reload (e.g. `router.reload({ only: [...] })` or local state). Inertia handles CSRF automatically.
-- Do **not** add new `fetch()` JSON endpoints or new `window.location.reload()` calls. If you must keep/repair an existing raw `fetch` call, follow the canonical helper in `resources/js/lib/upload.ts`: send `Accept: application/json`, `X-Requested-With: XMLHttpRequest`, and `X-XSRF-TOKEN` decrypted from the `XSRF-TOKEN` cookie; treat HTTP `419` as an expired session. Never send `_token` from a raw string.
+**Remaining JSON endpoints (intentional).**
+- `GET /calendar/events` — FullCalendar's events feed (`CalendarController::getEvents`); after a lesson mutation the calendar calls `calendarApi.refetchEvents()`.
+- `POST /avatar/upload` — `uploadAvatar()` in `resources/js/lib/upload.ts`, the canonical raw-`fetch` helper (send `Accept: application/json`, `X-Requested-With: XMLHttpRequest`, `X-XSRF-TOKEN` decrypted from the `XSRF-TOKEN` cookie; treat HTTP `419` as an expired session; never send `_token` from a raw string). Uses `ControllerHelper` `{ success, data }`.
+- `GET /changelog` — hardcoded changelog array (see §10).
+
+**Rules.**
+- Do **not** add new `fetch()` JSON endpoints or new `window.location.reload()` calls; keep mutations Inertia-native.
 - Server responses for user-facing messages come localized via `lng()`; keep `success.*` / `error.*` keys synced in ru + en.
+- Backend `back()->with('success'|'error', lng(...))` lands in the `flash` prop and is shown by the global `Toaster`; client-side Inertia `onError` uses `toast.error(...)` from `useToast()`. Do **not** render ad-hoc inline flash banners.
 
 **Social/auth flows.**
 - Registration: agreement consent (props `agreements` from `config/agreements.php`) + Yandex SmartCaptcha.
@@ -166,8 +175,10 @@ The changelog is a hardcoded, versioned array inside `ChangelogController::getCh
 
 **Do**
 - Match the existing style of the file you edit; keep new PHP modern but consistent with its neighbors.
+- Submit mutations with Inertia (`router.post`/`useForm`); controllers reply `back()->with('success'|'error', ...)` or `back()->withErrors($validator)`, and the redirect visit refreshes props with no browser reload (§7).
 - Add every new backend string to both `ru` and `en` `messages.php` and expose it via `lng()`.
 - Reuse the local UI kit, Tailwind theme tokens, existing pages/popups/helpers.
+- Give success/error feedback through `useToast()` (`lib/toast.ts`) — success/info auto-dismiss, errors persist until closed; keep field validation inline.
 - Run the §9 checks and fix all reported errors before reporting completion.
 - Write short Russian comments only where they explain non-obvious decisions.
 
@@ -177,4 +188,5 @@ The changelog is a hardcoded, versioned array inside `ChangelogController::getCh
 - Run migrations, seeds, or `artisan config:cache`/`optimize` without explicit permission.
 - Add packages, refactor `App\Model`/`App\Common`/`App\Access`/legacy controllers, add tests, or update the changelog unless asked.
 - Add new `fetch` JSON endpoints or `window.location.reload()` patterns; prefer Inertia-native flows.
+- Re-add inline flash banners or blocking alert modals for user messages — the global `Toaster` handles them (§6/§7).
 - Write English or heavy PHPDoc comments in Russian-oriented code — keep comments minimal and in Russian.

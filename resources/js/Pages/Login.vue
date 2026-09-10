@@ -1,17 +1,14 @@
 <script setup lang="ts">
-import { Head, Link, useForm, usePage } from '@inertiajs/vue3'
+import { Head, Link, useForm } from '@inertiajs/vue3'
 import { LogIn } from 'lucide-vue-next'
 import Button from '@/components/ui/Button.vue'
 import SocialAuth from '@/components/social/SocialAuth.vue'
 import { ref } from 'vue'
-import type { SharedProps } from '@/types'
 
 const form = useForm({
   email: '',
   password: '',
 })
-
-const page = usePage<SharedProps>()
 
 const showPassword = ref(false)
 
@@ -89,14 +86,6 @@ function submit(): void {
             </button>
           </div>
           <p v-if="form.errors.password" class="mt-1 text-xs text-destructive">{{ form.errors.password }}</p>
-        </div>
-
-        <!-- Error flash -->
-        <div
-          v-if="page.props.flash?.error"
-          class="rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive"
-        >
-          {{ page.props.flash.error }}
         </div>
 
         <!-- Actions -->

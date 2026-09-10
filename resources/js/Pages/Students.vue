@@ -9,7 +9,7 @@ import StudentFormPopup from '@/components/popups/StudentFormPopup.vue'
 import type { StudentFormData } from '@/components/popups/StudentFormPopup.vue'
 import UserAvatar from '@/components/ui/UserAvatar.vue'
 import ConfirmDialog from '@/components/popups/ConfirmDialog.vue'
-import AlertPopup from '@/components/popups/AlertPopup.vue'
+import { useToast } from '@/lib/toast'
 import {
   UserPlus,
   GraduationCap,
@@ -34,8 +34,9 @@ const page = usePage<{
   }>
   deletedFlag: boolean
   specialFlag: boolean
-  flash: { success: string | null; error: string | null }
 }>()
+
+const toast = useToast()
 
 const students = computed(() => page.props.students ?? [])
 const deletedFlag = computed(() => page.props.deletedFlag ?? false)
@@ -81,21 +82,6 @@ function onCancel() {
   confirmCallback = null
 }
 
-// Alert popup state
-const showAlert = ref(false)
-const alertMessage = ref('')
-const alertVariant = ref<'success' | 'error' | 'warning' | 'info'>('info')
-
-function openAlert(message: string, variant: 'success' | 'error' | 'warning' | 'info' = 'info') {
-  alertMessage.value = message
-  alertVariant.value = variant
-  showAlert.value = true
-}
-
-function closeAlert() {
-  showAlert.value = false
-}
-
 function openAddModal() {
   initialForm.value = null
   showAddModal.value = true
@@ -124,47 +110,26 @@ function closeModals() {
   editingStudent.value = null
 }
 
-async function submitStudent(formData: StudentFormData) {
-  try {
-    const response = await fetch('/students/edit', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-      body: JSON.stringify(formData),
-    })
-    const data = await response.json()
-
-    if (data.success) {
-      closeModals()
-      window.location.reload()
-    } else {
-      openAlert(typeof data.data === 'string' ? data.data : Object.values(data.data).join('\n'), 'error')
-    }
-  } catch (e) {
-    openAlert('Ошибка сети', 'error')
-  }
+function submitStudent(formData: StudentFormData) {
+  router.post('/students/edit', formData, {
+    preserveScroll: true,
+    onSuccess: () => closeModals(),
+    onError: (errors) => toast.error(Object.values(errors).join('\n')),
+  })
 }
 
 function deleteStudent(student: any) {
   openConfirm(
     student.is_deleted ? 'Восстановить ученика?' : 'Удалить ученика?',
     'danger',
-    async () => {
-      try {
-        const response = await fetch('/students/delete', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-          body: JSON.stringify({ student_id: student.id, is_deleted: student.is_deleted ? 0 : 1 }),
-        })
-        const data = await response.json()
-
-        if (data.success) {
-          window.location.reload()
-        } else {
-          openAlert(typeof data.data === 'string' ? data.data : Object.values(data.data).join('\n'), 'error')
-        }
-      } catch (e) {
-        openAlert('Ошибка сети', 'error')
-      }
+    () => {
+      router.post('/students/delete', {
+        student_id: student.id,
+        is_deleted: student.is_deleted ? 0 : 1,
+      }, {
+        preserveScroll: true,
+        onError: (errors) => toast.error(Object.values(errors).join('\n')),
+      })
     },
   )
 }
@@ -204,20 +169,6 @@ function deleteStudent(student: any) {
           Добавить ученика
         </Button>
       </div>
-    </div>
-
-    <!-- Flash message -->
-    <div
-      v-if="page.props.flash?.success"
-      class="rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700 border border-emerald-200"
-    >
-      {{ page.props.flash.success }}
-    </div>
-    <div
-      v-if="page.props.flash?.error"
-      class="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700 border border-red-200"
-    >
-      {{ page.props.flash.error }}
     </div>
 
     <!-- Students Grid -->
@@ -376,13 +327,6 @@ function deleteStudent(student: any) {
       :variant="confirmVariant"
       @confirm="onConfirm"
       @cancel="onCancel"
-    />
-
-    <AlertPopup
-      :show="showAlert"
-      :message="alertMessage"
-      :variant="alertVariant"
-      @close="closeAlert"
     />
   </div>
 </template>

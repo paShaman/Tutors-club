@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { Head, usePage } from '@inertiajs/vue3'
+import { Head, usePage, router } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import Card from '@/components/ui/Card.vue'
 import FullCalendar from '@fullcalendar/vue3'
@@ -12,7 +12,7 @@ import type { EventClickArg, DatesSetArg } from '@fullcalendar/core'
 import LessonFormPopup from '@/components/popups/LessonFormPopup.vue'
 import type { LessonFormData } from '@/components/popups/LessonFormPopup.vue'
 import ConfirmDialog from '@/components/popups/ConfirmDialog.vue'
-import AlertPopup from '@/components/popups/AlertPopup.vue'
+import { useToast } from '@/lib/toast'
 
 defineOptions({ layout: AppLayout })
 
@@ -28,6 +28,8 @@ const page = usePage<{
   defaultDuration: number
   defaultDate: string
 }>()
+
+const toast = useToast()
 
 const calendarRef = ref<InstanceType<typeof FullCalendar> | null>(null)
 const events = ref<any[]>([])
@@ -58,21 +60,6 @@ function onConfirm() {
 function onCancel() {
   showConfirm.value = false
   confirmCallback = null
-}
-
-// Alert popup state
-const showAlert = ref(false)
-const alertMessage = ref('')
-const alertVariant = ref<'success' | 'error' | 'warning' | 'info'>('info')
-
-function openAlert(message: string, variant: 'success' | 'error' | 'warning' | 'info' = 'info') {
-  alertMessage.value = message
-  alertVariant.value = variant
-  showAlert.value = true
-}
-
-function closeAlert() {
-  showAlert.value = false
 }
 
 function handleEventClick(arg: EventClickArg) {
@@ -112,60 +99,36 @@ function closeLessonPopup() {
   showLessonPopup.value = false
 }
 
-async function handleLessonSubmit(form: LessonFormData) {
-  try {
-    const response = await fetch('/lessons/edit', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'X-Requested-With': 'XMLHttpRequest',
-      },
-      body: JSON.stringify(form),
-    })
-    const data = await response.json()
-
-    if (data.success) {
-      closeLessonPopup()
-      const calendarApi = calendarRef.value?.getApi()
-      if (calendarApi) {
-        calendarApi.refetchEvents()
-      }
-    } else {
-      openAlert(typeof data.data === 'string' ? data.data : Object.values(data.data).join('\n'), 'error')
-    }
-  } catch (e) {
-    openAlert('Ошибка сети', 'error')
+function refetchEvents() {
+  const calendarApi = calendarRef.value?.getApi()
+  if (calendarApi) {
+    calendarApi.refetchEvents()
   }
 }
 
-function handleLessonDelete() {
-  if (!lessonPopupInitial.value?.lesson_id) return
-  openConfirm('Удалить урок?', 'danger', async () => {
-    try {
-      const response = await fetch('/lessons/delete', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'X-Requested-With': 'XMLHttpRequest',
-        },
-        body: JSON.stringify({ lesson_id: lessonPopupInitial.value!.lesson_id }),
-      })
-      const data = await response.json()
+function handleLessonSubmit(form: LessonFormData) {
+  router.post('/lessons/edit', form, {
+    preserveScroll: true,
+    onSuccess: () => {
+      closeLessonPopup()
+      refetchEvents()
+    },
+    onError: (errors) => toast.error(Object.values(errors).join('\n')),
+  })
+}
 
-      if (data.success) {
+function handleLessonDelete() {
+  const lessonId = lessonPopupInitial.value?.lesson_id
+  if (!lessonId) return
+  openConfirm('Удалить урок?', 'danger', () => {
+    router.post('/lessons/delete', { lesson_id: lessonId }, {
+      preserveScroll: true,
+      onSuccess: () => {
         closeLessonPopup()
-        const calendarApi = calendarRef.value?.getApi()
-        if (calendarApi) {
-          calendarApi.refetchEvents()
-        }
-      } else {
-        openAlert(typeof data.data === 'string' ? data.data : Object.values(data.data).join('\n'), 'error')
-      }
-    } catch (e) {
-      openAlert('Ошибка сети', 'error')
-    }
+        refetchEvents()
+      },
+      onError: (errors) => toast.error(Object.values(errors).join('\n')),
+    })
   })
 }
 </script>
@@ -239,13 +202,6 @@ function handleLessonDelete() {
       :variant="confirmVariant"
       @confirm="onConfirm"
       @cancel="onCancel"
-    />
-
-    <AlertPopup
-      :show="showAlert"
-      :message="alertMessage"
-      :variant="alertVariant"
-      @close="closeAlert"
     />
   </div>
 </template>

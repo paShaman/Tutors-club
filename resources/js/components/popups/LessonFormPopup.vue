@@ -9,7 +9,7 @@ export interface StudentOption {
   current_class: string
 }
 
-export interface LessonFormData {
+export type LessonFormData = {
   lesson_id: number | null
   lesson_student_id: string
   lesson_subject: string

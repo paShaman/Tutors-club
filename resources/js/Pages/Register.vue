@@ -305,14 +305,6 @@ function submit(): void {
           <p v-else-if="form.errors['smart-token']" class="mt-1 text-xs text-destructive">{{ form.errors['smart-token'] }}</p>
         </div>
 
-        <!-- Error flash -->
-        <div
-          v-if="page.props.flash?.error"
-          class="rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive"
-        >
-          {{ page.props.flash.error }}
-        </div>
-
         <!-- Actions -->
         <div class="space-y-3 pt-1">
           <Button

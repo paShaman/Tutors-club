@@ -1,5 +1,6 @@
 import { createApp, h } from 'vue'
 import { createInertiaApp } from '@inertiajs/vue3'
+import Toaster from './components/ui/Toaster.vue'
 
 import '../css/app.css' // Возвращаем стили
 
@@ -13,7 +14,7 @@ createInertiaApp({
         return page.default;
     },
     setup({ el, App, props, plugin }) {
-        createApp({ render: () => h(App, props) })
+        createApp({ render: () => [h(App, props), h(Toaster)] })
             .use(plugin)
             .mount(el);
     },

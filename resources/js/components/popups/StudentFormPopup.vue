@@ -4,7 +4,7 @@ import Card from '@/components/ui/Card.vue'
 import Button from '@/components/ui/Button.vue'
 import AvatarPicker from '@/components/ui/AvatarPicker.vue'
 
-export interface StudentFormData {
+export type StudentFormData = {
   student_id: number | null
   student_name: string
   student_class: string

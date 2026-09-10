@@ -21,7 +21,7 @@ import LessonFormPopup from '@/components/popups/LessonFormPopup.vue'
 import type { LessonFormData } from '@/components/popups/LessonFormPopup.vue'
 import UserAvatar from '@/components/ui/UserAvatar.vue'
 import ConfirmDialog from '@/components/popups/ConfirmDialog.vue'
-import AlertPopup from '@/components/popups/AlertPopup.vue'
+import { useToast } from '@/lib/toast'
 
 defineOptions({ layout: AppLayout })
 
@@ -92,8 +92,9 @@ const page = usePage<{
   defaultPrice: number
   defaultDuration: number
   defaultDate: string
-  flash: { success: string | null; error: string | null }
 }>()
+
+const toast = useToast()
 
 const selectedStudentId = ref<number | null>(page.props.selectedStudentId ?? null)
 
@@ -193,21 +194,6 @@ function onCancel() {
   confirmCallback = null
 }
 
-// Alert popup state
-const showAlert = ref(false)
-const alertMessage = ref('')
-const alertVariant = ref<'success' | 'error' | 'warning' | 'info'>('info')
-
-function openAlert(message: string, variant: 'success' | 'error' | 'warning' | 'info' = 'info') {
-  alertMessage.value = message
-  alertVariant.value = variant
-  showAlert.value = true
-}
-
-function closeAlert() {
-  showAlert.value = false
-}
-
 function openAddModal() {
   lessonPopupMode.value = 'add'
 
@@ -283,69 +269,34 @@ function closeLessonPopup() {
   showLessonPopup.value = false
 }
 
-async function handleLessonSubmit(form: LessonFormData) {
-  try {
-    const response = await fetch('/lessons/edit', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-      body: JSON.stringify(form),
-    })
-    const data = await response.json()
-
-    if (data.success) {
-      closeLessonPopup()
-      window.location.reload()
-    } else {
-      openAlert(typeof data.data === 'string' ? data.data : Object.values(data.data).join('\n'), 'error')
-    }
-  } catch (e) {
-    openAlert('Ошибка сети', 'error')
-  }
-}
-
-async function handleLessonDelete() {
-  if (!lessonPopupInitial.value?.lesson_id) return
-  await deleteLesson(lessonPopupInitial.value.lesson_id)
-}
-
-function deleteLesson(lessonId: number) {
-  openConfirm('Удалить урок?', 'danger', async () => {
-    try {
-      const response = await fetch('/lessons/delete', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-        body: JSON.stringify({ lesson_id: lessonId }),
-      })
-      const data = await response.json()
-
-      if (data.success) {
-        window.location.reload()
-      } else {
-        openAlert(typeof data.data === 'string' ? data.data : Object.values(data.data).join('\n'), 'error')
-      }
-    } catch (e) {
-      openAlert('Ошибка сети', 'error')
-    }
+function handleLessonSubmit(form: LessonFormData) {
+  router.post('/lessons/edit', form, {
+    preserveScroll: true,
+    onSuccess: () => closeLessonPopup(),
+    onError: (errors) => toast.error(Object.values(errors).join('\n')),
   })
 }
 
-async function togglePayLesson(lessonId: number) {
-  try {
-    const response = await fetch('/lessons/pay', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-      body: JSON.stringify({ lesson_id: lessonId }),
-    })
-    const data = await response.json()
+function handleLessonDelete() {
+  if (!lessonPopupInitial.value?.lesson_id) return
+  deleteLesson(lessonPopupInitial.value.lesson_id)
+}
 
-    if (data.success) {
-      window.location.reload()
-    } else {
-      openAlert(typeof data.data === 'string' ? data.data : Object.values(data.data).join('\n'), 'error')
-    }
-  } catch (e) {
-    openAlert('Ошибка сети', 'error')
-  }
+function deleteLesson(lessonId: number) {
+  openConfirm('Удалить урок?', 'danger', () => {
+    router.post('/lessons/delete', { lesson_id: lessonId }, {
+      preserveScroll: true,
+      onSuccess: () => closeLessonPopup(),
+      onError: (errors) => toast.error(Object.values(errors).join('\n')),
+    })
+  })
+}
+
+function togglePayLesson(lessonId: number) {
+  router.post('/lessons/pay', { lesson_id: lessonId }, {
+    preserveScroll: true,
+    onError: (errors) => toast.error(Object.values(errors).join('\n')),
+  })
 }
 
 function sortedStudents(students: Record<number, StudentGroup>): StudentGroup[] {
@@ -434,20 +385,6 @@ function formatDatePayed(dateStr: string | null): string {
           <span class="hidden sm:inline">Добавить урок</span>
         </Button>
       </div>
-    </div>
-
-    <!-- Flash message -->
-    <div
-      v-if="page.props.flash?.success"
-      class="rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700 border border-emerald-200"
-    >
-      {{ page.props.flash.success }}
-    </div>
-    <div
-      v-if="page.props.flash?.error"
-      class="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700 border border-red-200"
-    >
-      {{ page.props.flash.error }}
     </div>
 
     <!-- Years -->
@@ -728,14 +665,6 @@ function formatDatePayed(dateStr: string | null): string {
       :confirmText="confirmVariant === 'danger' ? 'Удалить' : 'Подтвердить'"
       @confirm="onConfirm"
       @cancel="onCancel"
-    />
-
-    <!-- Alert Popup -->
-    <AlertPopup
-      :show="showAlert"
-      :message="alertMessage"
-      :variant="alertVariant"
-      @close="closeAlert"
     />
   </div>
 </template>

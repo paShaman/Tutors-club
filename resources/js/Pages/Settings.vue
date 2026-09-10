@@ -144,22 +144,6 @@ function cancelUnlink(): void {
       </p>
     </div>
 
-    <!-- Error flash -->
-    <div
-      v-if="page.props.flash?.error"
-      class="rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive border border-destructive/20"
-    >
-      {{ page.props.flash.error }}
-    </div>
-
-    <!-- Success flash -->
-    <div
-      v-if="page.props.flash?.success"
-      class="rounded-xl bg-emerald-500/10 px-4 py-3 text-sm text-emerald-700 border border-emerald-500/20"
-    >
-      {{ page.props.flash.success }}
-    </div>
-
     <!-- Profile section -->
     <Card>
       <CardHeader>

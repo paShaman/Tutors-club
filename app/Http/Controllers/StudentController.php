@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Form;
 use App\Model\Student;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Inertia\Inertia;
@@ -47,7 +48,7 @@ final class StudentController extends Controller
     /**
      * Add or edit a student.
      */
-    public function editStudent(): \Illuminate\Http\JsonResponse
+    public function editStudent(): RedirectResponse
     {
         $rules = [
             'student_name'  => 'required',
@@ -59,7 +60,7 @@ final class StudentController extends Controller
         $validator = Validator::make($post, $rules);
 
         if ($validator->fails()) {
-            return ControllerHelper::resultError($validator);
+            return back()->withErrors($validator)->withInput();
         }
 
         $params = [
@@ -95,16 +96,16 @@ final class StudentController extends Controller
         }
 
         if (empty($result)) {
-            return ControllerHelper::resultError(lng('error.' . $str));
+            return back()->with('error', lng('error.' . $str));
         }
 
-        return ControllerHelper::resultSuccess(lng('success.' . $str));
+        return back()->with('success', lng('success.' . $str));
     }
 
     /**
      * Delete or restore a student.
      */
-    public function deleteStudent(): \Illuminate\Http\JsonResponse
+    public function deleteStudent(): RedirectResponse
     {
         $post = request()->post();
 
@@ -117,9 +118,9 @@ final class StudentController extends Controller
         }
 
         if (empty($result)) {
-            return ControllerHelper::resultError(lng('error.' . $str));
+            return back()->with('error', lng('error.' . $str));
         }
 
-        return ControllerHelper::resultSuccess(lng('success.' . $str));
+        return back()->with('success', lng('success.' . $str));
     }
 }
