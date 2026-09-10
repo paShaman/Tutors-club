@@ -40,7 +40,11 @@ defineOptions({ layout: AppLayout })
 interface LessonItem {
   id: number
   subject: string
-  theme: string | null
+  topic_id: number | null
+  subtopic_id: number | null
+  topic_name: string | null
+  subtopic_name: string | null
+  comment: string | null
   price: number
   duration: number
   date: string
@@ -668,7 +672,11 @@ function formatTopicDate(dateStr: string | null): string {
                           </div>
                           <p class="mt-0.5 text-sm text-muted-foreground">
                             {{ subjectName(lesson.subject) }}
-                            <span v-if="lesson.theme">· {{ lesson.theme }}</span>
+                            <span v-if="lesson.topic_name">· {{ lesson.topic_name }}</span>
+                            <span v-if="lesson.subtopic_name">/ {{ lesson.subtopic_name }}</span>
+                          </p>
+                          <p v-if="lesson.comment" class="mt-0.5 text-sm text-muted-foreground">
+                            {{ lesson.comment }}
                           </p>
                           <div class="mt-1.5 flex items-center gap-3 flex-wrap">
                             <span

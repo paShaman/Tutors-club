@@ -18,8 +18,9 @@ import {
   Star,
 } from 'lucide-vue-next'
 import LessonFormPopup from '@/components/popups/LessonFormPopup.vue'
-import type { LessonFormData } from '@/components/popups/LessonFormPopup.vue'
+import type { LessonFormData, TopicNode } from '@/components/popups/LessonFormPopup.vue'
 import UserAvatar from '@/components/ui/UserAvatar.vue'
+import TopicStatusBadge from '@/components/ui/TopicStatusBadge.vue'
 import ConfirmDialog from '@/components/popups/ConfirmDialog.vue'
 import { useToast } from '@/lib/toast'
 import { useI18n } from '@/lib/i18n'
@@ -30,7 +31,11 @@ interface Lesson {
   id: number
   student_id: number
   subject: string
-  theme: string | null
+  topic_id: number | null
+  subtopic_id: number | null
+  topic_name: string | null
+  subtopic_name: string | null
+  comment: string | null
   price: number
   duration: number
   is_payed: number
@@ -90,6 +95,8 @@ const page = usePage<{
   students: StudentData[]
   selectedStudentId: number | null
   lessonsSubjects: string[]
+  topicTree: Record<string, TopicNode[]>
+  topicStatuses: Record<number, Record<number, string>>
   defaultPrice: number
   defaultDuration: number
   defaultDate: string
@@ -125,6 +132,12 @@ const monthNames = computed(() => {
 function subjectName(key: string): string {
   const label = t(key)
   return label === key ? key : label
+}
+
+function lessonTopicStatus(lesson: Lesson): string {
+  const topicId = lesson.subtopic_id ?? lesson.topic_id
+  if (!topicId) return ''
+  return page.props.topicStatuses?.[lesson.student_id]?.[topicId] ?? ''
 }
 
 const years = computed(() => {
@@ -211,7 +224,10 @@ function openAddModal() {
     lesson_id: null,
     lesson_student_id: '',
     lesson_subject: '',
-    lesson_theme: '',
+    lesson_topic_id: null,
+    lesson_subtopic_id: null,
+    lesson_topic_status: 'in_progress',
+    lesson_comment: '',
     lesson_price: page.props.defaultPrice,
     lesson_duration: page.props.defaultDuration,
     lesson_date: todayStr,
@@ -240,7 +256,10 @@ function openAddModalForStudent(studentGroup: StudentGroup) {
     lesson_id: null,
     lesson_student_id: String(studentGroup.student.id),
     lesson_subject: lastLesson?.subject ?? '',
-    lesson_theme: lastLesson?.theme ?? '',
+    lesson_topic_id: lastLesson?.topic_id ?? null,
+    lesson_subtopic_id: lastLesson?.subtopic_id ?? null,
+    lesson_topic_status: 'in_progress',
+    lesson_comment: '',
     lesson_price: lastLesson?.price ?? page.props.defaultPrice,
     lesson_duration: lastLesson?.duration ?? page.props.defaultDuration,
     lesson_date: todayStr,
@@ -258,7 +277,10 @@ function openEditModal(lesson: Lesson) {
     lesson_id: lesson.id,
     lesson_student_id: String(lesson.student_id),
     lesson_subject: lesson.subject,
-    lesson_theme: lesson.theme ?? '',
+    lesson_topic_id: lesson.topic_id,
+    lesson_subtopic_id: lesson.subtopic_id,
+    lesson_topic_status: 'in_progress',
+    lesson_comment: lesson.comment ?? '',
     lesson_price: lesson.price,
     lesson_duration: lesson.duration,
     lesson_date: lesson.date,
@@ -549,9 +571,19 @@ function formatDatePayed(dateStr: string | null): string {
                                   {{ lesson.duration }} {{ t('ui.common.minutes') }}
                                 </span>
                               </div>
-                              <p class="text-sm text-muted-foreground mt-0.5">
-                                {{ subjectName(lesson.subject) }}
-                                <span v-if="lesson.theme">· {{ lesson.theme }}</span>
+                              <div class="mt-0.5 flex items-center gap-2 flex-wrap">
+                                <p class="text-sm text-muted-foreground">
+                                  {{ subjectName(lesson.subject) }}
+                                  <span v-if="lesson.topic_name">· {{ lesson.topic_name }}</span>
+                                  <span v-if="lesson.subtopic_name">/ {{ lesson.subtopic_name }}</span>
+                                </p>
+                                <TopicStatusBadge
+                                  v-if="lessonTopicStatus(lesson)"
+                                  :status="lessonTopicStatus(lesson)"
+                                />
+                              </div>
+                              <p v-if="lesson.comment" class="text-sm text-muted-foreground mt-0.5">
+                                {{ lesson.comment }}
                               </p>
                               <div class="flex items-center gap-3 mt-1.5">
                                 <span
@@ -645,6 +677,8 @@ function formatDatePayed(dateStr: string | null): string {
       :mode="lessonPopupMode"
       :students="page.props.students.map(s => ({ id: s.id, name: s.name, current_class: s.current_class }))"
       :subjects="page.props.lessonsSubjects"
+      :topicTree="page.props.topicTree"
+      :topicStatuses="page.props.topicStatuses"
       :defaultPrice="page.props.defaultPrice"
       :defaultDuration="page.props.defaultDuration"
       :initialForm="lessonPopupInitial"

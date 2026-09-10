@@ -6,6 +6,8 @@ namespace App\Http\Controllers;
 
 use App\Model\Lesson;
 use App\Model\Student;
+use App\Model\StudentTopic;
+use App\Model\Topic;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -45,6 +47,8 @@ final class CalendarController extends Controller
         return Inertia::render('Calendar', [
             'students'          => $activeStudents,
             'lessonsSubjects'   => Lesson::LESSON_SUBJECTS,
+            'topicTree'         => Topic::treesBySubject((int) Auth::id(), Lesson::LESSON_SUBJECTS),
+            'topicStatuses'     => StudentTopic::statusMapForStudents(array_keys($students)),
             'defaultPrice'      => config('lesson.default_price'),
             'defaultDuration'   => config('lesson.default_duration'),
             'defaultDate'       => date('Y-m-d'),
@@ -84,7 +88,9 @@ final class CalendarController extends Controller
                     'student_id'       => $lesson->student_id,
                     'student_name'     => $student['name'],
                     'subject'          => $lesson->subject,
-                    'theme'            => $lesson->theme,
+                    'topic_id'         => $lesson->topic_id,
+                    'subtopic_id'      => $lesson->subtopic_id,
+                    'comment'          => $lesson->comment,
                     'price'            => $lesson->price,
                     'duration'         => $lesson->duration,
                     'is_payed'         => $lesson->is_payed,

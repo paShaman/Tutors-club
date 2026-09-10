@@ -11,7 +11,7 @@ import ruLocale from '@fullcalendar/core/locales/ru'
 import enLocale from '@fullcalendar/core/locales/en-gb'
 import type { CalendarOptions, EventClickArg, DatesSetArg } from '@fullcalendar/core'
 import LessonFormPopup from '@/components/popups/LessonFormPopup.vue'
-import type { LessonFormData } from '@/components/popups/LessonFormPopup.vue'
+import type { LessonFormData, TopicNode } from '@/components/popups/LessonFormPopup.vue'
 import ConfirmDialog from '@/components/popups/ConfirmDialog.vue'
 import { useToast } from '@/lib/toast'
 import { useI18n } from '@/lib/i18n'
@@ -32,6 +32,8 @@ const page = usePage<{
     type: string | null
   }>
   lessonsSubjects: string[]
+  topicTree: Record<string, TopicNode[]>
+  topicStatuses: Record<number, Record<number, string>>
   defaultPrice: number
   defaultDuration: number
   defaultDate: string
@@ -110,7 +112,10 @@ function handleEventClick(arg: EventClickArg) {
     lesson_id: Number(arg.event.id),
     lesson_student_id: String(props.student_id),
     lesson_subject: props.subject,
-    lesson_theme: props.theme ?? '',
+    lesson_topic_id: props.topic_id ?? null,
+    lesson_subtopic_id: props.subtopic_id ?? null,
+    lesson_topic_status: 'in_progress',
+    lesson_comment: props.comment ?? '',
     lesson_price: props.price,
     lesson_duration: props.duration,
     lesson_date: props.date,
@@ -201,6 +206,8 @@ function handleLessonDelete() {
       mode="edit"
       :students="page.props.students.map(s => ({ id: s.id, name: s.name, current_class: s.current_class }))"
       :subjects="page.props.lessonsSubjects"
+      :topicTree="page.props.topicTree"
+      :topicStatuses="page.props.topicStatuses"
       :defaultPrice="page.props.defaultPrice"
       :defaultDuration="page.props.defaultDuration"
       :initialForm="lessonPopupInitial"

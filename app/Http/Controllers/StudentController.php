@@ -104,6 +104,10 @@ final class StudentController extends Controller
 
         $sortedLessons = [];
 
+        $topicNames = Topic::where('user_id', $user->id)
+            ->where('is_deleted', 0)
+            ->pluck('name', 'id');
+
         foreach ($lessons as $lesson) {
             $date = Carbon::parse($lesson->date);
             $year = (int) $date->year;
@@ -130,10 +134,14 @@ final class StudentController extends Controller
             }
 
             $sortedLessons[$year]['months'][$month]['lessons'][] = [
-                'id'         => $lesson->id,
-                'subject'    => $lesson->subject,
-                'theme'      => $lesson->theme,
-                'price'      => (int) $lesson->price,
+                'id'            => $lesson->id,
+                'subject'       => $lesson->subject,
+                'topic_id'      => $lesson->topic_id ? (int) $lesson->topic_id : null,
+                'subtopic_id'   => $lesson->subtopic_id ? (int) $lesson->subtopic_id : null,
+                'topic_name'    => $lesson->topic_id ? ($topicNames[$lesson->topic_id] ?? null) : null,
+                'subtopic_name' => $lesson->subtopic_id ? ($topicNames[$lesson->subtopic_id] ?? null) : null,
+                'comment'       => $lesson->comment,
+                'price'         => (int) $lesson->price,
                 'duration'   => (int) $lesson->duration,
                 'date'       => $date->toDateString(),
                 'time'       => $lesson->time ? substr((string) $lesson->time, 0, 5) : null,

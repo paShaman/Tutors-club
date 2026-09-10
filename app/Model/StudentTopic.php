@@ -34,4 +34,25 @@ final class StudentTopic extends Model
     {
         return $this->belongsTo(Topic::class, 'topic_id');
     }
+
+    /**
+     * Карта статусов тем по ученикам: student_id → topic_id → status.
+     *
+     * @param array<int, int|string> $studentIds
+     * @return array<int, array<int, string>>
+     */
+    public static function statusMapForStudents(array $studentIds): array
+    {
+        if (empty($studentIds)) {
+            return [];
+        }
+
+        $result = [];
+
+        foreach (self::whereIn('student_id', $studentIds)->get(['student_id', 'topic_id', 'status']) as $item) {
+            $result[(int) $item->student_id][(int) $item->topic_id] = (string) $item->status;
+        }
+
+        return $result;
+    }
 }

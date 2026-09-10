@@ -36,6 +36,23 @@ final class Topic extends Model
     }
 
     /**
+     * Деревья тем преподавателя по всем переданным предметам.
+     *
+     * @param array<int, string> $subjects
+     * @return array<string, array<int, array<string, mixed>>>
+     */
+    public static function treesBySubject(int $userId, array $subjects): array
+    {
+        $trees = [];
+
+        foreach ($subjects as $subject) {
+            $trees[$subject] = self::treeForSubject($userId, $subject);
+        }
+
+        return $trees;
+    }
+
+    /**
      * Дерево тем преподавателя по предмету (тема → подтемы).
      *
      * @return array<int, array<string, mixed>>

@@ -6,6 +6,9 @@ namespace App\Http\Controllers;
 
 use App\Model\Lesson;
 use App\Model\Student;
+use App\Model\StudentTopic;
+use App\Model\Topic;
+use App\Model\TopicReview;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
@@ -32,11 +35,18 @@ final class LessonController extends Controller
 
         $lessons = $lessonsQuery->orderBy('date', 'desc')->get()->toArray();
 
+        // Названия выбранных тем/подтем, чтобы показывать их в списке без N+1.
+        $topicNames = Topic::where('user_id', Auth::id())
+            ->where('is_deleted', 0)
+            ->pluck('name', 'id');
+
         foreach ($lessons as &$lesson) {
             $lesson['date'] = \Carbon\Carbon::parse($lesson['date'])->format('Y-m-d');
             $lesson['date_payed'] = $lesson['date_payed']
                 ? \Carbon\Carbon::parse($lesson['date_payed'])->format('Y-m-d H:i')
                 : null;
+            $lesson['topic_name'] = $lesson['topic_id'] ? ($topicNames[$lesson['topic_id']] ?? null) : null;
+            $lesson['subtopic_name'] = $lesson['subtopic_id'] ? ($topicNames[$lesson['subtopic_id']] ?? null) : null;
         }
         unset($lesson);
 
@@ -147,6 +157,8 @@ final class LessonController extends Controller
             'students'          => $activeStudents,
             'selectedStudentId' => $selectedStudentId ? (int) $selectedStudentId : null,
             'lessonsSubjects'   => Lesson::LESSON_SUBJECTS,
+            'topicTree'         => Topic::treesBySubject((int) Auth::id(), Lesson::LESSON_SUBJECTS),
+            'topicStatuses'     => StudentTopic::statusMapForStudents(array_keys($students)),
             'defaultPrice'      => config('lesson.default_price'),
             'defaultDuration'   => config('lesson.default_duration'),
             'defaultDate'       => date('Y-m-d'),
@@ -159,9 +171,12 @@ final class LessonController extends Controller
     public function editLesson(): RedirectResponse
     {
         $rules = [
-            'lesson_student_id' => 'required',
-            'lesson_subject'    => 'required',
-            'lesson_date'       => 'required',
+            'lesson_student_id'  => 'required',
+            'lesson_subject'     => 'required',
+            'lesson_date'        => 'required',
+            'lesson_topic_id'     => 'nullable|integer',
+            'lesson_subtopic_id'  => 'nullable|integer',
+            'lesson_topic_status' => 'nullable|in:in_progress,mastered,review',
         ];
 
         $post = request()->post();
@@ -172,11 +187,21 @@ final class LessonController extends Controller
             return back()->withErrors($validator)->withInput();
         }
 
+        $subject = (string) ($post['lesson_subject'] ?? '');
+
+        [$topicId, $subtopicId, $topicError] = $this->resolveLessonTopics($post, $subject);
+
+        if ($topicError) {
+            return back()->with('error', lng($topicError))->withInput();
+        }
+
         $str = 'add_lesson';
 
         $params = [
-            'subject'       => $post['lesson_subject'] ?? null,
-            'theme'         => $post['lesson_theme'] ?? null,
+            'subject'       => $subject,
+            'topic_id'      => $topicId,
+            'subtopic_id'   => $subtopicId,
+            'comment'       => $post['lesson_comment'] ?? null,
             'price'         => $post['lesson_price'] ?? 0,
             'duration'      => $post['lesson_duration'] ?? null,
             'date'          => $post['lesson_date'] ?? null,
@@ -201,7 +226,134 @@ final class LessonController extends Controller
             return back()->with('error', lng('error.' . $str));
         }
 
+        $statusTopicId = $subtopicId ?? $topicId;
+
+        if ($statusTopicId !== null) {
+            $this->applyTopicStatus(
+                (int) $post['lesson_student_id'],
+                (int) $statusTopicId,
+                (string) ($post['lesson_topic_status'] ?? 'in_progress'),
+                (string) ($post['lesson_date'] ?? date('Y-m-d')),
+                !empty($post['lesson_comment']) ? (string) $post['lesson_comment'] : null,
+            );
+        }
+
         return back()->with('success', lng('success.' . $str));
+    }
+
+    /**
+     * Применяет статус темы к ученику по итогам урока.
+     */
+    private function applyTopicStatus(int $studentId, int $topicId, string $status, string $date, ?string $comment): void
+    {
+        $studentTopic = StudentTopic::firstOrNew([
+            'student_id' => $studentId,
+            'topic_id'   => $topicId,
+        ]);
+
+        if ($status === 'review') {
+            TopicReview::firstOrCreate(
+                [
+                    'student_id'  => $studentId,
+                    'topic_id'    => $topicId,
+                    'reviewed_on' => $date,
+                ],
+                ['comment' => $comment],
+            );
+
+            if (!$studentTopic->exists || $studentTopic->status === StudentTopic::STATUS_NOT_STARTED) {
+                $studentTopic->status = StudentTopic::STATUS_IN_PROGRESS;
+            }
+
+            $current = $studentTopic->last_reviewed_at
+                ? $studentTopic->last_reviewed_at->toDateString()
+                : null;
+
+            if ($current === null || $date > $current) {
+                $studentTopic->last_reviewed_at = $date;
+            }
+
+            $studentTopic->save();
+
+            return;
+        }
+
+        if ($status === StudentTopic::STATUS_MASTERED) {
+            $studentTopic->status = StudentTopic::STATUS_MASTERED;
+
+            if (!$studentTopic->mastered_at || $date > $studentTopic->mastered_at->toDateString()) {
+                $studentTopic->mastered_at = $date;
+            }
+
+            $studentTopic->save();
+
+            return;
+        }
+
+        $studentTopic->status = StudentTopic::STATUS_IN_PROGRESS;
+        $studentTopic->save();
+    }
+
+    /**
+     * Проверяет, что тема/подтема принадлежат пользователю и предмету урока.
+     *
+     * @param array<string, mixed> $post
+     * @return array{0: int|null, 1: int|null, 2: string|null}
+     */
+    private function resolveLessonTopics(array $post, string $subject): array
+    {
+        $userId = (int) Auth::id();
+
+        $topicId = !empty($post['lesson_topic_id']) ? (int) $post['lesson_topic_id'] : null;
+        $subtopicId = !empty($post['lesson_subtopic_id']) ? (int) $post['lesson_subtopic_id'] : null;
+
+        $topic = null;
+
+        if ($topicId !== null) {
+            $topic = Topic::where('user_id', $userId)
+                ->where('is_deleted', 0)
+                ->whereNull('parent_id')
+                ->where('subject', $subject)
+                ->find($topicId);
+
+            if (!$topic) {
+                return [null, null, 'error.add_lesson'];
+            }
+        }
+
+        if ($subtopicId !== null) {
+            $subtopic = Topic::where('user_id', $userId)
+                ->where('is_deleted', 0)
+                ->where('subject', $subject)
+                ->whereNotNull('parent_id')
+                ->find($subtopicId);
+
+            if (!$subtopic) {
+                return [null, null, 'error.add_lesson'];
+            }
+
+            // Подтема должна относиться к выбранной теме.
+            if ($topic !== null && (int) $subtopic->parent_id !== (int) $topic->id) {
+                return [null, null, 'error.add_lesson'];
+            }
+
+            // Если выбрана только подтема — темой считаем её родителя.
+            if ($topic === null) {
+                $topic = Topic::where('user_id', $userId)
+                    ->where('is_deleted', 0)
+                    ->find((int) $subtopic->parent_id);
+
+                if (!$topic) {
+                    return [null, null, 'error.add_lesson'];
+                }
+            }
+        }
+
+        return [
+            $topic !== null ? (int) $topic->id : null,
+            $subtopicId,
+            null,
+        ];
     }
 
     /**

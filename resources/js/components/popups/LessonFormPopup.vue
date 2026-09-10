@@ -12,11 +12,20 @@ export interface StudentOption {
   current_class: string
 }
 
+export interface TopicNode {
+  id: number
+  name: string
+  children: TopicNode[]
+}
+
 export type LessonFormData = {
   lesson_id: number | null
   lesson_student_id: string
   lesson_subject: string
-  lesson_theme: string
+  lesson_topic_id: number | null
+  lesson_subtopic_id: number | null
+  lesson_topic_status: string
+  lesson_comment: string
   lesson_price: number
   lesson_duration: number
   lesson_date: string
@@ -36,6 +45,8 @@ const props = defineProps<{
   mode: 'add' | 'edit'
   students: StudentOption[]
   subjects: string[]
+  topicTree: Record<string, TopicNode[]>
+  topicStatuses: Record<number, Record<number, string>>
   defaultPrice: number
   defaultDuration: number
   initialForm?: LessonFormData | null
@@ -51,7 +62,10 @@ const emptyForm = (): LessonFormData => ({
   lesson_id: null,
   lesson_student_id: '',
   lesson_subject: '',
-  lesson_theme: '',
+  lesson_topic_id: null,
+  lesson_subtopic_id: null,
+  lesson_topic_status: 'in_progress',
+  lesson_comment: '',
   lesson_price: props.defaultPrice,
   lesson_duration: props.defaultDuration,
   lesson_date: '',
@@ -63,9 +77,59 @@ const emptyForm = (): LessonFormData => ({
 
 const form = ref<LessonFormData>(emptyForm())
 
+const subjectTopics = computed<TopicNode[]>(() => props.topicTree?.[form.value.lesson_subject] ?? [])
+
+const selectedTopic = computed<TopicNode | null>(
+  () => subjectTopics.value.find((topic) => topic.id === form.value.lesson_topic_id) ?? null,
+)
+
+const subtopics = computed<TopicNode[]>(() => selectedTopic.value?.children ?? [])
+
+const hasTopic = computed(() => form.value.lesson_topic_id !== null)
+
+// Статус по умолчанию — «проходим»; для уже усвоенной темы сохраняем «усвоено».
+function syncTopicStatus(): void {
+  const topicId = form.value.lesson_subtopic_id ?? form.value.lesson_topic_id
+
+  if (topicId === null) {
+    form.value.lesson_topic_status = 'in_progress'
+    return
+  }
+
+  const statuses = props.topicStatuses?.[Number(form.value.lesson_student_id)] ?? {}
+  const existing = statuses[topicId]
+
+  form.value.lesson_topic_status = existing === 'mastered' || existing === 'in_progress'
+    ? existing
+    : 'in_progress'
+}
+
+watch(() => form.value.lesson_student_id, syncTopicStatus)
+watch(() => form.value.lesson_topic_id, syncTopicStatus)
+watch(() => form.value.lesson_subtopic_id, syncTopicStatus)
+
+// Сбрасываем тему/подтему, если они не относятся к выбранному предмету.
+watch(() => form.value.lesson_subject, (subject) => {
+  const topics = props.topicTree?.[subject] ?? []
+  if (form.value.lesson_topic_id !== null && !topics.some((topic) => topic.id === form.value.lesson_topic_id)) {
+    form.value.lesson_topic_id = null
+    form.value.lesson_subtopic_id = null
+  }
+})
+
+// Сбрасываем подтему, если она не относится к выбранной теме.
+watch(() => form.value.lesson_topic_id, (topicId) => {
+  if (form.value.lesson_subtopic_id === null) return
+  const topic = subjectTopics.value.find((item) => item.id === topicId)
+  if (!topic?.children.some((child) => child.id === form.value.lesson_subtopic_id)) {
+    form.value.lesson_subtopic_id = null
+  }
+})
+
 watch(() => props.initialForm, (val) => {
   if (val) {
     form.value = { ...val }
+    syncTopicStatus()
   }
 }, { immediate: true })
 
@@ -122,13 +186,56 @@ const title = computed(() => props.mode === 'edit' ? t('ui.lessons.form.edit_tit
               </select>
             </div>
 
-            <!-- Theme -->
+            <!-- Topic & Subtopic -->
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-foreground mb-1.5">{{ t('ui.lessons.form.topic') }}</label>
+                <select
+                  v-model="form.lesson_topic_id"
+                  :disabled="!form.lesson_subject"
+                  class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors disabled:opacity-50"
+                >
+                  <option :value="null">{{ t('ui.lessons.form.topic_none') }}</option>
+                  <option v-for="topic in subjectTopics" :key="topic.id" :value="topic.id">
+                    {{ topic.name }}
+                  </option>
+                </select>
+              </div>
+              <div v-if="subtopics.length">
+                <label class="block text-sm font-medium text-foreground mb-1.5">{{ t('ui.lessons.form.subtopic') }}</label>
+                <select
+                  v-model="form.lesson_subtopic_id"
+                  class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+                >
+                  <option :value="null">{{ t('ui.lessons.form.subtopic_none') }}</option>
+                  <option v-for="sub in subtopics" :key="sub.id" :value="sub.id">
+                    {{ sub.name }}
+                  </option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Topic status -->
+            <div v-if="hasTopic">
+              <label class="block text-sm font-medium text-foreground mb-1.5">{{ t('ui.lessons.form.topic_status') }}</label>
+              <select
+                v-model="form.lesson_topic_status"
+                class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+              >
+                <option value="in_progress">{{ t('ui.lessons.form.topic_status_in_progress') }}</option>
+                <option value="mastered">{{ t('ui.lessons.form.topic_status_mastered') }}</option>
+                <option value="review">{{ t('ui.lessons.form.topic_status_review') }}</option>
+              </select>
+            </div>
+
+            <!-- Comment -->
             <div>
-              <label class="block text-sm font-medium text-foreground mb-1.5">{{ t('ui.lessons.form.theme') }}</label>
+              <label class="block text-sm font-medium text-foreground mb-1.5">{{ t('ui.lessons.form.comment') }}</label>
               <input
-                v-model="form.lesson_theme"
+                v-model="form.lesson_comment"
+                maxlength="255"
                 class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
-                :placeholder="t('ui.lessons.form.theme_placeholder')"
+                :placeholder="t('ui.lessons.form.comment_placeholder')"
               />
             </div>
 

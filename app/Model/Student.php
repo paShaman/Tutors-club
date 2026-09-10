@@ -84,7 +84,9 @@ class Student extends Model
 
             $lesson = new Lesson([
                 'subject'       => $params['subject'],
-                'theme'         => $params['theme'] ?? '',
+                'topic_id'      => $params['topic_id'] ?? null,
+                'subtopic_id'   => $params['subtopic_id'] ?? null,
+                'comment'       => $params['comment'] ?? '',
                 'price'         => $params['price'],
                 'duration'      => $params['duration'] ?? 0,
                 'time'          => $params['time'] ?? 0,

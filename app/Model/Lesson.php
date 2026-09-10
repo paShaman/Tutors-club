@@ -14,7 +14,7 @@ class Lesson extends Model
     ];
 
     protected $fillable = [
-        'student_id', 'subject', 'theme', 'price', 'duration', 'is_payed', 'date', 'date_payed', 'time', 'is_deleted', 'is_future'
+        'student_id', 'subject', 'topic_id', 'subtopic_id', 'comment', 'price', 'duration', 'is_payed', 'date', 'date_payed', 'time', 'is_deleted', 'is_future'
     ];
 
     /**
@@ -94,8 +94,10 @@ class Lesson extends Model
                 throw new \Exception('lesson_not_found');
             }
 
-            $lesson->subject    = $params['subject'];
-            $lesson->theme      = $params['theme'] ?? '';
+            $lesson->subject     = $params['subject'];
+            $lesson->topic_id    = $params['topic_id'] ?? null;
+            $lesson->subtopic_id = $params['subtopic_id'] ?? null;
+            $lesson->comment     = $params['comment'] ?? '';
             $lesson->price      = $params['price'];
             $lesson->duration   = $params['duration'] ?? 0;
             $lesson->time       = $params['time'] ?? 0;
