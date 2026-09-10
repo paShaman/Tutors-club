@@ -87,6 +87,48 @@ function isActive(route: string): boolean {
 const user = computed(() => page.props.auth?.user ?? null)
 const tariff = computed(() => page.props.tariff ?? null)
 
+// Уведомление об истёкшем тарифе: закрытие запоминаем в localStorage,
+// чтобы не показывать его снова, пока тариф не обновится (меняется expired_at).
+const TARIFF_NOTICE_STORAGE_PREFIX = 'tariff-expired-notice:'
+const dismissedTariffNotice = ref<string | null>(null)
+
+function readDismissedTariffNotice(): void {
+  if (typeof window === 'undefined') return
+
+  const key = TARIFF_NOTICE_STORAGE_PREFIX + (user.value?.id ?? 'guest')
+
+  try {
+    dismissedTariffNotice.value = window.localStorage.getItem(key)
+  } catch {
+    dismissedTariffNotice.value = null
+  }
+}
+
+function dismissTariffNotice(): void {
+  const expiredAt = tariff.value?.expired_at
+  if (!expiredAt) return
+
+  dismissedTariffNotice.value = expiredAt
+
+  const key = TARIFF_NOTICE_STORAGE_PREFIX + (user.value?.id ?? 'guest')
+
+  try {
+    window.localStorage.setItem(key, expiredAt)
+  } catch {
+    // localStorage может быть недоступен — не критично
+  }
+}
+
+watch(() => user.value?.id, readDismissedTariffNotice, { immediate: true })
+
+// В настройках уведомление всегда видно в блоке тарифа и не закрывается
+const showTariffNotice = computed(() => {
+  const info = tariff.value
+  if (!info?.expired || !info.expired_at) return false
+  if (page.url.startsWith('/settings')) return false
+  return dismissedTariffNotice.value !== info.expired_at
+})
+
 function logout(): void {
   router.visit('/logout', { method: 'get' })
 }
@@ -312,14 +354,22 @@ onUnmounted(() => {
       <!-- Page content -->
       <main class="p-6">
         <div
-          v-if="tariff?.expired"
+          v-if="showTariffNotice"
           class="mb-4 flex items-start gap-3 rounded-xl border border-amber-200/60 bg-amber-50/60 px-4 py-3 text-sm text-amber-700"
         >
           <AlertTriangle class="mt-0.5 h-4 w-4 shrink-0" />
-          <div>
+          <div class="flex-1">
             <p class="font-medium">{{ t('ui.tariff.expired.title') }}</p>
-            <p class="text-amber-700/80">{{ t('ui.tariff.expired.text', { date: tariff.expired_at ?? '' }) }}</p>
+            <p class="text-amber-700/80">{{ t('ui.tariff.expired.text', { date: tariff?.expired_at ?? '' }) }}</p>
           </div>
+          <button
+            type="button"
+            class="-mr-1 shrink-0 rounded-lg p-1 opacity-60 transition-opacity hover:opacity-100 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-current"
+            :aria-label="t('ui.toast.close')"
+            @click="dismissTariffNotice"
+          >
+            <X class="h-4 w-4" />
+          </button>
         </div>
         <slot />
       </main>

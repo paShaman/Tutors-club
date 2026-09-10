@@ -18,8 +18,8 @@ const DEFAULT_DURATION: Record<ToastVariant, number> = {
   success: 4000,
   info: 4000,
   warning: 6000,
-  // Ошибку не скрываем автоматически — её легко пропустить
-  error: 0,
+  // Ошибка закрывается сама, но висит в 3 раза дольше обычного тоста
+  error: 12000,
 }
 
 const toasts = reactive<Toast[]>([])
