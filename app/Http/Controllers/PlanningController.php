@@ -8,6 +8,7 @@ use App\Model\Lesson;
 use App\Model\StudentTopic;
 use App\Model\Topic;
 use App\Model\TopicReview;
+use App\Services\TariffService;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
@@ -86,6 +87,10 @@ final class PlanningController extends Controller
 
             if (!in_array($subject, Lesson::LESSON_SUBJECTS, true)) {
                 return back()->with('error', lng('error.add_topic'));
+            }
+
+            if (!app(TariffService::class)->canUse(Auth::user(), 'topics')) {
+                return back()->with('error', lng('error.tariff_topics_limit'))->withInput();
             }
 
             $maxPosition = (int) Topic::where('user_id', $userId)

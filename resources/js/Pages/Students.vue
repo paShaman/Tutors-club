@@ -11,6 +11,7 @@ import UserAvatar from '@/components/ui/UserAvatar.vue'
 import ConfirmDialog from '@/components/popups/ConfirmDialog.vue'
 import { useToast } from '@/lib/toast'
 import { useI18n } from '@/lib/i18n'
+import type { TariffInfo } from '@/types'
 import {
   UserPlus,
   GraduationCap,
@@ -35,6 +36,7 @@ const page = usePage<{
   }>
   deletedFlag: boolean
   specialFlag: boolean
+  tariff: TariffInfo | null
 }>()
 
 const toast = useToast()
@@ -43,6 +45,7 @@ const { t, tp } = useI18n()
 const students = computed(() => page.props.students ?? [])
 const deletedFlag = computed(() => page.props.deletedFlag ?? false)
 const specialFlag = computed(() => page.props.specialFlag ?? false)
+const canAddStudent = computed(() => page.props.tariff?.can.students ?? true)
 
 const showDeleted = ref(false)
 const showAddModal = ref(false)
@@ -82,6 +85,14 @@ function onConfirm() {
 function onCancel() {
   showConfirm.value = false
   confirmCallback = null
+}
+
+function requestAddModal() {
+  if (!canAddStudent.value) {
+    toast.warning(t('ui.tariff.limit.students'))
+    return
+  }
+  openAddModal()
 }
 
 function openAddModal() {
@@ -166,7 +177,7 @@ function deleteStudent(student: any) {
           <Trash2 class="h-4 w-4" />
           {{ showDeleted ? t('ui.students.active') : t('ui.students.deleted') }}
         </Button>
-        <Button @click="openAddModal">
+        <Button @click="requestAddModal">
           <UserPlus class="h-4 w-4" />
           {{ t('ui.students.add') }}
         </Button>
@@ -309,7 +320,7 @@ function deleteStudent(student: any) {
       <p class="mt-4 text-muted-foreground">
         {{ showDeleted ? t('ui.students.empty_deleted') : t('ui.students.empty') }}
       </p>
-      <Button v-if="!showDeleted" @click="openAddModal" variant="outline" class="mt-4">
+      <Button v-if="!showDeleted" @click="requestAddModal" variant="outline" class="mt-4">
         <UserPlus class="h-4 w-4" />
         {{ t('ui.students.add_first') }}
       </Button>

@@ -10,6 +10,7 @@ import ConfirmDialog from '@/components/popups/ConfirmDialog.vue'
 import { useToast } from '@/lib/toast'
 import { useI18n } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
+import type { TariffInfo } from '@/types'
 import {
   GripVertical,
   ListTree,
@@ -31,6 +32,7 @@ const page = usePage<{
   subjects: string[]
   selectedSubject: string
   topicTree: TopicNode[]
+  tariff: TariffInfo | null
 }>()
 
 const toast = useToast()
@@ -38,6 +40,7 @@ const { t, tp } = useI18n()
 
 const subjects = computed(() => page.props.subjects ?? [])
 const selectedSubject = computed(() => page.props.selectedSubject ?? subjects.value[0] ?? '')
+const canAddTopic = computed(() => page.props.tariff?.can.topics ?? true)
 
 function cloneNode(node: TopicNode): TopicNode {
   return { ...node, children: (node.children ?? []).map(cloneNode) }
@@ -68,6 +71,22 @@ const showTopicForm = ref(false)
 const formMode = ref<'add' | 'edit'>('add')
 const formParent = ref<{ id: number; name: string } | null>(null)
 const formInitial = ref<TopicFormData | null>(null)
+
+function requestAddRoot(): void {
+  if (!canAddTopic.value) {
+    toast.warning(t('ui.tariff.limit.topics'))
+    return
+  }
+  openAddRoot()
+}
+
+function requestAddSubtopic(root: TopicNode): void {
+  if (!canAddTopic.value) {
+    toast.warning(t('ui.tariff.limit.topics'))
+    return
+  }
+  openAddSubtopic(root)
+}
 
 function openAddRoot(): void {
   formMode.value = 'add'
@@ -259,7 +278,7 @@ function onCancel(): void {
         <h1 class="text-2xl font-bold tracking-tight text-foreground">{{ t('ui.planning.title') }}</h1>
         <p class="mt-1 text-sm text-muted-foreground">{{ t('ui.planning.subtitle') }}</p>
       </div>
-      <Button @click="openAddRoot">
+      <Button @click="requestAddRoot">
         <Plus class="h-4 w-4" />
         {{ t('ui.planning.add_topic') }}
       </Button>
@@ -291,7 +310,7 @@ function onCancel(): void {
       <ListTree class="mx-auto h-12 w-12 text-muted-foreground/30" />
       <p class="mt-4 font-medium text-foreground">{{ t('ui.planning.empty') }}</p>
       <p class="mt-1 text-sm text-muted-foreground">{{ t('ui.planning.empty_hint') }}</p>
-      <Button class="mt-4" @click="openAddRoot">
+      <Button class="mt-4" @click="requestAddRoot">
         <Plus class="h-4 w-4" />
         {{ t('ui.planning.add_topic') }}
       </Button>
@@ -327,7 +346,7 @@ function onCancel(): void {
             <GripVertical class="h-5 w-5 shrink-0 cursor-grab text-muted-foreground/50" />
             <p class="min-w-0 flex-1 truncate font-semibold text-foreground">{{ root.name }}</p>
             <span class="hidden text-xs text-muted-foreground sm:inline">{{ root.children.length }}</span>
-            <Button variant="ghost" size="sm" @click="openAddSubtopic(root)">
+            <Button variant="ghost" size="sm" @click="requestAddSubtopic(root)">
               <Plus class="h-4 w-4" />
               <span class="hidden sm:inline">{{ t('ui.planning.add_subtopic') }}</span>
             </Button>

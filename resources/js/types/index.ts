@@ -26,6 +26,23 @@ export interface LocaleOption {
   label: string
 }
 
+export type TariffFeature = 'students' | 'lessons' | 'topics'
+
+export interface TariffInfo {
+  plan: string
+  is_paid: boolean
+  period: 'month' | 'year' | null
+  until: string | null
+  started_at: string | null
+  expired: boolean
+  expired_at: string | null
+  limits: Record<TariffFeature, number | null>
+  usage: Record<TariffFeature, number>
+  can: Record<TariffFeature, boolean>
+  price_month: number
+  price_year: number
+}
+
 export interface SharedProps {
   [key: string]: unknown
   auth: {
@@ -37,6 +54,7 @@ export interface SharedProps {
   }
   social: SocialProviderConfig[]
   agreements: AgreementDocument[]
+  tariff: TariffInfo | null
   locale: string
   locales: LocaleOption[]
   translations: Record<string, unknown>

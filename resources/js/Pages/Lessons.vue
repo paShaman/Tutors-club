@@ -24,6 +24,7 @@ import TopicStatusBadge from '@/components/ui/TopicStatusBadge.vue'
 import ConfirmDialog from '@/components/popups/ConfirmDialog.vue'
 import { useToast } from '@/lib/toast'
 import { useI18n } from '@/lib/i18n'
+import type { TariffInfo } from '@/types'
 
 defineOptions({ layout: AppLayout })
 
@@ -100,10 +101,13 @@ const page = usePage<{
   defaultPrice: number
   defaultDuration: number
   defaultDate: string
+  tariff: TariffInfo | null
 }>()
 
 const toast = useToast()
 const { t, tp, intlLocale } = useI18n()
+
+const canAddLesson = computed(() => page.props.tariff?.can.lessons ?? true)
 
 const selectedStudentId = ref<number | null>(page.props.selectedStudentId ?? null)
 
@@ -210,6 +214,22 @@ function onConfirm() {
 function onCancel() {
   showConfirm.value = false
   confirmCallback = null
+}
+
+function requestAddLesson() {
+  if (!canAddLesson.value) {
+    toast.warning(t('ui.tariff.limit.lessons'))
+    return
+  }
+  openAddModal()
+}
+
+function requestAddLessonForStudent(studentGroup: StudentGroup) {
+  if (!canAddLesson.value) {
+    toast.warning(t('ui.tariff.limit.lessons'))
+    return
+  }
+  openAddModalForStudent(studentGroup)
 }
 
 function openAddModal() {
@@ -398,7 +418,7 @@ function formatDatePayed(dateStr: string | null): string {
           {{ t('ui.lessons.reset_filter') }}
         </button>
 
-        <Button @click="openAddModal">
+        <Button @click="requestAddLesson">
           <Plus class="h-4 w-4" />
           <span class="hidden sm:inline">{{ t('ui.lessons.add') }}</span>
         </Button>
@@ -530,7 +550,7 @@ function formatDatePayed(dateStr: string | null): string {
                       </div>
                       <!-- Add lesson button for this student -->
                       <button
-                        @click.stop="openAddModalForStudent(studentGroup)"
+                        @click.stop="requestAddLessonForStudent(studentGroup)"
                         class="inline-flex items-center justify-center rounded-lg h-8 w-8 text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors cursor-pointer shrink-0"
                         :title="t('ui.lessons.add_for_student')"
                       >
@@ -665,7 +685,7 @@ function formatDatePayed(dateStr: string | null): string {
     <Card v-else class="p-12 text-center">
       <BookOpen class="mx-auto h-12 w-12 text-muted-foreground/30" />
       <p class="mt-4 text-muted-foreground">{{ t('ui.lessons.empty') }}</p>
-      <Button @click="openAddModal" variant="outline" class="mt-4">
+      <Button @click="requestAddLesson" variant="outline" class="mt-4">
         <Plus class="h-4 w-4" />
         {{ t('ui.lessons.add_first') }}
       </Button>

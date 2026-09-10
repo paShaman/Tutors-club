@@ -16,6 +16,8 @@ Guidance for AI coding agents working in this repository. Read this file before 
 
 The user-facing UI is Russian; backend locale is `ru` (with `en` translation files that must be kept in sync for backend strings, see §7).
 
+Monetization: there are two **tariff plans** — free "Basic" (full functionality, 1 student) and paid "Paid" (100 ₽/month or 1000 ₽/year, unlimited). Payments and self-service plan switching are **not implemented**; plans are assigned manually in the DB via the `user_subscriptions` table (see §5).
+
 ## 2. Non-negotiable rules (read first)
 
 - **Git is completely off-limits.** Do not stage, commit, push, branch, reset, stash, merge, rebase, or craft commit messages. Do not even run `git log`/`git status`/`git diff` unless the user explicitly asks. Version control is done by the user only.
@@ -26,6 +28,7 @@ The user-facing UI is Russian; backend locale is `ru` (with `en` translation fil
 - **Do not write tests.** There is no `tests/` directory, no test script, and tests are intentionally not part of the workflow yet. Do not scaffold PHPUnit/Pest/component-test infrastructure.
 - **Do not refactor legacy code** (`app/Model`, `App\Common`, `App\Access`, `App\Notification`, `App\Form`, `App\Image`, old controllers/models) unless the task explicitly requires it. Match the surrounding file's style when you do edit one.
 - **Do not update the changelog** (hardcoded in `ChangelogController`) unless explicitly asked.
+- **Billing/tariffs are not self-service.** Do not implement payment flows or plan switching. Limits come from `config/tariffs.php` only; the effective plan is the latest active row in `user_subscriptions` (or `free`). Do not use the legacy `users.account` column or the empty `users_payments` table.
 - **Do not add new `window.location.reload()` calls** and prefer migrating touched flows away from full reloads (see §7).
 
 ## 3. Tech stack
@@ -60,9 +63,9 @@ app/
 │   │                          # Page, Planning, Student, User, ControllerHelper
 │   └── Middleware/            # Authenticate, HandleInertiaRequests, ...
 ├── Model/                     # LEGACY Eloquent namespace: User, Student, Lesson,
-│                              # Topic, StudentTopic, TopicReview, Page  (NOT App\Models)
+│                              # Topic, StudentTopic, TopicReview, UserSubscription, Page  (NOT App\Models)
 ├── Services/                  # SocialAccountService, SocialOAuthProvider,
-│                              # VkIdService, YandexIdService
+│                              # VkIdService, YandexIdService, TariffService
 └── Providers/
 routes/
 ├── web.php                    # THE single routing file (all HTTP routes)
@@ -70,7 +73,8 @@ routes/
 config/
 ├── services.php               # vkid / yandex / yandex_smartcaptcha credentials
 ├── agreements.php             # registration agreement documents (shared via Inertia)
-└── lesson.php                 # LESSON_DEFAULT_PRICE (3000), LESSON_DEFAULT_DURATION (60)
+├── lesson.php                 # LESSON_DEFAULT_PRICE (3000), LESSON_DEFAULT_DURATION (60)
+└── tariffs.php                # tariff plans: limits + prices (free/paid)
 resources/
 ├── css/app.css                # Tailwind v4 entry: @theme tokens + global styles
 ├── lang/{ru,en}/              # messages.php (backend + ui.* strings); validation.php (one per locale)
@@ -97,11 +101,12 @@ public_html/                   # web root (Laravel public dir via usePublicPath)
 
 - **Routing**: everything lives in `routes/web.php`. Page endpoints render Inertia; student/lesson/planning mutations are Inertia POST routes that `redirect()->back()` (see §7). Route names use dot notation (`auth.yandex`, `lessons`, `planning`).
 - **Controllers** live in `App\Http\Controllers`. Page methods return `Inertia::render('PageName', props)`. Student/lesson/planning mutation methods return `Illuminate\Http\RedirectResponse` via `back()->with('success'|'error', lng(...))`, or `back()->withErrors($validator)->withInput()` on validation failure. `ControllerHelper::resultSuccess()` / `resultError()` (`{ success, data }`) remain only for the intentional JSON endpoints (`/avatar/upload`, `/changelog`).
-- **Models** use the legacy namespace `App\Model` (singular). Keep using it for new models. Relations: `User` ↔ `Student` (many-to-many via `students_to_users`), `User` has many `Topic`; `Student` has many `Lesson`, `StudentTopic` (per-student topic status) and `TopicReview` (review log).
+- **Models** use the legacy namespace `App\Model` (singular). Keep using it for new models. Relations: `User` ↔ `Student` (many-to-many via `students_to_users`), `User` has many `Topic` and `UserSubscription`; `Student` has many `Lesson`, `StudentTopic` (per-student topic status) and `TopicReview` (review log).
 - **Localization**: user-facing backend strings MUST go through the `lng('...')` helper (dot key under `messages.php`), e.g. `lng('success.add_student')`. **Every new key must be added to BOTH `resources/lang/ru/messages.php` and `resources/lang/en/messages.php`.** Group keys under `success.*`, `error.*`, `title`, etc. See existing usage in controllers. Validation texts and field names (`attributes`) live in `resources/lang/<locale>/validation.php` — keep a file for **every** locale listed in `config/locales.php`, not just the primary one.
 - **Roles**: `roles`/`roles_to_users` tables and `Access` constants are an unused rudiment from an old version and are not part of the current product. Do not introduce new role logic; if roles return later, this is where it goes.
+- **Tariffs (планы)**: limits live only in `config/tariffs.php` (`plans.<plan>.limits.<feature>`). Feature registry: `students`, `lessons`, `topics` — quotas (`null` = unlimited); `subjects` is intentionally still the `Lesson::LESSON_SUBJECTS` constant (move to DB later). The effective plan = latest active row in `user_subscriptions` (not expired) or `free`; an expired paid plan auto-falls back to `free` and surfaces a notice (`TariffService::expired()`). Enforce quotas only on **creation** via `TariffService::canUse()` (edit/delete/restore don't consume quota); a new creatable entity must add its counter to `TariffService::used()` and a guard at its creation point. The single student-creation path is `StudentController::editStudent()` (plus the `User::addStudent()` safety net).
 - **PHP style for NEW files**: add `declare(strict_types=1);`, typed signatures/return types, `final class` where sensible, aligned multi-line arrays, no noisy PHPDoc — write short Russian comments only where they explain "why". Do not retro-edit old files to this style.
-- Middleware: `auth`, `guest`, `signed` (auto-login link). Shared Inertia props are assembled in `app/Http/Middleware/HandleInertiaRequests.php` (`auth.user`, `flash`, `social`, `agreements`) — when you add globally shared data, extend this class AND `resources/js/types/index.ts` (`SharedProps`).
+- Middleware: `auth`, `guest`, `signed` (auto-login link). Shared Inertia props are assembled in `app/Http/Middleware/HandleInertiaRequests.php` (`auth.user`, `flash`, `social`, `agreements`, `tariff`) — when you add globally shared data, extend this class AND `resources/js/types/index.ts` (`SharedProps`).
 
 ## 6. Frontend conventions (Vue/TS)
 
@@ -110,6 +115,7 @@ public_html/                   # web root (Laravel public dir via usePublicPath)
 - Import with the `@/` alias for `Layouts/`, `components/`, `lib/`; use relative paths within a directory.
 - **Reuse existing UI**, don't restyle components: `components/ui/*` (Button with variants, Card/CardHeader/CardTitle, UserAvatar, Toaster), `components/popups/*` (ConfirmDialog, form popups). Buttons are `Button`; forms live in popups bound to local refs.
 - **User feedback = toasts.** Use `useToast()` from `lib/toast.ts` (`toast.success/error/warning/info`) instead of inline flash banners or a blocking alert modal. The global `<Toaster/>` (mounted in `app.ts`, so it also works on auth pages without `AppLayout`) renders the stack bottom-right and auto-surfaces Inertia `flash.success`/`flash.error` — do not re-add per-page flash markup. Success/info auto-dismiss after 4 s, warning after 6 s, **error stays until closed manually** (never auto-hide errors). Form **field** validation errors stay inline next to the input (`form.errors.*`); the `onError` toast is a fallback channel.
+- **Tariff prop**: the shared `tariff` prop (`TariffInfo` in `types/index.ts`) carries `plan`, `limits`, `usage` and `can.<feature>` flags. Gate "add" buttons on `tariff.can.*` and explain the block with `toast.warning(t('ui.tariff.limit.<feature>'))`; the server stays the source of truth. When `tariff.expired` is true, `AppLayout` shows a notice.
 - Styling: Tailwind utility classes with the design-token palette from `resources/css/app.css` (`bg-background`, `text-foreground`, `bg-primary/...`, `border-border`, tokens like `--color-primary: hsl(252 87% 67%)`, radius 0.75rem). Do not introduce ad-hoc hex colors; extend the `@theme` block if a token is genuinely needed.
 - Icons: `lucide-vue-next`. Charts: register ChartJS modules where used. Calendar: `@fullcalendar/vue3`.
 - Vue components are single-file with `lang="ts"`; no CSS-in-JS. Shared helpers: `cn()` in `lib/utils.ts`, `uploadAvatar()` in `lib/upload.ts`.
@@ -179,6 +185,7 @@ The changelog is a hardcoded, versioned array inside `ChangelogController::getCh
 - Submit mutations with Inertia (`router.post`/`useForm`); controllers reply `back()->with('success'|'error', ...)` or `back()->withErrors($validator)`, and the redirect visit refreshes props with no browser reload (§7).
 - Add every new backend string to both `ru` and `en` `messages.php` and expose it via `lng()`.
 - Reuse the local UI kit, Tailwind theme tokens, existing pages/popups/helpers.
+- Keep tariff limits/prices in `config/tariffs.php`; enforce quotas on creation and gate the matching UI "add" buttons via the shared `tariff` prop.
 - Give success/error feedback through `useToast()` (`lib/toast.ts`) — success/info auto-dismiss, errors persist until closed; keep field validation inline.
 - Run the §9 checks and fix all reported errors before reporting completion.
 - Write short Russian comments only where they explain non-obvious decisions.
@@ -190,4 +197,5 @@ The changelog is a hardcoded, versioned array inside `ChangelogController::getCh
 - Add packages, refactor `App\Model`/`App\Common`/`App\Access`/legacy controllers, add tests, or update the changelog unless asked.
 - Add new `fetch` JSON endpoints or `window.location.reload()` patterns; prefer Inertia-native flows.
 - Re-add inline flash banners or blocking alert modals for user messages — the global `Toaster` handles them (§6/§7).
+- Hardcode plan limits/prices or Russian plan strings; add payment flows or self-service plan switching (§2).
 - Write English or heavy PHPDoc comments in Russian-oriented code — keep comments minimal and in Russian.

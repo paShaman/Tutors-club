@@ -9,6 +9,7 @@ use App\Model\Student;
 use App\Model\StudentTopic;
 use App\Model\Topic;
 use App\Model\TopicReview;
+use App\Services\TariffService;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
@@ -304,7 +305,13 @@ final class StudentController extends Controller
                 \App\Image::deleteStoredAvatar($oldAvatar);
             }
         } else {
-            $result = Auth::user()->addStudent($params);
+            $user = Auth::user();
+
+            if (!app(TariffService::class)->canUse($user, 'students')) {
+                return back()->with('error', lng('error.tariff_students_limit'));
+            }
+
+            $result = $user->addStudent($params);
         }
 
         if (empty($result)) {

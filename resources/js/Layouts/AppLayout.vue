@@ -14,6 +14,7 @@ import {
   X,
   ChevronDown,
   GitCommit,
+  AlertTriangle,
 } from 'lucide-vue-next'
 import Button from '@/components/ui/Button.vue'
 import UserAvatar from '@/components/ui/UserAvatar.vue'
@@ -84,6 +85,7 @@ function isActive(route: string): boolean {
 }
 
 const user = computed(() => page.props.auth?.user ?? null)
+const tariff = computed(() => page.props.tariff ?? null)
 
 function logout(): void {
   router.visit('/logout', { method: 'get' })
@@ -309,6 +311,16 @@ onUnmounted(() => {
 
       <!-- Page content -->
       <main class="p-6">
+        <div
+          v-if="tariff?.expired"
+          class="mb-4 flex items-start gap-3 rounded-xl border border-amber-200/60 bg-amber-50/60 px-4 py-3 text-sm text-amber-700"
+        >
+          <AlertTriangle class="mt-0.5 h-4 w-4 shrink-0" />
+          <div>
+            <p class="font-medium">{{ t('ui.tariff.expired.title') }}</p>
+            <p class="text-amber-700/80">{{ t('ui.tariff.expired.text', { date: tariff.expired_at ?? '' }) }}</p>
+          </div>
+        </div>
         <slot />
       </main>
     </div>

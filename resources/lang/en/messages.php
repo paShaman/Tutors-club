@@ -54,6 +54,9 @@ return [
         'set_topic_status' => 'Topic status was not updated',
         'review_topic' => 'Review was not saved',
         'no_access' => 'Access denied',
+        'tariff_students_limit' => 'You have reached the student limit on your plan',
+        'tariff_lessons_limit'  => 'You have reached the lesson limit on your plan',
+        'tariff_topics_limit'   => 'You have reached the topic limit on your plan',
     ],
     'success' => [
         'register' => 'Registration successful',
@@ -411,6 +414,34 @@ return [
             'change_password'     => 'Change password',
             'set_password'        => 'Set password',
             'logout'              => 'Log out',
+        ],
+        'tariff' => [
+            'title'    => 'Plan',
+            'subtitle' => 'Your plan, limits and usage',
+            'current'  => 'Your plan',
+            'plans' => [
+                'free' => 'Basic',
+                'paid' => 'Paid',
+            ],
+            'active_until' => 'Active until :date',
+            'expired' => [
+                'title' => 'Your paid plan has expired',
+                'text'  => 'The plan ended on :date. The basic plan with a 1-student limit is now active.',
+            ],
+            'usage' => [
+                'students' => 'Students',
+                'lessons'  => 'Lessons',
+                'topics'   => 'Topics',
+            ],
+            'of_limit'  => ':used of :limit',
+            'unlimited' => ':used (unlimited)',
+            'limit' => [
+                'students' => 'You have reached the student limit on your plan',
+                'lessons'  => 'You have reached the lesson limit on your plan',
+                'topics'   => 'You have reached the topic limit on your plan',
+            ],
+            'upsell'      => 'Paid plan — :month ₽/mo or :year ₽/yr',
+            'manage_hint' => 'The plan is assigned by an administrator. Switching plans is not available yet.',
         ],
         'changelog' => [
             'title'         => 'Changelog',

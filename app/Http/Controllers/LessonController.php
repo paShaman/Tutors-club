@@ -9,6 +9,7 @@ use App\Model\Student;
 use App\Model\StudentTopic;
 use App\Model\Topic;
 use App\Model\TopicReview;
+use App\Services\TariffService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
@@ -217,6 +218,12 @@ final class LessonController extends Controller
 
             $result = (new Lesson())->editLesson($lessonId, $params);
         } else {
+            $user = Auth::user();
+
+            if (!app(TariffService::class)->canUse($user, 'lessons')) {
+                return back()->with('error', lng('error.tariff_lessons_limit'))->withInput();
+            }
+
             $student = Student::findOrFail($post['lesson_student_id']);
 
             $result = $student->addLesson($params);

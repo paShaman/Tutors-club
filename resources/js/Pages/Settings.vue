@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, router, usePage, useForm } from '@inertiajs/vue3'
-import { Settings, User, Shield, Save, Link2, Unlink, Languages } from 'lucide-vue-next'
+import { Settings, User, Shield, Save, Link2, Unlink, Languages, CreditCard, AlertTriangle } from 'lucide-vue-next'
 import Button from '@/components/ui/Button.vue'
 import Card from '@/components/ui/Card.vue'
 import CardHeader from '@/components/ui/CardHeader.vue'
@@ -28,12 +28,35 @@ interface SettingsPageProps extends SharedProps {
 defineOptions({ layout: AppLayout })
 
 const page = usePage<SettingsPageProps>()
-const { t } = useI18n()
+const { t, intlLocale } = useI18n()
 
 const user = computed(() => page.props.auth?.user ?? null)
 const socials = computed(() => page.props.socials ?? [])
 const locales = computed(() => page.props.locales ?? [])
 const configuredProviders = computed(() => (page.props.social ?? []).filter((p) => p.configured))
+
+const tariff = computed(() => page.props.tariff ?? null)
+
+function formatTariffDate(raw: string | null | undefined): string | null {
+  if (!raw) return null
+  return new Date(`${raw}T00:00:00`).toLocaleDateString(intlLocale.value)
+}
+
+const tariffUntil = computed(() => formatTariffDate(tariff.value?.until))
+const tariffExpiredAt = computed(() => formatTariffDate(tariff.value?.expired_at))
+
+const tariffUsageRows = computed(() => {
+  const info = tariff.value
+  if (!info) return []
+
+  return (['students', 'lessons', 'topics'] as const).map((feature) => ({
+    key: feature,
+    label: t(`ui.tariff.usage.${feature}`),
+    value: info.limits[feature] === null
+      ? t('ui.tariff.unlimited', { used: info.usage[feature] })
+      : t('ui.tariff.of_limit', { used: info.usage[feature], limit: info.limits[feature] }),
+  }))
+})
 
 function binding(provider: string): SocialBinding | null {
   return socials.value.find((s) => s.provider === provider) ?? null
@@ -285,6 +308,60 @@ function cancelUnlink(): void {
           </option>
         </select>
         <p v-if="localeForm.errors.locale" class="mt-1 text-xs text-destructive">{{ localeForm.errors.locale }}</p>
+      </div>
+    </Card>
+
+    <!-- Tariff section -->
+    <Card>
+      <CardHeader>
+        <div class="flex items-center gap-3">
+          <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10">
+            <CreditCard class="h-5 w-5 text-amber-500" />
+          </div>
+          <div>
+            <CardTitle>{{ t('ui.tariff.title') }}</CardTitle>
+            <p class="text-sm text-muted-foreground">{{ t('ui.tariff.subtitle') }}</p>
+          </div>
+        </div>
+      </CardHeader>
+
+      <div v-if="tariff" class="px-6 pb-6 space-y-4">
+        <div class="flex items-center justify-between rounded-xl border border-border/60 bg-white/40 px-4 py-3">
+          <span class="text-sm text-muted-foreground">{{ t('ui.tariff.current') }}</span>
+          <span class="text-sm font-semibold text-foreground">{{ t(`ui.tariff.plans.${tariff.plan}`) }}</span>
+        </div>
+
+        <p v-if="tariff.is_paid && tariffUntil" class="text-sm text-muted-foreground">
+          {{ t('ui.tariff.active_until', { date: tariffUntil }) }}
+        </p>
+
+        <div
+          v-if="tariff.expired"
+          class="flex items-start gap-3 rounded-xl border border-amber-200/60 bg-amber-50/60 px-4 py-3 text-sm text-amber-700"
+        >
+          <AlertTriangle class="mt-0.5 h-4 w-4 shrink-0" />
+          <div>
+            <p class="font-medium">{{ t('ui.tariff.expired.title') }}</p>
+            <p class="text-amber-700/80">{{ t('ui.tariff.expired.text', { date: tariffExpiredAt ?? '' }) }}</p>
+          </div>
+        </div>
+
+        <div class="space-y-1.5 border-t border-border/60 pt-4">
+          <div
+            v-for="row in tariffUsageRows"
+            :key="row.key"
+            class="flex items-center justify-between text-sm"
+          >
+            <span class="text-muted-foreground">{{ row.label }}</span>
+            <span class="font-medium text-foreground">{{ row.value }}</span>
+          </div>
+        </div>
+
+        <p v-if="!tariff.is_paid && tariff.price_month" class="text-sm text-muted-foreground">
+          {{ t('ui.tariff.upsell', { month: tariff.price_month, year: tariff.price_year }) }}
+        </p>
+
+        <p class="text-xs text-muted-foreground/70">{{ t('ui.tariff.manage_hint') }}</p>
       </div>
     </Card>
 

@@ -57,6 +57,14 @@ class User extends Authenticatable
         return $this->hasMany('App\Model\Topic', 'user_id');
     }
 
+    /**
+     * подписки (тарифы) пользователя
+     */
+    public function subscriptions()
+    {
+        return $this->hasMany('App\Model\UserSubscription', 'user_id');
+    }
+
     /*
      * FUNCTIONS ---------------------------------
      */
@@ -84,8 +92,6 @@ class User extends Authenticatable
     /**
      * добавление ученика
      *
-     * @todo если более одного ученика, то необходима активная подписка
-     *
      * @param $params
      * @return bool
      */
@@ -94,6 +100,11 @@ class User extends Authenticatable
         try {
             if (empty($params['name'])) {
                 throw new \Exception('empty_params');
+            }
+
+            // Лимит учеников по тарифу (основная проверка — в StudentController).
+            if (!app(\App\Services\TariffService::class)->canUse($this, 'students')) {
+                throw new \Exception('tariff_students_limit');
             }
 
             $student = new Student([
