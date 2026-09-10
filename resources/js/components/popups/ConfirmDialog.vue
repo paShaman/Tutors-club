@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { Teleport, Transition } from 'vue'
 import Button from '@/components/ui/Button.vue'
+import { useI18n } from '@/lib/i18n'
+
+const { t } = useI18n()
 
 defineProps<{
   show: boolean
@@ -46,13 +49,13 @@ function onCancel() {
               </p>
               <div class="mt-6 flex justify-end gap-3">
                 <Button variant="outline" @click="onCancel">
-                  {{ cancelText ?? 'Отмена' }}
+                  {{ cancelText ?? t('ui.common.cancel') }}
                 </Button>
                 <Button
                   :variant="variant === 'danger' ? 'destructive' : 'default'"
                   @click="onConfirm"
                 >
-                  {{ confirmText ?? 'Подтвердить' }}
+                  {{ confirmText ?? t('ui.common.confirm') }}
                 </Button>
               </div>
             </div>

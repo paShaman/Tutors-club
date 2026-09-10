@@ -18,6 +18,9 @@ import Button from '@/components/ui/Button.vue'
 import UserAvatar from '@/components/ui/UserAvatar.vue'
 import ChangelogModal from '@/components/popups/ChangelogModal.vue'
 import { cn } from '@/lib/utils'
+import { useI18n } from '@/lib/i18n'
+
+const { t, intlLocale } = useI18n()
 
 const page = usePage<SharedProps>()
 
@@ -34,7 +37,7 @@ function onSidebarResize() {
 }
 
 interface NavItem {
-  label: string
+  labelKey: string
   href: string
   icon: any
   activeRoute: string
@@ -42,25 +45,25 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   {
-    label: 'Дашборд',
+    labelKey: 'ui.nav.dashboard',
     href: '/',
     icon: LayoutDashboard,
     activeRoute: 'home',
   },
   {
-    label: 'Календарь',
+    labelKey: 'ui.nav.calendar',
     href: '/calendar',
     icon: Calendar,
     activeRoute: 'calendar',
   },
   {
-    label: 'Ученики',
+    labelKey: 'ui.nav.students',
     href: '/students',
     icon: GraduationCap,
     activeRoute: 'students',
   },
   {
-    label: 'Уроки',
+    labelKey: 'ui.nav.lessons',
     href: '/lessons',
     icon: Users,
     activeRoute: 'lessons',
@@ -82,7 +85,7 @@ function logout(): void {
 // Форматированная текущая дата
 const todayDate = computed(() => {
   const now = new Date()
-  const formatted = now.toLocaleDateString('ru-RU', {
+  const formatted = now.toLocaleDateString(intlLocale.value, {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
@@ -179,14 +182,14 @@ onUnmounted(() => {
                 (sidebarCompact && !sidebarOpen) ? 'hidden' : 'opacity-100',
               )"
             >
-              {{ item.label }}
+              {{ t(item.labelKey) }}
             </span>
             <!-- Tooltip в компактном режиме -->
             <span
               v-if="sidebarCompact && !sidebarOpen"
               class="pointer-events-none absolute left-full ml-3 z-100 rounded-lg bg-gray-900 px-2.5 py-1.5 text-xs font-medium text-white whitespace-nowrap opacity-0 transition-opacity duration-150 group-hover:opacity-100 shadow-lg"
             >
-              {{ item.label }}
+              {{ t(item.labelKey) }}
             </span>
           </Link>
         </nav>
@@ -199,7 +202,7 @@ onUnmounted(() => {
             @click="changelogOpen = true"
           >
             <GitCommit class="h-3.5 w-3.5" />
-            <span class="whitespace-nowrap">История изменений</span>
+            <span class="whitespace-nowrap">{{ t('ui.changelog.title') }}</span>
           </button>
           <p
             :class="cn(
@@ -283,14 +286,14 @@ onUnmounted(() => {
                 @click="userMenuOpen = false"
               >
                 <Settings class="h-4 w-4" />
-                Настройки
+                {{ t('ui.nav.settings') }}
               </Link>
               <button
                 class="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors cursor-pointer"
                 @click="logout"
               >
                 <LogOut class="h-4 w-4" />
-                Выйти
+                {{ t('ui.logout') }}
               </button>
             </div>
           </Transition>

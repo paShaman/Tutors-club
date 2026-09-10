@@ -159,7 +159,7 @@ final class DashboardController
                 ->keyBy('lesson_date');
         }
 
-        $dayNames = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+        $dayNames = trans('messages.ui.days_short');
         $chartData = [];
         for ($i = 0; $i < 7; $i++) {
             $date = $weekStart->copy()->addDays($i)->toDateString();
@@ -209,7 +209,7 @@ final class DashboardController
                 ->keyBy('month');
         }
 
-        $monthNames = ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'];
+        $monthNames = trans('messages.ui.months_short');
         for ($m = 1; $m <= 12; $m++) {
             $earningsByMonth[] = [
                 'month'  => $monthNames[$m - 1],

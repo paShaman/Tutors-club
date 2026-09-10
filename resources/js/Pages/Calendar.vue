@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { Head, usePage, router } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import Card from '@/components/ui/Card.vue'
@@ -8,11 +8,19 @@ import dayGridPlugin from '@fullcalendar/daygrid'
 import timeGridPlugin from '@fullcalendar/timegrid'
 import interactionPlugin from '@fullcalendar/interaction'
 import ruLocale from '@fullcalendar/core/locales/ru'
-import type { EventClickArg, DatesSetArg } from '@fullcalendar/core'
+import enLocale from '@fullcalendar/core/locales/en-gb'
+import type { CalendarOptions, EventClickArg, DatesSetArg } from '@fullcalendar/core'
 import LessonFormPopup from '@/components/popups/LessonFormPopup.vue'
 import type { LessonFormData } from '@/components/popups/LessonFormPopup.vue'
 import ConfirmDialog from '@/components/popups/ConfirmDialog.vue'
 import { useToast } from '@/lib/toast'
+import { useI18n } from '@/lib/i18n'
+
+// Соответствие кода языка и локали FullCalendar (список расширяется вместе с config/locales.php)
+const FC_LOCALES: Record<string, any> = {
+  ru: ruLocale,
+  en: enLocale,
+}
 
 defineOptions({ layout: AppLayout })
 
@@ -30,9 +38,42 @@ const page = usePage<{
 }>()
 
 const toast = useToast()
+const { t, locale } = useI18n()
 
 const calendarRef = ref<InstanceType<typeof FullCalendar> | null>(null)
 const events = ref<any[]>([])
+
+const fullCalendarLocale = computed(() => FC_LOCALES[locale.value] ?? ruLocale)
+
+const calendarOptions = computed<CalendarOptions>(() => ({
+  plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin],
+  initialView: 'dayGridMonth',
+  locales: [fullCalendarLocale.value],
+  locale: fullCalendarLocale.value,
+  headerToolbar: {
+    left: 'prev,next today',
+    center: 'title',
+    right: 'dayGridMonth,timeGridWeek,timeGridDay',
+  },
+  buttonText: {
+    today: t('ui.calendar.today'),
+    month: t('ui.calendar.month'),
+    week: t('ui.calendar.week'),
+    day: t('ui.calendar.day'),
+  },
+  events: events.value,
+  eventClick: handleEventClick,
+  datesSet: handleDatesSet,
+  editable: false,
+  selectable: false,
+  firstDay: 1,
+  height: 'auto',
+  eventTimeFormat: {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  },
+}))
 
 // Popup state
 const showLessonPopup = ref(false)
@@ -120,7 +161,7 @@ function handleLessonSubmit(form: LessonFormData) {
 function handleLessonDelete() {
   const lessonId = lessonPopupInitial.value?.lesson_id
   if (!lessonId) return
-  openConfirm('Удалить урок?', 'danger', () => {
+  openConfirm(t('ui.lessons.delete_confirm'), 'danger', () => {
     router.post('/lessons/delete', { lesson_id: lessonId }, {
       preserveScroll: true,
       onSuccess: () => {
@@ -134,14 +175,14 @@ function handleLessonDelete() {
 </script>
 
 <template>
-  <Head title="Календарь" />
+  <Head :title="t('ui.calendar.title')" />
 
   <div class="space-y-6 animate-fade-up">
     <!-- Page header -->
     <div class="flex items-center justify-between flex-wrap gap-4">
       <div class="flex items-center gap-4">
         <h1 class="text-2xl font-bold tracking-tight text-foreground">
-          Календарь
+          {{ t('ui.calendar.title') }}
         </h1>
       </div>
     </div>
@@ -150,35 +191,7 @@ function handleLessonDelete() {
     <Card class="p-4 fc-theme-custom">
       <FullCalendar
         ref="calendarRef"
-        :options="{
-          plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin],
-          initialView: 'dayGridMonth',
-          locales: [ruLocale],
-          locale: 'ru',
-          headerToolbar: {
-            left: 'prev,next today',
-            center: 'title',
-            right: 'dayGridMonth,timeGridWeek,timeGridDay',
-          },
-          buttonText: {
-            today: 'Сегодня',
-            month: 'Месяц',
-            week: 'Неделя',
-            day: 'День',
-          },
-          events: events,
-          eventClick: handleEventClick,
-          datesSet: handleDatesSet,
-          editable: false,
-          selectable: false,
-          firstDay: 1,
-          height: 'auto',
-          eventTimeFormat: {
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: false,
-          },
-        }"
+        :options="calendarOptions"
       />
     </Card>
 

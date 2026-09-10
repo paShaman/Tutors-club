@@ -3,6 +3,7 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { router, usePage } from '@inertiajs/vue3'
 import * as VKID from '@vkid/sdk'
 import type { SharedProps } from '@/types'
+import { useI18n } from '@/lib/i18n'
 
 interface VkLoginPayload {
   code: string
@@ -22,6 +23,7 @@ const props = withDefaults(defineProps<{
 })
 
 const page = usePage<SharedProps>()
+const { t } = useI18n()
 
 const container = ref<HTMLElement | null>(null)
 const error = ref('')
@@ -39,7 +41,7 @@ async function handleLoginSuccess(payload: VkLoginPayload): Promise<void> {
   }
 
   if (props.agreementRequired && props.agreement !== true) {
-    error.value = 'Необходимо согласие на обработку персональных данных'
+    error.value = t('ui.social.agreement_required')
     return
   }
 
@@ -56,7 +58,7 @@ async function handleLoginSuccess(payload: VkLoginPayload): Promise<void> {
     }, {
       preserveScroll: true,
       onError: () => {
-        error.value = props.mode === 'link' ? 'Не удалось привязать VK ID' : 'Не удалось войти через VK ID'
+        error.value = props.mode === 'link' ? t('ui.social.vk_link_error') : t('ui.social.vk_login_error')
       },
       onFinish: () => {
         processing.value = false
@@ -64,12 +66,12 @@ async function handleLoginSuccess(payload: VkLoginPayload): Promise<void> {
     })
   } catch (e) {
     processing.value = false
-    error.value = props.mode === 'link' ? 'Не удалось привязать VK ID' : 'Не удалось войти через VK ID'
+    error.value = props.mode === 'link' ? t('ui.social.vk_link_error') : t('ui.social.vk_login_error')
   }
 }
 
 function handleError(): void {
-  error.value = 'Не удалось загрузить виджет VK ID'
+  error.value = t('ui.social.vk_widget_error')
 }
 
 onMounted(() => {

@@ -22,6 +22,7 @@ import type { LessonFormData } from '@/components/popups/LessonFormPopup.vue'
 import UserAvatar from '@/components/ui/UserAvatar.vue'
 import ConfirmDialog from '@/components/popups/ConfirmDialog.vue'
 import { useToast } from '@/lib/toast'
+import { useI18n } from '@/lib/i18n'
 
 defineOptions({ layout: AppLayout })
 
@@ -95,6 +96,7 @@ const page = usePage<{
 }>()
 
 const toast = useToast()
+const { t, tp, intlLocale } = useI18n()
 
 const selectedStudentId = ref<number | null>(page.props.selectedStudentId ?? null)
 
@@ -110,16 +112,19 @@ function clearStudentFilter() {
   selectedStudentId.value = null
 }
 
-const monthNames = ['', 'Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь']
-
-const subjectLabels: Record<string, string> = {
-  lesson_subject_maths: 'Математика',
-  lesson_subject_informatics: 'Информатика',
-  lesson_subject_english: 'Английский',
-}
+const monthNames = computed(() => {
+  const formatter = new Intl.DateTimeFormat(intlLocale.value, { month: 'long' })
+  const names = ['']
+  for (let m = 0; m < 12; m++) {
+    const name = formatter.format(new Date(2020, m, 1))
+    names.push(name.charAt(0).toUpperCase() + name.slice(1))
+  }
+  return names
+})
 
 function subjectName(key: string): string {
-  return subjectLabels[key] ?? key
+  const label = t(key)
+  return label === key ? key : label
 }
 
 const years = computed(() => {
@@ -283,7 +288,7 @@ function handleLessonDelete() {
 }
 
 function deleteLesson(lessonId: number) {
-  openConfirm('Удалить урок?', 'danger', () => {
+  openConfirm(t('ui.lessons.delete_confirm'), 'danger', () => {
     router.post('/lessons/delete', { lesson_id: lessonId }, {
       preserveScroll: true,
       onSuccess: () => closeLessonPopup(),
@@ -309,22 +314,13 @@ function sortedStudents(students: Record<number, StudentGroup>): StudentGroup[] 
   })
 }
 
-function pluralLessons(n: number): string {
-  const m = n % 100
-  if (m >= 11 && m <= 14) return 'уроков'
-  const r = n % 10
-  if (r === 1) return 'урок'
-  if (r >= 2 && r <= 4) return 'урока'
-  return 'уроков'
-}
-
 function formatDate(dateStr: string): string {
   const d = new Date(dateStr)
-  return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })
+  return d.toLocaleDateString(intlLocale.value, { day: 'numeric', month: 'long' })
 }
 
 function formatDatePayed(dateStr: string | null): string {
-  if (!dateStr) return 'Не оплачен'
+  if (!dateStr) return t('ui.lessons.not_paid')
   const d = new Date(dateStr)
   const day = String(d.getDate()).padStart(2, '0')
   const month = String(d.getMonth() + 1).padStart(2, '0')
@@ -342,7 +338,7 @@ function formatDatePayed(dateStr: string | null): string {
 </script>
 
 <template>
-  <Head title="Уроки" />
+  <Head :title="t('ui.lessons.title')" />
 
   <div class="space-y-6 animate-fade-up">
     <!-- Page header -->
@@ -353,21 +349,21 @@ function formatDatePayed(dateStr: string | null): string {
         </div>
         <div>
           <h1 class="text-2xl font-bold tracking-tight text-foreground">
-            Уроки
+            {{ t('ui.lessons.title') }}
           </h1>
           <p class="text-sm text-muted-foreground mt-0.5">
-            История проведённых занятий
+            {{ t('ui.lessons.subtitle') }}
           </p>
         </div>
       </div>
 
       <div class="flex items-center gap-3">
-        <label class="hidden sm:inline text-sm font-medium text-muted-foreground shrink-0">Фильтр по ученику:</label>
+        <label class="hidden sm:inline text-sm font-medium text-muted-foreground shrink-0">{{ t('ui.lessons.filter_label') }}</label>
         <select
           v-model="selectedStudentId"
           class="rounded-xl border border-border bg-white/50 px-3.5 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors min-w-[160px] sm:min-w-[200px]"
         >
-          <option :value="null">Все ученики</option>
+          <option :value="null">{{ t('ui.lessons.all_students') }}</option>
           <option v-for="student in page.props.students" :key="student.id" :value="student.id">
             {{ student.name }}<span class="hidden sm:inline">{{ student.current_class ? ` (${student.current_class})` : '' }}</span>
           </option>
@@ -377,12 +373,12 @@ function formatDatePayed(dateStr: string | null): string {
           @click="clearStudentFilter"
           class="hidden sm:inline text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
         >
-          Сбросить
+          {{ t('ui.lessons.reset_filter') }}
         </button>
 
         <Button @click="openAddModal">
           <Plus class="h-4 w-4" />
-          <span class="hidden sm:inline">Добавить урок</span>
+          <span class="hidden sm:inline">{{ t('ui.lessons.add') }}</span>
         </Button>
       </div>
     </div>
@@ -404,20 +400,20 @@ function formatDatePayed(dateStr: string | null): string {
                   <div class="flex items-center gap-2.5 flex-wrap text-left">
                     <h2 class="text-xl font-bold text-foreground">{{ yearData.year }}</h2>
                     <p class="text-sm text-muted-foreground">
-                      {{ (yearData.cnt_all + yearData.cnt_special) }} {{ pluralLessons(yearData.cnt_all + yearData.cnt_special) }}
-                      <span v-if="yearData.cnt_special" class="text-amber-600"> (особых: {{ yearData.cnt_special }})</span>
+                      {{ tp('ui.lessons.count', yearData.cnt_all + yearData.cnt_special) }}
+                      <span v-if="yearData.cnt_special" class="text-amber-600"> {{ t('ui.lessons.special_count', { count: yearData.cnt_special }) }}</span>
                     </p>
                   </div>
               <div class="flex items-center gap-2 flex-wrap shrink-0">
                 <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-sm font-bold bg-emerald-100 text-emerald-700">
-                  {{ (yearData.sum + yearData.sum_special).toLocaleString('ru-RU') }} ₽
+                  {{ (yearData.sum + yearData.sum_special).toLocaleString(intlLocale) }} ₽
                 </span>
                 <span v-if="yearData.sum_special" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-100 text-sm font-semibold text-amber-800">
                   <Star class="h-3.5 w-3.5 fill-amber-500 text-amber-600" />
-                  {{ yearData.sum_special.toLocaleString('ru-RU') }} ₽
+                  {{ yearData.sum_special.toLocaleString(intlLocale) }} ₽
                 </span>
                 <span v-if="yearData.sum_not_payed" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-red-50 text-sm font-semibold text-red-600">
-                  Долг: {{ yearData.sum_not_payed.toLocaleString('ru-RU') }} ₽
+                  {{ t('ui.lessons.debt') }} {{ yearData.sum_not_payed.toLocaleString(intlLocale) }} ₽
                 </span>
               </div>
             </div>
@@ -447,20 +443,20 @@ function formatDatePayed(dateStr: string | null): string {
                         {{ monthNames[Number(monthNum)] }}
                       </h3>
                       <p class="text-xs text-muted-foreground">
-                        {{ (monthData.cnt_all + monthData.cnt_special) }} {{ pluralLessons(monthData.cnt_all + monthData.cnt_special) }}
-                        <span v-if="monthData.cnt_special" class="text-amber-600"> (особых: {{ monthData.cnt_special }})</span>
+                        {{ tp('ui.lessons.count', monthData.cnt_all + monthData.cnt_special) }}
+                        <span v-if="monthData.cnt_special" class="text-amber-600"> {{ t('ui.lessons.special_count', { count: monthData.cnt_special }) }}</span>
                       </p>
                     </div>
                     <div class="flex items-center gap-1.5 flex-wrap shrink-0">
                       <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700">
-                        {{ (monthData.sum + monthData.sum_special).toLocaleString('ru-RU') }} ₽
+                        {{ (monthData.sum + monthData.sum_special).toLocaleString(intlLocale) }} ₽
                       </span>
                       <span v-if="monthData.sum_special" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100 text-xs font-semibold text-amber-800">
                         <Star class="h-3 w-3 fill-amber-500 text-amber-600" />
-                        {{ monthData.sum_special.toLocaleString('ru-RU') }} ₽
+                        {{ monthData.sum_special.toLocaleString(intlLocale) }} ₽
                       </span>
                       <span v-if="monthData.sum_not_payed" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-50 text-xs font-semibold text-red-600">
-                        Долг: {{ monthData.sum_not_payed.toLocaleString('ru-RU') }} ₽
+                        {{ t('ui.lessons.debt') }} {{ monthData.sum_not_payed.toLocaleString(intlLocale) }} ₽
                       </span>
                     </div>
                   </div>
@@ -499,14 +495,14 @@ function formatDatePayed(dateStr: string | null): string {
                         </p>
                         <div class="flex items-center gap-1.5 flex-wrap shrink-0">
                           <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-sm font-bold bg-emerald-100 text-emerald-700">
-                            {{ (studentGroup.sum + studentGroup.sum_special).toLocaleString('ru-RU') }} ₽
+                            {{ (studentGroup.sum + studentGroup.sum_special).toLocaleString(intlLocale) }} ₽
                           </span>
                           <span v-if="studentGroup.sum_special" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-100 text-xs font-semibold text-amber-700">
                             <Star class="h-3 w-3" />
-                            {{ studentGroup.sum_special.toLocaleString('ru-RU') }} ₽
+                            {{ studentGroup.sum_special.toLocaleString(intlLocale) }} ₽
                           </span>
                           <span v-if="studentGroup.sum_not_payed" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-red-50 text-xs font-semibold text-red-600">
-                            <span class="hidden sm:inline">Долг: </span>{{ studentGroup.sum_not_payed.toLocaleString('ru-RU') }} ₽
+                            <span class="hidden sm:inline">{{ t('ui.lessons.debt') }} </span>{{ studentGroup.sum_not_payed.toLocaleString(intlLocale) }} ₽
                           </span>
                         </div>
                       </div>
@@ -514,7 +510,7 @@ function formatDatePayed(dateStr: string | null): string {
                       <button
                         @click.stop="openAddModalForStudent(studentGroup)"
                         class="inline-flex items-center justify-center rounded-lg h-8 w-8 text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors cursor-pointer shrink-0"
-                        title="Добавить урок ученику"
+                        :title="t('ui.lessons.add_for_student')"
                       >
                         <Plus class="h-4 w-4" />
                       </button>
@@ -550,7 +546,7 @@ function formatDatePayed(dateStr: string | null): string {
                                   class="inline-flex items-center gap-1 text-xs text-muted-foreground"
                                 >
                                   <Timer class="h-3 w-3" />
-                                  {{ lesson.duration }} мин
+                                  {{ lesson.duration }} {{ t('ui.common.minutes') }}
                                 </span>
                               </div>
                               <p class="text-sm text-muted-foreground mt-0.5">
@@ -568,7 +564,7 @@ function formatDatePayed(dateStr: string | null): string {
                                         : 'bg-foreground/5 text-foreground',
                                   )"
                                 >
-                                  {{ lesson.price.toLocaleString('ru-RU') }} ₽
+                                  {{ lesson.price.toLocaleString(intlLocale) }} ₽
                                 </span>
                                 <span
                                   :class="cn(
@@ -579,16 +575,16 @@ function formatDatePayed(dateStr: string | null): string {
                                   <Coins v-if="lesson.is_payed" class="h-3.5 w-3.5" />
                                   <Coins v-else class="h-3.5 w-3.5 text-red-500" />
                                   <template v-if="lesson.is_payed">
-                                    <span class="hidden sm:inline">Оплачен </span>{{ lesson.date_payed ? formatDatePayed(lesson.date_payed) : '' }}
+                                    <span class="hidden sm:inline">{{ t('ui.lessons.paid') }} </span>{{ lesson.date_payed ? formatDatePayed(lesson.date_payed) : '' }}
                                   </template>
-                                  <span v-else>Не оплачен</span>
+                                  <span v-else>{{ t('ui.lessons.not_paid') }}</span>
                                 </span>
                                 <span
                                   v-if="lesson.is_future"
                                   class="inline-flex items-center gap-1 text-xs font-medium text-amber-600"
                                 >
                                   <Calendar class="h-3.5 w-3.5" />
-                                  План
+                                  {{ t('ui.lessons.plan') }}
                                 </span>
                               </div>
                             </div>
@@ -600,22 +596,22 @@ function formatDatePayed(dateStr: string | null): string {
                                 v-if="!lesson.is_payed"
                                 @click="togglePayLesson(lesson.id)"
                                 class="inline-flex items-center justify-center gap-1.5 rounded-lg h-8 w-8 sm:w-auto sm:px-3 text-xs font-semibold bg-emerald-500 text-white hover:bg-emerald-600 transition-colors cursor-pointer"
-                                title="Оплатить урок"
+                                :title="t('ui.lessons.pay_title')"
                               >
                                 <Coins class="h-3.5 w-3.5" />
-                                <span class="hidden sm:inline">Оплатить</span>
+                                <span class="hidden sm:inline">{{ t('ui.lessons.pay') }}</span>
                               </button>
                               <button
                                 @click="openEditModal(lesson)"
                                 class="inline-flex items-center justify-center rounded-lg h-8 w-8 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors cursor-pointer"
-                                title="Редактировать"
+                                :title="t('ui.common.edit')"
                               >
                                 <Pencil class="h-4 w-4" />
                               </button>
                               <button
                                 @click="deleteLesson(lesson.id)"
                                 class="inline-flex items-center justify-center rounded-lg h-8 w-8 text-muted-foreground hover:bg-red-50 hover:text-red-600 transition-colors cursor-pointer"
-                                title="Удалить"
+                                :title="t('ui.common.delete')"
                               >
                                 <Trash2 class="h-4 w-4" />
                               </button>
@@ -636,10 +632,10 @@ function formatDatePayed(dateStr: string | null): string {
     <!-- Empty state -->
     <Card v-else class="p-12 text-center">
       <BookOpen class="mx-auto h-12 w-12 text-muted-foreground/30" />
-      <p class="mt-4 text-muted-foreground">Пока нет уроков</p>
+      <p class="mt-4 text-muted-foreground">{{ t('ui.lessons.empty') }}</p>
       <Button @click="openAddModal" variant="outline" class="mt-4">
         <Plus class="h-4 w-4" />
-        Добавить первый урок
+        {{ t('ui.lessons.add_first') }}
       </Button>
     </Card>
 
@@ -662,7 +658,7 @@ function formatDatePayed(dateStr: string | null): string {
       :show="showConfirm"
       :title="confirmMessage"
       :variant="confirmVariant"
-      :confirmText="confirmVariant === 'danger' ? 'Удалить' : 'Подтвердить'"
+      :confirmText="confirmVariant === 'danger' ? t('ui.common.delete') : t('ui.common.confirm')"
       @confirm="onConfirm"
       @cancel="onCancel"
     />

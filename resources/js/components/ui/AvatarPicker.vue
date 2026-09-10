@@ -5,6 +5,9 @@ import { cn } from '@/lib/utils'
 import { uploadAvatar } from '@/lib/upload'
 import UserAvatar from '@/components/ui/UserAvatar.vue'
 import ImageCropper from '@/components/ui/ImageCropper.vue'
+import { useI18n } from '@/lib/i18n'
+
+const { t } = useI18n()
 
 const props = withDefaults(defineProps<{
   modelValue?: string | null
@@ -16,7 +19,7 @@ const props = withDefaults(defineProps<{
   modelValue: null,
   name: '',
   circleClass: 'h-20 w-20 text-2xl',
-  hint: 'JPG, PNG или WebP до 5 МБ. Можно выбрать область фото и масштаб.',
+  hint: '',
   showRemove: true,
 })
 
@@ -50,7 +53,7 @@ function onFileChange(e: Event) {
   if (!file || busy.value) return
 
   if (!file.type.startsWith('image/')) {
-    error.value = 'Файл должен быть изображением'
+    error.value = t('ui.avatar.not_image')
     return
   }
 
@@ -81,7 +84,7 @@ async function onCropApply(blob: Blob) {
     const url = await uploadAvatar(blob, 'avatar.jpg')
     emit('update:modelValue', url)
   } catch (err) {
-    error.value = err instanceof Error ? err.message : 'Не удалось загрузить изображение'
+    error.value = err instanceof Error ? err.message : t('ui.avatar.upload_error')
   } finally {
     busy.value = false
   }
@@ -95,7 +98,7 @@ async function onCropApply(blob: Blob) {
         type="button"
         class="relative cursor-pointer rounded-full"
         :disabled="busy"
-        :title="'Загрузить фото'"
+        :title="t('ui.avatar.upload')"
         @click="openPicker"
       >
         <UserAvatar
@@ -124,7 +127,7 @@ async function onCropApply(blob: Blob) {
           >
             <Loader2 v-if="busy" class="h-3.5 w-3.5 animate-spin" />
             <Upload v-else class="h-3.5 w-3.5" />
-            {{ busy ? 'Загрузка...' : 'Загрузить фото' }}
+            {{ busy ? t('ui.avatar.uploading') : t('ui.avatar.upload') }}
           </button>
           <button
             v-if="showRemove && displaySrc"
@@ -133,11 +136,11 @@ async function onCropApply(blob: Blob) {
             @click="removePhoto"
           >
             <Trash2 class="h-3.5 w-3.5" />
-            Убрать
+            {{ t('ui.avatar.remove') }}
           </button>
         </div>
         <p class="text-xs text-muted-foreground max-w-[260px]">
-          {{ hint }}
+          {{ hint || t('ui.avatar.hint') }}
         </p>
         <p v-if="error" class="text-xs font-medium text-destructive whitespace-pre-line">
           {{ error }}

@@ -1,18 +1,18 @@
 export interface SocialProviderMeta {
   key: string
-  label: string
+  labelKey: string
   badge: string
   badgeClass: string
 }
 
 const PROVIDER_META: Record<string, Omit<SocialProviderMeta, 'key'>> = {
   vkontakte: {
-    label: 'VK ID',
+    labelKey: 'ui.social.vk_label',
     badge: 'VK',
     badgeClass: 'bg-[#0077FF]/10 text-[#0077FF]',
   },
   yandex: {
-    label: 'Яндекс ID',
+    labelKey: 'ui.social.yandex_label',
     badge: 'Я',
     badgeClass: 'bg-[#FC3F1D]/10 text-[#FC3F1D]',
   },
@@ -20,5 +20,5 @@ const PROVIDER_META: Record<string, Omit<SocialProviderMeta, 'key'>> = {
 
 export function providerMeta(key: string): SocialProviderMeta {
   const meta = PROVIDER_META[key]
-  return meta ? { key, ...meta } : { key, label: key, badge: '', badgeClass: '' }
+  return meta ? { key, ...meta } : { key, labelKey: key, badge: '', badgeClass: '' }
 }

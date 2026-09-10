@@ -2,6 +2,9 @@
 import { Head, router } from '@inertiajs/vue3'
 import { ArrowLeft, Home, SearchX } from 'lucide-vue-next'
 import Button from '@/components/ui/Button.vue'
+import { useI18n } from '@/lib/i18n'
+
+const { t } = useI18n()
 
 withDefaults(defineProps<{ status?: number }>(), { status: 404 })
 
@@ -15,7 +18,7 @@ function goBack(): void {
 </script>
 
 <template>
-  <Head title="Страница не найдена" />
+  <Head :title="t('ui.error.title')" />
 
   <div class="flex min-h-screen items-center justify-center px-4 py-10">
     <div class="glass animate-fade-up w-full max-w-md rounded-2xl border border-white/20 p-8 text-center">
@@ -28,20 +31,20 @@ function goBack(): void {
       </div>
 
       <h1 class="mt-3 text-xl font-bold tracking-tight text-foreground">
-        Страница не найдена
+        {{ t('ui.error.title') }}
       </h1>
       <p class="mt-2 text-sm text-muted-foreground">
-        Возможно, страница была удалена или вы перешли по неверной ссылке.
+        {{ t('ui.error.description') }}
       </p>
 
       <div class="mt-7 flex flex-col gap-3 sm:flex-row">
         <Button class="w-full" @click="router.visit('/')">
           <Home class="h-4 w-4" />
-          На главную
+          {{ t('ui.error.home') }}
         </Button>
         <Button variant="outline" class="w-full" @click="goBack">
           <ArrowLeft class="h-4 w-4" />
-          Назад
+          {{ t('ui.error.back') }}
         </Button>
       </div>
     </div>

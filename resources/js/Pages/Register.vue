@@ -5,6 +5,7 @@ import Button from '@/components/ui/Button.vue'
 import SocialAuth from '@/components/social/SocialAuth.vue'
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import type { SharedProps } from '@/types'
+import { useI18n } from '@/lib/i18n'
 
 interface SmartCaptchaApi {
   render: (container: HTMLElement | string, params: SmartCaptchaParams) => number
@@ -26,6 +27,7 @@ interface SmartCaptchaWindow extends Window {
 const CAPTCHA_SITEKEY = 'ysc1_JArb9tRxzTMqOzXyeT01wYKXoYLtCQK5DPmkB10x200589eb'
 
 const page = usePage<SharedProps>()
+const { t, locale } = useI18n()
 
 const agreements = computed(() => page.props.agreements ?? [])
 
@@ -94,7 +96,7 @@ function initCaptcha(): void {
 
       captchaWidgetId = smartCaptchaApi()!.render(captchaContainer.value, {
         sitekey: CAPTCHA_SITEKEY,
-        hl: 'ru',
+        hl: locale.value,
         callback: (token: string) => {
           captchaToken.value = token
           captchaError.value = ''
@@ -102,7 +104,7 @@ function initCaptcha(): void {
       })
     })
     .catch(() => {
-      captchaError.value = 'Не удалось загрузить проверку «Я не робот»'
+      captchaError.value = t('ui.auth.captcha_load_error')
     })
 }
 
@@ -128,7 +130,7 @@ onBeforeUnmount(() => {
 
 function submit(): void {
   if (!captchaToken.value) {
-    captchaError.value = 'Подтвердите, что вы не робот'
+    captchaError.value = t('ui.auth.captcha_required')
     return
   }
 
@@ -145,7 +147,7 @@ function submit(): void {
 </script>
 
 <template>
-  <Head title="Регистрация" />
+  <Head :title="t('ui.auth.register_page_title')" />
 
   <div class="flex min-h-screen items-center justify-center px-4 py-8">
     <div class="w-full max-w-md">
@@ -155,10 +157,10 @@ function submit(): void {
           <UserPlus class="h-7 w-7 text-white" />
         </div>
         <h1 class="text-2xl font-bold tracking-tight text-foreground">
-          Регистрация
+          {{ t('ui.auth.register_title') }}
         </h1>
         <p class="mt-2 text-sm text-muted-foreground">
-          Создайте аккаунт в Tutors Club
+          {{ t('ui.auth.register_subtitle') }}
         </p>
       </div>
 
@@ -184,9 +186,9 @@ function submit(): void {
               class="mt-0.5 h-4 w-4 shrink-0 cursor-pointer rounded border-border accent-primary"
             />
             <span>
-              Я согласен на обработку персональных данных и принимаю условия
+              {{ t('ui.auth.agreement_prefix') }}
               <template v-for="(doc, index) in agreements" :key="index">
-                <span v-if="index > 0"> и </span>
+                <span v-if="index > 0"> {{ t('ui.auth.and') }} </span>
                 <a
                   v-if="doc.url"
                   :href="doc.url"
@@ -204,7 +206,7 @@ function submit(): void {
         <!-- Last Name -->
         <div>
           <label for="last_name" class="block text-sm font-medium text-foreground mb-1.5">
-            Фамилия
+            {{ t('ui.auth.last_name') }}
           </label>
           <input
             id="last_name"
@@ -212,7 +214,7 @@ function submit(): void {
             type="text"
             autocomplete="family-name"
             class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
-            placeholder="Иванов"
+            :placeholder="t('ui.placeholder.last_name')"
           />
           <p v-if="form.errors.last_name" class="mt-1 text-xs text-destructive">{{ form.errors.last_name }}</p>
         </div>
@@ -220,7 +222,7 @@ function submit(): void {
         <!-- First Name -->
         <div>
           <label for="first_name" class="block text-sm font-medium text-foreground mb-1.5">
-            Имя
+            {{ t('ui.auth.first_name') }}
           </label>
           <input
             id="first_name"
@@ -229,7 +231,7 @@ function submit(): void {
             required
             autocomplete="given-name"
             class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
-            placeholder="Иван"
+            :placeholder="t('ui.placeholder.first_name')"
           />
           <p v-if="form.errors.first_name" class="mt-1 text-xs text-destructive">{{ form.errors.first_name }}</p>
         </div>
@@ -254,7 +256,7 @@ function submit(): void {
         <!-- Password -->
         <div>
           <label for="password" class="block text-sm font-medium text-foreground mb-1.5">
-            Пароль
+            {{ t('ui.auth.password') }}
           </label>
           <div class="relative">
             <input
@@ -271,7 +273,7 @@ function submit(): void {
               class="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
               @click="showPassword = !showPassword"
             >
-              <span class="text-xs">{{ showPassword ? 'Скрыть' : 'Показать' }}</span>
+              <span class="text-xs">{{ showPassword ? t('ui.common.hide') : t('ui.common.show') }}</span>
             </button>
           </div>
           <p v-if="form.errors.password" class="mt-1 text-xs text-destructive">{{ form.errors.password }}</p>
@@ -280,7 +282,7 @@ function submit(): void {
         <!-- Confirm password -->
         <div>
           <label for="password_confirmation" class="block text-sm font-medium text-foreground mb-1.5">
-            Подтверждение пароля
+            {{ t('ui.auth.password_confirmation') }}
           </label>
           <input
             id="password_confirmation"
@@ -313,13 +315,13 @@ function submit(): void {
             :disabled="form.processing"
           >
             <UserPlus class="h-4 w-4" />
-            {{ form.processing ? 'Регистрация...' : 'Зарегистрироваться' }}
+            {{ form.processing ? t('ui.auth.registering') : t('ui.auth.register_action') }}
           </Button>
 
           <p class="text-center text-sm text-muted-foreground">
-            Уже есть аккаунт?&nbsp;
+            {{ t('ui.auth.have_account') }}&nbsp;
             <Link href="/login" class="font-medium text-primary hover:underline transition-colors cursor-pointer">
-              Войти
+              {{ t('ui.auth.login_link') }}
             </Link>
           </p>
         </div>

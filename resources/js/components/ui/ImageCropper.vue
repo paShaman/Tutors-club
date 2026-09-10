@@ -2,6 +2,9 @@
 import { onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { ZoomIn, ZoomOut, RotateCcw, X } from 'lucide-vue-next'
 import Button from '@/components/ui/Button.vue'
+import { useI18n } from '@/lib/i18n'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   src: string | null
@@ -166,7 +169,7 @@ const zoomPercent = () => Math.round(zoom.value * 100)
         <div class="flex min-h-full items-center justify-center p-4" @click.self="emit('cancel')">
           <div class="w-full max-w-sm rounded-2xl border border-border bg-white p-5 shadow-xl">
             <div class="flex items-center justify-between mb-4">
-              <h2 class="text-xl font-semibold text-foreground">Область фото</h2>
+              <h2 class="text-xl font-semibold text-foreground">{{ t('ui.avatar.crop_title') }}</h2>
               <button
                 type="button"
                 class="rounded-lg p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors cursor-pointer"
@@ -177,7 +180,7 @@ const zoomPercent = () => Math.round(zoom.value * 100)
             </div>
 
             <p class="text-sm text-muted-foreground mb-4">
-              Перетащите фото, чтобы выбрать область. Лицо можно выровнять по кругу и изменить масштаб.
+              {{ t('ui.avatar.crop_hint') }}
             </p>
 
             <!-- Circular viewport -->
@@ -237,7 +240,7 @@ const zoomPercent = () => Math.round(zoom.value * 100)
               <button
                 type="button"
                 class="ml-auto inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-input bg-background text-muted-foreground transition-colors hover:bg-accent hover:text-foreground cursor-pointer"
-                title="Сбросить"
+                :title="t('ui.avatar.reset')"
                 @click="resetView"
               >
                 <RotateCcw class="h-4 w-4" />
@@ -246,10 +249,10 @@ const zoomPercent = () => Math.round(zoom.value * 100)
 
             <div class="mt-5 flex items-center gap-3">
               <Button type="button" variant="outline" class="flex-1" @click="emit('cancel')">
-                Отмена
+                {{ t('ui.common.cancel') }}
               </Button>
               <Button type="button" class="flex-1" @click="apply">
-                Применить
+                {{ t('ui.avatar.apply') }}
               </Button>
             </div>
           </div>

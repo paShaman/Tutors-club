@@ -3,6 +3,9 @@ import { ref, watch, computed } from 'vue'
 import Card from '@/components/ui/Card.vue'
 import Button from '@/components/ui/Button.vue'
 import AvatarPicker from '@/components/ui/AvatarPicker.vue'
+import { useI18n } from '@/lib/i18n'
+
+const { t } = useI18n()
 
 export type StudentFormData = {
   student_id: number | null
@@ -47,7 +50,7 @@ watch(() => props.show, (val) => {
   }
 })
 
-const title = computed(() => props.mode === 'edit' ? 'Редактировать ученика' : 'Новый ученик')
+const title = computed(() => props.mode === 'edit' ? t('ui.students.form.edit_title') : t('ui.students.form.new_title'))
 </script>
 
 <template>
@@ -65,7 +68,7 @@ const title = computed(() => props.mode === 'edit' ? 'Редактировать
 
             <form @submit.prevent="emit('submit', form)" class="space-y-4">
               <div v-if="form.student_id" class="border-b border-border/60 pb-4">
-                <p class="block text-sm font-medium text-foreground mb-3">Фотография</p>
+                <p class="block text-sm font-medium text-foreground mb-3">{{ t('ui.students.form.photo') }}</p>
                 <AvatarPicker
                   v-model="form.student_avatar"
                   :name="form.student_name"
@@ -74,49 +77,49 @@ const title = computed(() => props.mode === 'edit' ? 'Редактировать
               </div>
 
               <div>
-                <label class="block text-sm font-medium text-foreground mb-1.5">Имя *</label>
+                <label class="block text-sm font-medium text-foreground mb-1.5">{{ t('ui.students.form.name') }}</label>
                 <input
                   v-model="form.student_name"
                   required
                   class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
-                  placeholder="Имя ученика"
+                  :placeholder="t('ui.students.form.name_placeholder')"
                 />
               </div>
 
               <div>
-                <label class="block text-sm font-medium text-foreground mb-1.5">Класс</label>
+                <label class="block text-sm font-medium text-foreground mb-1.5">{{ t('ui.students.form.class') }}</label>
                 <input
                   v-model="form.student_class"
                   class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
-                  placeholder="Например: 9Б"
+                  :placeholder="t('ui.students.form.class_placeholder')"
                 />
               </div>
 
               <div>
-                <label class="block text-sm font-medium text-foreground mb-1.5">Тип</label>
+                <label class="block text-sm font-medium text-foreground mb-1.5">{{ t('ui.students.form.type') }}</label>
                 <input
                   v-model="form.student_type"
                   class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
-                  placeholder="Например: IELTS, ОГЭ, ЕГЭ"
+                  :placeholder="t('ui.students.form.type_placeholder')"
                 />
               </div>
 
               <div>
-                <label class="block text-sm font-medium text-foreground mb-1.5">Описание</label>
+                <label class="block text-sm font-medium text-foreground mb-1.5">{{ t('ui.students.form.description') }}</label>
                 <textarea
                   v-model="form.student_description"
                   rows="3"
                   class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors resize-none"
-                  placeholder="Заметки об ученике"
+                  :placeholder="t('ui.students.form.description_placeholder')"
                 />
               </div>
 
               <div class="flex items-center gap-3 pt-2">
                 <Button type="submit" class="flex-1">
-                  {{ mode === 'edit' ? 'Сохранить' : 'Добавить' }}
+                  {{ mode === 'edit' ? t('ui.common.save') : t('ui.common.add') }}
                 </Button>
                 <Button type="button" variant="outline" class="flex-1" @click="emit('close')">
-                  Отмена
+                  {{ t('ui.common.cancel') }}
                 </Button>
               </div>
             </form>

@@ -13,6 +13,7 @@ import VkIdAuth from '@/components/social/VkIdAuth.vue'
 import YandexAuth from '@/components/social/YandexAuth.vue'
 import ConfirmDialog from '@/components/popups/ConfirmDialog.vue'
 import { providerMeta } from '@/lib/social'
+import { useI18n } from '@/lib/i18n'
 
 interface SocialBinding {
   provider: string
@@ -27,6 +28,7 @@ interface SettingsPageProps extends SharedProps {
 defineOptions({ layout: AppLayout })
 
 const page = usePage<SettingsPageProps>()
+const { t } = useI18n()
 
 const user = computed(() => page.props.auth?.user ?? null)
 const socials = computed(() => page.props.socials ?? [])
@@ -147,16 +149,16 @@ function cancelUnlink(): void {
 </script>
 
 <template>
-  <Head title="Настройки" />
+  <Head :title="t('ui.settings.title')" />
 
   <div class="max-w-2xl space-y-6 animate-fade-up">
     <!-- Page header -->
     <div>
       <h1 class="text-3xl font-bold tracking-tight text-foreground">
-        Настройки
+        {{ t('ui.settings.title') }}
       </h1>
       <p class="mt-1 text-muted-foreground">
-        Управление аккаунтом и уведомлениями
+        {{ t('ui.settings.subtitle') }}
       </p>
     </div>
 
@@ -168,8 +170,8 @@ function cancelUnlink(): void {
             <User class="h-5 w-5 text-primary" />
           </div>
           <div>
-            <CardTitle>Профиль</CardTitle>
-            <p class="text-sm text-muted-foreground">Редактирование личных данных</p>
+            <CardTitle>{{ t('ui.settings.profile') }}</CardTitle>
+            <p class="text-sm text-muted-foreground">{{ t('ui.settings.profile_subtitle') }}</p>
           </div>
         </div>
       </CardHeader>
@@ -178,7 +180,7 @@ function cancelUnlink(): void {
         <!-- Фото профиля -->
         <div class="border-b border-border/60 pb-5">
           <p class="block text-sm font-medium text-foreground mb-3">
-            Фотография профиля
+            {{ t('ui.settings.photo') }}
           </p>
           <AvatarPicker
             v-model="form.avatar"
@@ -190,7 +192,7 @@ function cancelUnlink(): void {
         <!-- Фамилия -->
         <div>
           <label for="last_name" class="block text-sm font-medium text-foreground mb-1.5">
-            Фамилия
+            {{ t('ui.settings.last_name') }}
           </label>
           <input
             id="last_name"
@@ -198,7 +200,7 @@ function cancelUnlink(): void {
             type="text"
             autocomplete="family-name"
             class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
-            placeholder="Иванов"
+            :placeholder="t('ui.placeholder.last_name')"
           />
           <p v-if="form.errors.last_name" class="mt-1 text-xs text-destructive">{{ form.errors.last_name }}</p>
         </div>
@@ -206,7 +208,7 @@ function cancelUnlink(): void {
         <!-- Имя -->
         <div>
           <label for="first_name" class="block text-sm font-medium text-foreground mb-1.5">
-            Имя
+            {{ t('ui.settings.first_name') }}
           </label>
           <input
             id="first_name"
@@ -214,7 +216,7 @@ function cancelUnlink(): void {
             type="text"
             autocomplete="given-name"
             class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
-            placeholder="Иван"
+            :placeholder="t('ui.placeholder.first_name')"
           />
           <p v-if="form.errors.first_name" class="mt-1 text-xs text-destructive">{{ form.errors.first_name }}</p>
         </div>
@@ -222,7 +224,7 @@ function cancelUnlink(): void {
         <!-- Отчество -->
         <div>
           <label for="middle_name" class="block text-sm font-medium text-foreground mb-1.5">
-            Отчество
+            {{ t('ui.settings.middle_name') }}
           </label>
           <input
             id="middle_name"
@@ -230,7 +232,7 @@ function cancelUnlink(): void {
             type="text"
             autocomplete="additional-name"
             class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
-            placeholder="Иванович"
+            :placeholder="t('ui.placeholder.middle_name')"
           />
           <p v-if="form.errors.middle_name" class="mt-1 text-xs text-destructive">{{ form.errors.middle_name }}</p>
         </div>
@@ -238,7 +240,7 @@ function cancelUnlink(): void {
         <!-- Email (readonly) -->
         <div>
           <label for="email" class="block text-sm font-medium text-muted-foreground mb-1.5">
-            Email (не редактируется)
+            {{ t('ui.settings.email_readonly') }}
           </label>
           <p class="text-foreground">{{ user?.email ?? '—' }}</p>
         </div>
@@ -247,7 +249,7 @@ function cancelUnlink(): void {
         <div class="pt-2">
           <Button type="submit" :disabled="form.processing">
             <Save class="h-4 w-4" />
-            {{ form.processing ? 'Сохранение...' : 'Сохранить изменения' }}
+            {{ form.processing ? t('ui.common.saving') : t('ui.settings.save') }}
           </Button>
         </div>
       </form>
@@ -261,15 +263,15 @@ function cancelUnlink(): void {
             <Languages class="h-5 w-5 text-emerald-500" />
           </div>
           <div>
-            <CardTitle>Язык</CardTitle>
-            <p class="text-sm text-muted-foreground">Язык интерфейса и уведомлений</p>
+            <CardTitle>{{ t('ui.settings.language') }}</CardTitle>
+            <p class="text-sm text-muted-foreground">{{ t('ui.settings.language_subtitle') }}</p>
           </div>
         </div>
       </CardHeader>
 
       <div class="px-6 pb-6">
         <label for="locale" class="block text-sm font-medium text-foreground mb-1.5">
-          Язык интерфейса
+          {{ t('ui.settings.language_label') }}
         </label>
         <select
           id="locale"
@@ -294,8 +296,8 @@ function cancelUnlink(): void {
             <Link2 class="h-5 w-5 text-sky-500" />
           </div>
           <div>
-            <CardTitle>Соцсети</CardTitle>
-            <p class="text-sm text-muted-foreground">Вход в аккаунт через соцсети</p>
+            <CardTitle>{{ t('ui.settings.socials') }}</CardTitle>
+            <p class="text-sm text-muted-foreground">{{ t('ui.settings.socials_subtitle') }}</p>
           </div>
         </div>
       </CardHeader>
@@ -312,12 +314,12 @@ function cancelUnlink(): void {
                 <span class="text-xs font-bold">{{ providerMeta(key).badge }}</span>
               </div>
               <div>
-                <p class="text-sm font-medium text-foreground">{{ providerMeta(key).label }}</p>
+                <p class="text-sm font-medium text-foreground">{{ t(providerMeta(key).labelKey) }}</p>
                 <p v-if="binding(key)" class="text-xs text-muted-foreground">
-                  Привязан (id: {{ binding(key)!.social_id }})
+                  {{ t('ui.settings.social_linked', { id: binding(key)!.social_id }) }}
                 </p>
                 <p v-else class="text-xs text-muted-foreground">
-                  Не привязан
+                  {{ t('ui.settings.social_not_linked') }}
                 </p>
               </div>
             </div>
@@ -329,7 +331,7 @@ function cancelUnlink(): void {
               @click="requestUnlink(key)"
             >
               <Unlink class="h-4 w-4" />
-              Отвязать
+              {{ t('ui.settings.unlink') }}
             </Button>
           </div>
 
@@ -354,8 +356,8 @@ function cancelUnlink(): void {
             <Shield class="h-5 w-5 text-destructive" />
           </div>
           <div>
-            <CardTitle>Безопасность</CardTitle>
-            <p class="text-sm text-muted-foreground">Управление доступом к аккаунту</p>
+            <CardTitle>{{ t('ui.settings.security') }}</CardTitle>
+            <p class="text-sm text-muted-foreground">{{ t('ui.settings.security_subtitle') }}</p>
           </div>
         </div>
       </CardHeader>
@@ -363,21 +365,16 @@ function cancelUnlink(): void {
         <!-- Password -->
         <div class="border-b border-border/60 pb-5">
           <p class="block text-sm font-medium text-foreground mb-1">
-            Пароль
+            {{ t('ui.settings.password') }}
           </p>
           <p class="mb-3 text-xs text-muted-foreground">
-            <template v-if="user?.has_password">
-              Изменение пароля для входа по email
-            </template>
-            <template v-else>
-              Задайте пароль — после этого можно будет отвязать соцсеть
-            </template>
+            {{ user?.has_password ? t('ui.settings.password_hint_change') : t('ui.settings.password_hint_set') }}
           </p>
 
           <form class="space-y-3" @submit.prevent="submitPassword">
             <div v-if="user?.has_password">
               <label for="current_password" class="block text-sm font-medium text-foreground mb-1.5">
-                Текущий пароль
+                {{ t('ui.settings.current_password') }}
               </label>
               <input
                 id="current_password"
@@ -391,7 +388,7 @@ function cancelUnlink(): void {
 
             <div>
               <label for="new_password" class="block text-sm font-medium text-foreground mb-1.5">
-                Новый пароль
+                {{ t('ui.settings.new_password') }}
               </label>
               <input
                 id="new_password"
@@ -405,7 +402,7 @@ function cancelUnlink(): void {
 
             <div>
               <label for="password_confirmation" class="block text-sm font-medium text-foreground mb-1.5">
-                Повторите пароль
+                {{ t('ui.settings.repeat_password') }}
               </label>
               <input
                 id="password_confirmation"
@@ -418,13 +415,13 @@ function cancelUnlink(): void {
             </div>
 
             <Button type="submit" :disabled="passwordForm.processing">
-              {{ passwordForm.processing ? 'Сохранение...' : (user?.has_password ? 'Сменить пароль' : 'Задать пароль') }}
+              {{ passwordForm.processing ? t('ui.common.saving') : (user?.has_password ? t('ui.settings.change_password') : t('ui.settings.set_password')) }}
             </Button>
           </form>
         </div>
 
         <Button variant="outline" @click="logout">
-          Выйти из аккаунта
+          {{ t('ui.settings.logout') }}
         </Button>
       </div>
     </Card>
@@ -432,8 +429,8 @@ function cancelUnlink(): void {
     <!-- Unlink confirm -->
     <ConfirmDialog
       :show="showUnlinkConfirm"
-      title="Отвязать соцсеть?"
-      confirmText="Отвязать"
+      :title="t('ui.settings.unlink_confirm')"
+      :confirmText="t('ui.settings.unlink')"
       variant="danger"
       @confirm="confirmUnlink"
       @cancel="cancelUnlink"

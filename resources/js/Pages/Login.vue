@@ -4,6 +4,9 @@ import { LogIn } from 'lucide-vue-next'
 import Button from '@/components/ui/Button.vue'
 import SocialAuth from '@/components/social/SocialAuth.vue'
 import { ref } from 'vue'
+import { useI18n } from '@/lib/i18n'
+
+const { t } = useI18n()
 
 const form = useForm({
   email: '',
@@ -20,7 +23,7 @@ function submit(): void {
 </script>
 
 <template>
-  <Head title="Вход" />
+  <Head :title="t('ui.auth.login_page_title')" />
 
   <div class="flex min-h-[80vh] items-center justify-center px-4">
     <div class="w-full max-w-md">
@@ -30,10 +33,10 @@ function submit(): void {
           <LogIn class="h-7 w-7 text-primary-foreground" />
         </div>
         <h1 class="text-2xl font-bold tracking-tight text-foreground">
-          Вход в Tutors Club
+          {{ t('ui.auth.login_title') }}
         </h1>
         <p class="mt-2 text-sm text-muted-foreground">
-          Введите данные для входа в аккаунт
+          {{ t('ui.auth.login_subtitle') }}
         </p>
       </div>
 
@@ -65,7 +68,7 @@ function submit(): void {
         <!-- Password -->
         <div>
           <label for="password" class="block text-sm font-medium text-foreground mb-1.5">
-            Пароль
+            {{ t('ui.auth.password') }}
           </label>
           <div class="relative">
             <input
@@ -82,7 +85,7 @@ function submit(): void {
               class="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
               @click="showPassword = !showPassword"
             >
-              <span class="text-xs">{{ showPassword ? 'Скрыть' : 'Показать' }}</span>
+              <span class="text-xs">{{ showPassword ? t('ui.common.hide') : t('ui.common.show') }}</span>
             </button>
           </div>
           <p v-if="form.errors.password" class="mt-1 text-xs text-destructive">{{ form.errors.password }}</p>
@@ -96,13 +99,13 @@ function submit(): void {
             :disabled="form.processing"
           >
             <LogIn class="h-4 w-4" />
-            {{ form.processing ? 'Вход...' : 'Войти' }}
+            {{ form.processing ? t('ui.auth.logging_in') : t('ui.auth.login_action') }}
           </Button>
 
           <p class="text-center text-sm text-muted-foreground">
-            Нет аккаунта?&nbsp;
+            {{ t('ui.auth.no_account') }}&nbsp;
             <Link href="/register" class="font-medium text-primary hover:underline transition-colors cursor-pointer">
-              Зарегистрироваться
+              {{ t('ui.auth.register_link') }}
             </Link>
           </p>
         </div>

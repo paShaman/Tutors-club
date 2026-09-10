@@ -2,6 +2,9 @@
 import { computed, ref } from 'vue'
 import { usePage } from '@inertiajs/vue3'
 import type { SharedProps } from '@/types'
+import { useI18n } from '@/lib/i18n'
+
+const { t } = useI18n()
 
 const props = withDefaults(defineProps<{
   mode?: 'login' | 'link'
@@ -24,10 +27,10 @@ const enabled = computed(() => Boolean(yandex.value?.configured))
 
 const label = computed(() => {
   if (props.mode === 'link') {
-    return 'Привязать Яндекс ID'
+    return t('ui.social.link_yandex')
   }
 
-  return props.register ? 'Регистрация через Яндекс ID' : 'Войти через Яндекс ID'
+  return props.register ? t('ui.social.register_yandex') : t('ui.social.login_yandex')
 })
 
 function buildStartUrl(): string {
@@ -52,7 +55,7 @@ function buildStartUrl(): string {
 
 function start(): void {
   if (props.agreementRequired && props.agreement !== true) {
-    error.value = 'Необходимо согласие на обработку персональных данных'
+    error.value = t('ui.social.agreement_required')
     return
   }
 

@@ -39,6 +39,7 @@ export interface SharedProps {
   agreements: AgreementDocument[]
   locale: string
   locales: LocaleOption[]
+  translations: Record<string, unknown>
 }
 
 declare module '@inertiajs/vue3' {

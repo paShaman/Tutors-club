@@ -104,7 +104,7 @@ public_html/                   # web root (Laravel public dir via usePublicPath)
 
 ## 6. Frontend conventions (Vue/TS)
 
-- A **page** = `resources/js/Pages/<Name>.vue`, referenced by the controller's `Inertia::render('<Name>', ...)`. Layout opt-in: `defineOptions({ layout: AppLayout })`. Set page title with `<Head title="..."/>` (Russian).
+- A **page** = `resources/js/Pages/<Name>.vue`, referenced by the controller's `Inertia::render('<Name>', ...)`. Layout opt-in: `defineOptions({ layout: AppLayout })`. Set page title with `<Head :title="t('ui....')"/>`.
 - Use `<script setup lang="ts">`. Type props with `defineProps<{...}>()`; typing is **pragmatic** — an occasional local `any` is acceptable, but keep shared/global types in `types/index.ts`.
 - Import with the `@/` alias for `Layouts/`, `components/`, `lib/`; use relative paths within a directory.
 - **Reuse existing UI**, don't restyle components: `components/ui/*` (Button with variants, Card/CardHeader/CardTitle, UserAvatar, Toaster), `components/popups/*` (ConfirmDialog, form popups). Buttons are `Button`; forms live in popups bound to local refs.
@@ -112,7 +112,7 @@ public_html/                   # web root (Laravel public dir via usePublicPath)
 - Styling: Tailwind utility classes with the design-token palette from `resources/css/app.css` (`bg-background`, `text-foreground`, `bg-primary/...`, `border-border`, tokens like `--color-primary: hsl(252 87% 67%)`, radius 0.75rem). Do not introduce ad-hoc hex colors; extend the `@theme` block if a token is genuinely needed.
 - Icons: `lucide-vue-next`. Charts: register ChartJS modules where used. Calendar: `@fullcalendar/vue3`.
 - Vue components are single-file with `lang="ts"`; no CSS-in-JS. Shared helpers: `cn()` in `lib/utils.ts`, `uploadAvatar()` in `lib/upload.ts`.
-- The whole UI text is **hardcoded Russian** on the client — keep it that way; do not wire up client-side i18n.
+- **UI is multilingual — no hardcoded Russian in templates.** All user-facing client strings live under the `ui.*` namespace in `resources/lang/{ru,en}/messages.php` (same file as backend strings) and are rendered with `useI18n()` from `lib/i18n.ts`: `const { t, tp, locale, intlLocale } = useI18n()`, then `t('ui.x.y')` (interpolation: `t('ui.x.y', { name })`) or `tp('ui.x.count', n)` for plurals (`Intl.PluralRules`, forms `one`/`few`/`many`/`other`). Never hardcode Russian in `.vue`/`.ts`. Format dates/numbers with `intlLocale` (not `'ru-RU'`). Adding a language = one entry in `config/locales.php` + a `resources/lang/<code>/` catalog (client translations are shared automatically via the `translations` Inertia prop). The backend applies the user's `users.locale` in `App\Http\Middleware\SetLocale`; read it via `lng()` server-side and `t()` client-side. The hardcoded changelog content itself (`ChangelogController`) stays Russian unless explicitly requested.
 
 ## 7. Request/data flows
 

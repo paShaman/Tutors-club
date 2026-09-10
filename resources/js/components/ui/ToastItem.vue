@@ -4,6 +4,9 @@ import { AlertTriangle, CheckCircle2, Info, X, XCircle } from 'lucide-vue-next'
 import type { Toast, ToastVariant } from '@/lib/toast'
 import { dismissToast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
+import { useI18n } from '@/lib/i18n'
+
+const { t } = useI18n()
 
 const props = defineProps<{ toast: Toast }>()
 
@@ -78,7 +81,7 @@ onBeforeUnmount(clearTimer)
     <button
       type="button"
       class="-mr-1 shrink-0 rounded-lg p-1 opacity-60 transition-opacity hover:opacity-100 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-current"
-      aria-label="Закрыть"
+      :aria-label="t('ui.toast.close')"
       @click="dismissToast(toast.id)"
     >
       <X class="h-4 w-4" />

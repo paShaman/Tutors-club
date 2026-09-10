@@ -1,3 +1,5 @@
+import { t } from '@/lib/i18n'
+
 const MAX_FILE_SIZE = 5 * 1024 * 1024
 
 function xsrfToken(): string | null {
@@ -11,7 +13,7 @@ function xsrfToken(): string | null {
  */
 export async function uploadAvatar(file: Blob, filename = 'avatar.jpg'): Promise<string> {
   if (file.size > MAX_FILE_SIZE) {
-    throw new Error('Изображение не должно превышать 5 МБ')
+    throw new Error(t('ui.upload.too_large'))
   }
 
   const formData = new FormData()
@@ -34,7 +36,7 @@ export async function uploadAvatar(file: Blob, filename = 'avatar.jpg'): Promise
       body: formData,
     })
   } catch {
-    throw new Error('Ошибка сети')
+    throw new Error(t('ui.upload.network'))
   }
 
   let data: any = null
@@ -56,7 +58,7 @@ export async function uploadAvatar(file: Blob, filename = 'avatar.jpg'): Promise
     throw new Error(Object.values(raw).join('\n'))
   }
   if (response.status === 419) {
-    throw new Error('Сессия истекла, обновите страницу')
+    throw new Error(t('ui.upload.session_expired'))
   }
-  throw new Error('Не удалось загрузить изображение')
+  throw new Error(t('ui.upload.failed'))
 }

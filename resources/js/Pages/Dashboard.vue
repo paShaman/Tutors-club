@@ -31,6 +31,9 @@ import {
   Filler,
 } from 'chart.js'
 import { computed } from 'vue'
+import { useI18n } from '@/lib/i18n'
+
+const { t, intlLocale } = useI18n()
 
 ChartJS.register(
   CategoryScale,
@@ -93,7 +96,7 @@ const chartJsData = computed(() => ({
   labels: props.chartData.map(d => d.day),
   datasets: [
     {
-      label: 'Часы',
+      label: t('ui.dashboard.hours'),
       data: props.chartData.map(d => d.hours),
       borderColor: 'hsl(252 87% 67%)',
       backgroundColor: (ctx: any) => {
@@ -148,7 +151,7 @@ const barChartData = computed(() => ({
   labels: props.earningsByMonth.map(d => d.month),
   datasets: [
     {
-      label: 'Заработок',
+      label: t('ui.dashboard.earnings'),
       data: props.earningsByMonth.map(d => d.amount),
       backgroundColor: 'hsl(252 87% 67%)',
       borderRadius: 6,
@@ -173,7 +176,7 @@ const barChartOptions = computed(() => ({
       padding: 12,
       displayColors: false,
       callbacks: {
-        label: (ctx: any) => `${ctx.raw.toLocaleString('ru-RU')} ₽`,
+        label: (ctx: any) => `${ctx.raw.toLocaleString(intlLocale.value)} ₽`,
       },
     },
   },
@@ -187,7 +190,7 @@ const barChartOptions = computed(() => ({
       ticks: {
         color: 'hsl(215.4 16.3% 46.9%)',
         font: { size: 12 },
-        callback: (v: any) => `${v.toLocaleString('ru-RU')} ₽`,
+        callback: (v: any) => `${v.toLocaleString(intlLocale.value)} ₽`,
       },
     },
   },
@@ -195,16 +198,16 @@ const barChartOptions = computed(() => ({
 </script>
 
 <template>
-  <Head title="Дашборд" />
+  <Head :title="t('ui.dashboard.title')" />
 
   <div class="space-y-8 animate-fade-up">
     <!-- Page header -->
     <div>
       <h1 class="text-3xl font-bold tracking-tight text-foreground">
-        Добрый день, {{ userName ?? 'коллега' }} 👋
+        {{ t('ui.dashboard.greeting', { name: userName ?? t('ui.dashboard.greeting_fallback') }) }}
       </h1>
       <p class="mt-1 text-muted-foreground">
-        Вот сводка на сегодня
+        {{ t('ui.dashboard.summary') }}
       </p>
     </div>
 
@@ -214,7 +217,7 @@ const barChartOptions = computed(() => ({
         <div class="flex items-center justify-between">
           <div>
             <p class="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-              Часов на этой неделе
+              {{ t('ui.dashboard.hours_week') }}
             </p>
             <p class="mt-2 text-2xl xl:text-3xl font-bold text-foreground whitespace-nowrap">
               {{ totalHoursThisWeek }}
@@ -230,7 +233,7 @@ const barChartOptions = computed(() => ({
         <div class="flex items-center justify-between">
           <div>
             <p class="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-              Активных учеников
+              {{ t('ui.dashboard.active_students') }}
             </p>
             <p class="mt-2 text-2xl xl:text-3xl font-bold text-foreground whitespace-nowrap">
               {{ students.length }}
@@ -246,10 +249,10 @@ const barChartOptions = computed(() => ({
         <div class="flex items-center justify-between">
           <div>
             <p class="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-              Заработано за месяц
+              {{ t('ui.dashboard.earned_month') }}
             </p>
             <p class="mt-2 text-2xl xl:text-3xl font-bold text-foreground whitespace-nowrap">
-              {{ totalEarnings.toLocaleString('ru-RU') }} ₽
+              {{ totalEarnings.toLocaleString(intlLocale) }} ₽
             </p>
           </div>
           <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-500/10">
@@ -262,7 +265,7 @@ const barChartOptions = computed(() => ({
         <div class="flex items-center justify-between">
           <div>
             <p class="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-              Оплачено уроков
+              {{ t('ui.dashboard.paid_lessons') }}
             </p>
             <p class="mt-2 text-2xl xl:text-3xl font-bold text-foreground whitespace-nowrap">
               {{ paidPercent }}%
@@ -282,7 +285,7 @@ const barChartOptions = computed(() => ({
         <div class="bg-gradient-to-br from-primary/5 via-primary/10 to-purple-500/5 p-6">
           <div class="flex items-center gap-2 text-sm font-medium text-primary mb-1">
             <Calendar class="h-4 w-4" />
-            {{ nextLesson.isUpcoming ? 'Следующий урок' : 'Последний урок' }}
+            {{ nextLesson.isUpcoming ? t('ui.dashboard.next_lesson') : t('ui.dashboard.last_lesson') }}
           </div>
           <div class="flex items-start justify-between mt-1">
             <div>
@@ -290,7 +293,7 @@ const barChartOptions = computed(() => ({
                 {{ nextLesson.studentName }}
               </h3>
               <p class="text-sm text-muted-foreground mt-0.5">
-                {{ nextLesson.studentClass }} · {{ nextLesson.duration }} мин
+                {{ nextLesson.studentClass }} · {{ nextLesson.duration }} {{ t('ui.common.minutes') }}
               </p>
             </div>
             <span
@@ -303,7 +306,7 @@ const barChartOptions = computed(() => ({
             >
               <CheckCircle2 v-if="nextLesson.isPaid" class="h-3 w-3" />
               <AlertCircle v-else class="h-3 w-3" />
-              {{ nextLesson.isPaid ? 'Оплачен' : 'Не оплачен' }}
+              {{ nextLesson.isPaid ? t('ui.dashboard.paid') : t('ui.dashboard.not_paid') }}
             </span>
           </div>
           <div class="mt-6 flex items-center gap-6">
@@ -318,17 +321,17 @@ const barChartOptions = computed(() => ({
         </div>
         <div class="border-t border-border p-4 flex items-center justify-between">
           <span class="text-sm text-muted-foreground">
-            Всего сегодня уроков: <strong>{{ todaysLessonsCount }}</strong>
+            {{ t('ui.dashboard.today_total') }} <strong>{{ todaysLessonsCount }}</strong>
           </span>
           <Link href="/calendar" class="inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground transition-colors">
-            Календарь <ArrowRight class="h-4 w-4" />
+            {{ t('ui.nav.calendar') }} <ArrowRight class="h-4 w-4" />
           </Link>
         </div>
       </Card>
 
       <!-- No upcoming lessons placeholder -->
       <Card v-else class="lg:col-span-2 p-6 flex items-center justify-center">
-        <p class="text-muted-foreground text-sm">Нет предстоящих уроков</p>
+        <p class="text-muted-foreground text-sm">{{ t('ui.dashboard.no_upcoming') }}</p>
       </Card>
 
       <!-- Students mini grid (takes 3 cols) -->
@@ -354,13 +357,13 @@ const barChartOptions = computed(() => ({
           <div class="mt-4 flex items-center gap-3 text-sm">
             <span class="inline-flex items-center gap-1">
               <BookOpen class="h-3.5 w-3.5 text-muted-foreground" />
-              <span class="text-muted-foreground">За месяц</span>
+              <span class="text-muted-foreground">{{ t('ui.dashboard.per_month') }}</span>
               <span class="font-semibold text-foreground">{{ student.totalLessons }}</span>
             </span>
             <span class="text-muted-foreground/40 select-none">|</span>
             <span class="inline-flex items-center gap-1">
               <Coins class="h-3.5 w-3.5 text-emerald-600" />
-              <span class="text-muted-foreground">Оплачено</span>
+              <span class="text-muted-foreground">{{ t('ui.dashboard.paid_label') }}</span>
               <span class="font-semibold text-emerald-600">{{ student.paidLessons }}</span>
             </span>
           </div>
@@ -373,8 +376,8 @@ const barChartOptions = computed(() => ({
       <!-- Load chart (3 cols) -->
       <Card class="lg:col-span-3">
         <CardHeader>
-          <CardTitle>Нагрузка (часы)</CardTitle>
-          <p class="text-sm text-muted-foreground">Текущая неделя</p>
+          <CardTitle>{{ t('ui.dashboard.workload') }}</CardTitle>
+          <p class="text-sm text-muted-foreground">{{ t('ui.dashboard.current_week') }}</p>
         </CardHeader>
         <div class="px-2 pb-4">
           <div class="h-[240px]">
@@ -386,8 +389,8 @@ const barChartOptions = computed(() => ({
       <!-- Earnings bar chart (2 cols) -->
       <Card class="lg:col-span-2">
         <CardHeader>
-          <CardTitle>Заработок</CardTitle>
-          <p class="text-sm text-muted-foreground">{{ new Date().getFullYear() }} год</p>
+          <CardTitle>{{ t('ui.dashboard.earnings') }}</CardTitle>
+          <p class="text-sm text-muted-foreground">{{ t('ui.dashboard.year', { year: new Date().getFullYear() }) }}</p>
         </CardHeader>
         <div class="px-2 pb-4">
           <div class="h-[240px]">

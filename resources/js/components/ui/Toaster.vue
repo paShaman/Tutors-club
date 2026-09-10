@@ -4,9 +4,11 @@ import { usePage } from '@inertiajs/vue3'
 import type { SharedProps } from '@/types'
 import { useToast } from '@/lib/toast'
 import ToastItem from './ToastItem.vue'
+import { useI18n } from '@/lib/i18n'
 
 const page = usePage<SharedProps>()
 const toast = useToast()
+const { t } = useI18n()
 
 // Inertia-флеши бэкенда (lng('success.*') / lng('error.*')) показываем как тосты
 watch(
@@ -28,7 +30,7 @@ watch(
   <Teleport to="body">
     <div
       class="pointer-events-none fixed inset-x-0 bottom-0 z-[100] flex flex-col items-center gap-2 p-4 sm:items-end"
-      aria-label="Уведомления"
+      :aria-label="t('ui.toast.notifications')"
     >
       <TransitionGroup
         tag="div"

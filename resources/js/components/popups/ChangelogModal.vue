@@ -2,6 +2,9 @@
 import { ref, computed, watch } from 'vue'
 import { X, GitFork, ChevronDown, Loader2 } from 'lucide-vue-next'
 import Button from '@/components/ui/Button.vue'
+import { useI18n } from '@/lib/i18n'
+
+const { t, intlLocale } = useI18n()
 
 const props = defineProps<{
   show: boolean
@@ -60,7 +63,7 @@ async function loadChangelog() {
     const first = versions.value[0]
     openVersions.value = new Set(first ? [first.version] : [])
   } catch (e: any) {
-    error.value = 'Не удалось загрузить список изменений'
+    error.value = t('ui.changelog.load_error')
     console.error(e)
   } finally {
     loading.value = false
@@ -84,7 +87,7 @@ function toggle(version: string): void {
 function formatDate(isoDate: string): string {
   const [year, month, day] = isoDate.split('-').map(Number)
   const date = new Date(year, (month ?? 1) - 1, day ?? 1)
-  const label = date.toLocaleDateString('ru-RU', {
+  const label = date.toLocaleDateString(intlLocale.value, {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
@@ -123,10 +126,10 @@ watch(
               <GitFork class="h-4 w-4 text-primary" />
             </div>
             <div>
-              <h3 class="text-base font-semibold text-foreground">История изменений</h3>
+              <h3 class="text-base font-semibold text-foreground">{{ t('ui.changelog.title') }}</h3>
               <p class="text-xs text-muted-foreground">
-                <template v-if="latest">Версия {{ latest.version }} · {{ latestDateLabel }}</template>
-                <template v-else>Обновления приложения</template>
+                <template v-if="latest">{{ t('ui.changelog.version', { version: latest.version, date: latestDateLabel }) }}</template>
+                <template v-else>{{ t('ui.changelog.app_updates') }}</template>
               </p>
             </div>
           </div>
@@ -157,7 +160,7 @@ watch(
                 <GitFork class="h-5 w-5 text-muted-foreground" />
               </div>
             </div>
-            <p class="text-sm text-muted-foreground">Список изменений пока пуст</p>
+            <p class="text-sm text-muted-foreground">{{ t('ui.changelog.empty') }}</p>
           </div>
 
           <!-- Versioned accordion -->
@@ -177,7 +180,7 @@ watch(
                 </div>
                 <div class="flex-1 min-w-0">
                   <div class="flex items-center gap-2">
-                    <p class="text-sm font-semibold text-foreground">Версия {{ ver.version }}</p>
+                    <p class="text-sm font-semibold text-foreground">{{ t('ui.changelog.version_label', { version: ver.version }) }}</p>
                   </div>
                   <p class="text-xs text-muted-foreground">{{ formatDate(ver.date) }}</p>
                 </div>
@@ -211,7 +214,7 @@ watch(
         <!-- Footer -->
         <div class="px-5 py-3 border-t border-border/50 flex justify-end">
           <Button variant="outline" size="sm" @click="emit('close')">
-            Закрыть
+            {{ t('ui.common.close') }}
           </Button>
         </div>
           </div>

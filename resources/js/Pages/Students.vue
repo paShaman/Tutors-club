@@ -10,6 +10,7 @@ import type { StudentFormData } from '@/components/popups/StudentFormPopup.vue'
 import UserAvatar from '@/components/ui/UserAvatar.vue'
 import ConfirmDialog from '@/components/popups/ConfirmDialog.vue'
 import { useToast } from '@/lib/toast'
+import { useI18n } from '@/lib/i18n'
 import {
   UserPlus,
   GraduationCap,
@@ -37,6 +38,7 @@ const page = usePage<{
 }>()
 
 const toast = useToast()
+const { t, tp } = useI18n()
 
 const students = computed(() => page.props.students ?? [])
 const deletedFlag = computed(() => page.props.deletedFlag ?? false)
@@ -120,7 +122,7 @@ function submitStudent(formData: StudentFormData) {
 
 function deleteStudent(student: any) {
   openConfirm(
-    student.is_deleted ? 'Восстановить ученика?' : 'Удалить ученика?',
+    student.is_deleted ? t('ui.students.restore_confirm') : t('ui.students.delete_confirm'),
     'danger',
     () => {
       router.post('/students/delete', {
@@ -136,7 +138,7 @@ function deleteStudent(student: any) {
 </script>
 
 <template>
-  <Head title="Ученики" />
+  <Head :title="t('ui.students.title')" />
 
   <div class="space-y-6 animate-fade-up">
     <!-- Page header -->
@@ -147,10 +149,10 @@ function deleteStudent(student: any) {
         </div>
         <div>
           <h1 class="text-2xl font-bold tracking-tight text-foreground">
-            Ученики
+            {{ t('ui.students.title') }}
           </h1>
           <p class="text-sm text-muted-foreground mt-0.5">
-            {{ filteredStudents.length }} {{ filteredStudents.length === 1 ? 'ученик' : (filteredStudents.length < 5 ? 'ученика' : 'учеников') }}
+            {{ tp('ui.students.count', filteredStudents.length) }}
           </p>
         </div>
       </div>
@@ -162,11 +164,11 @@ function deleteStudent(student: any) {
           :variant="showDeleted ? 'destructive' : 'outline'"
         >
           <Trash2 class="h-4 w-4" />
-          {{ showDeleted ? 'Активные' : 'Удалённые' }}
+          {{ showDeleted ? t('ui.students.active') : t('ui.students.deleted') }}
         </Button>
         <Button @click="openAddModal">
           <UserPlus class="h-4 w-4" />
-          Добавить ученика
+          {{ t('ui.students.add') }}
         </Button>
       </div>
     </div>
@@ -177,7 +179,7 @@ function deleteStudent(student: any) {
       <template v-if="regularStudents.length">
         <div class="flex items-center gap-2 px-1">
           <GraduationCap class="h-4 w-4 text-blue-500" />
-          <span class="text-sm font-semibold text-blue-600">Обычные ученики</span>
+          <span class="text-sm font-semibold text-blue-600">{{ t('ui.students.regular') }}</span>
           <span class="text-xs text-muted-foreground">· {{ regularStudents.length }}</span>
         </div>
         <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -200,7 +202,7 @@ function deleteStudent(student: any) {
                 <div>
                   <h3 class="font-medium text-foreground">{{ student.name }}</h3>
                   <p class="text-xs text-muted-foreground">
-                    {{ student.current_class || 'Класс не указан' }}
+                    {{ student.current_class || t('ui.students.class_not_set') }}
                   </p>
                 </div>
               </div>
@@ -209,7 +211,7 @@ function deleteStudent(student: any) {
                   v-if="!student.is_deleted"
                   @click.stop="openEditModal(student)"
                   class="inline-flex items-center justify-center rounded-lg h-9 w-9 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors cursor-pointer"
-                  title="Редактировать"
+                  :title="t('ui.common.edit')"
                 >
                   <Pencil class="h-4 w-4" />
                 </button>
@@ -221,7 +223,7 @@ function deleteStudent(student: any) {
                       ? 'text-emerald-500 hover:bg-emerald-50 hover:text-emerald-600 cursor-pointer'
                       : 'text-muted-foreground hover:bg-red-50 hover:text-red-600 cursor-pointer',
                   )"
-                  :title="student.is_deleted ? 'Восстановить' : 'Удалить'"
+                  :title="student.is_deleted ? t('ui.common.restore') : t('ui.common.delete')"
                 >
                   <RefreshCcw v-if="student.is_deleted" class="h-4 w-4" />
                   <Trash2 v-else class="h-4 w-4" />
@@ -239,7 +241,7 @@ function deleteStudent(student: any) {
       <template v-if="specialStudents.length">
         <div :class="cn('flex items-center gap-2 px-1', regularStudents.length && 'mt-6')">
           <Star class="h-4 w-4 text-amber-500" />
-          <span class="text-sm font-semibold text-amber-600">Особая группа</span>
+          <span class="text-sm font-semibold text-amber-600">{{ t('ui.students.special') }}</span>
           <span class="text-xs text-muted-foreground">· {{ specialStudents.length }}</span>
         </div>
         <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -274,7 +276,7 @@ function deleteStudent(student: any) {
                   v-if="!student.is_deleted"
                   @click.stop="openEditModal(student)"
                   class="inline-flex items-center justify-center rounded-lg h-9 w-9 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors cursor-pointer"
-                  title="Редактировать"
+                  :title="t('ui.common.edit')"
                 >
                   <Pencil class="h-4 w-4" />
                 </button>
@@ -286,7 +288,7 @@ function deleteStudent(student: any) {
                       ? 'text-emerald-500 hover:bg-emerald-50 hover:text-emerald-600 cursor-pointer'
                       : 'text-muted-foreground hover:bg-red-50 hover:text-red-600 cursor-pointer',
                   )"
-                  :title="student.is_deleted ? 'Восстановить' : 'Удалить'"
+                  :title="student.is_deleted ? t('ui.common.restore') : t('ui.common.delete')"
                 >
                   <RefreshCcw v-if="student.is_deleted" class="h-4 w-4" />
                   <Trash2 v-else class="h-4 w-4" />
@@ -305,11 +307,11 @@ function deleteStudent(student: any) {
     <Card v-else class="p-12 text-center">
       <GraduationCap class="mx-auto h-12 w-12 text-muted-foreground/30" />
       <p class="mt-4 text-muted-foreground">
-        {{ showDeleted ? 'Нет удалённых учеников' : 'Пока нет учеников' }}
+        {{ showDeleted ? t('ui.students.empty_deleted') : t('ui.students.empty') }}
       </p>
       <Button v-if="!showDeleted" @click="openAddModal" variant="outline" class="mt-4">
         <UserPlus class="h-4 w-4" />
-        Добавить первого ученика
+        {{ t('ui.students.add_first') }}
       </Button>
     </Card>
 

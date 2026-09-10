@@ -4,6 +4,9 @@ import { usePage } from '@inertiajs/vue3'
 import type { SharedProps } from '@/types'
 import VkIdAuth from '@/components/social/VkIdAuth.vue'
 import YandexAuth from '@/components/social/YandexAuth.vue'
+import { useI18n } from '@/lib/i18n'
+
+const { t } = useI18n()
 
 const props = withDefaults(defineProps<{
   mode?: 'login' | 'link'
@@ -44,7 +47,7 @@ const visible = computed(() => providers.value.length > 0)
 
     <div class="flex items-center gap-3 text-xs uppercase tracking-wide text-muted-foreground">
       <span class="h-px flex-1 bg-border/70"></span>
-      или
+      {{ t('ui.auth.or') }}
       <span class="h-px flex-1 bg-border/70"></span>
     </div>
   </div>
