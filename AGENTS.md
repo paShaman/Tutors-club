@@ -10,6 +10,7 @@ Guidance for AI coding agents working in this repository. Read this file before 
 
 - manage their **students** (add, edit, soft-delete, avatars, dynamic school class);
 - plan and track **lessons** (FullCalendar schedule, price, duration, paid/future status);
+- manage a **topic planner** (topics/subtopics by subject, per-student status and mastery date, review log with last-review date);
 - watch **statistics** on the dashboard (weekly workload chart, monthly earnings);
 - manage their **profile** (name, avatar with client-side cropping, password, linked social accounts).
 
@@ -56,10 +57,10 @@ app/
 ├── helpers.php                # lng() localization helper
 ├── Http/
 │   ├── Controllers/           # Auth, Avatar, Calendar, Changelog, Dashboard, Lesson,
-│   │                          # Page, Student, User, ControllerHelper
+│   │                          # Page, Planning, Student, User, ControllerHelper
 │   └── Middleware/            # Authenticate, HandleInertiaRequests, ...
 ├── Model/                     # LEGACY Eloquent namespace: User, Student, Lesson,
-│                              # User, Student, Lesson, Page  (NOT App\Models)
+│                              # Topic, StudentTopic, TopicReview, Page  (NOT App\Models)
 ├── Services/                  # SocialAccountService, SocialOAuthProvider,
 │                              # VkIdService, YandexIdService
 └── Providers/
@@ -72,19 +73,19 @@ config/
 └── lesson.php                 # LESSON_DEFAULT_PRICE (3000), LESSON_DEFAULT_DURATION (60)
 resources/
 ├── css/app.css                # Tailwind v4 entry: @theme tokens + global styles
-├── lang/{ru,en}/              # messages.php (backend strings), validation.php, js.php, mail.php
+├── lang/{ru,en}/              # messages.php (backend + ui.* strings); validation.php (one per locale)
 ├── views/app.blade.php        # single Blade shell (@routes, @vite, @inertia)
 └── js/
     ├── app.ts                 # createInertiaApp entry (import.meta.glob Pages);
     │                          # mounts <Toaster/> globally next to <App>
     ├── Pages/                 # one .vue per route component: Dashboard, Students,
-    │                          # Lessons, Calendar, Settings, Login, Register
+    │                          # Lessons, Calendar, Planning, Settings, Login, Register
     ├── Layouts/AppLayout.vue  # sidebar + layout; pages opt in via defineOptions
     ├── components/
     │   ├── ui/                # Button, Card, CardHeader, CardTitle, UserAvatar,
-    │   │                      # AvatarPicker, ImageCropper, Toaster + ToastItem
-    │   ├── popups/            # ConfirmDialog, ChangelogModal,
-    │   │                      # StudentFormPopup, LessonFormPopup
+    │   │                      # AvatarPicker, ImageCropper, TopicStatusBadge, Toaster + ToastItem
+    │   ├── popups/            # ConfirmDialog, ChangelogModal, StudentFormPopup,
+    │   │                      # LessonFormPopup, TopicFormPopup, ReviewFormPopup
     │   └── social/            # SocialAuth, VkIdAuth, YandexAuth
     ├── lib/                   # utils.ts (cn), upload.ts (avatar upload), social.ts,
     │                          # toast.ts (useToast — global toasts)
@@ -94,10 +95,10 @@ public_html/                   # web root (Laravel public dir via usePublicPath)
 
 ## 5. Backend conventions (PHP)
 
-- **Routing**: everything lives in `routes/web.php`. Page endpoints render Inertia; student/lesson mutations are Inertia POST routes that `redirect()->back()` (see §7). Route names use dot notation (`auth.yandex`, `lessons`).
-- **Controllers** live in `App\Http\Controllers`. Page methods return `Inertia::render('PageName', props)`. Student/lesson mutation methods return `Illuminate\Http\RedirectResponse` via `back()->with('success'|'error', lng(...))`, or `back()->withErrors($validator)->withInput()` on validation failure. `ControllerHelper::resultSuccess()` / `resultError()` (`{ success, data }`) remain only for the intentional JSON endpoints (`/avatar/upload`, `/changelog`).
-- **Models** use the legacy namespace `App\Model` (singular). Keep using it for new models. Relations: `User` ↔ `Student` (many-to-many via `students_to_users`), `Student` has many `Lesson`.
-- **Localization**: user-facing backend strings MUST go through the `lng('...')` helper (dot key under `messages.php`), e.g. `lng('success.add_student')`. **Every new key must be added to BOTH `resources/lang/ru/messages.php` and `resources/lang/en/messages.php`.** Group keys under `success.*`, `error.*`, `title`, etc. See existing usage in controllers.
+- **Routing**: everything lives in `routes/web.php`. Page endpoints render Inertia; student/lesson/planning mutations are Inertia POST routes that `redirect()->back()` (see §7). Route names use dot notation (`auth.yandex`, `lessons`, `planning`).
+- **Controllers** live in `App\Http\Controllers`. Page methods return `Inertia::render('PageName', props)`. Student/lesson/planning mutation methods return `Illuminate\Http\RedirectResponse` via `back()->with('success'|'error', lng(...))`, or `back()->withErrors($validator)->withInput()` on validation failure. `ControllerHelper::resultSuccess()` / `resultError()` (`{ success, data }`) remain only for the intentional JSON endpoints (`/avatar/upload`, `/changelog`).
+- **Models** use the legacy namespace `App\Model` (singular). Keep using it for new models. Relations: `User` ↔ `Student` (many-to-many via `students_to_users`), `User` has many `Topic`; `Student` has many `Lesson`, `StudentTopic` (per-student topic status) and `TopicReview` (review log).
+- **Localization**: user-facing backend strings MUST go through the `lng('...')` helper (dot key under `messages.php`), e.g. `lng('success.add_student')`. **Every new key must be added to BOTH `resources/lang/ru/messages.php` and `resources/lang/en/messages.php`.** Group keys under `success.*`, `error.*`, `title`, etc. See existing usage in controllers. Validation texts and field names (`attributes`) live in `resources/lang/<locale>/validation.php` — keep a file for **every** locale listed in `config/locales.php`, not just the primary one.
 - **Roles**: `roles`/`roles_to_users` tables and `Access` constants are an unused rudiment from an old version and are not part of the current product. Do not introduce new role logic; if roles return later, this is where it goes.
 - **PHP style for NEW files**: add `declare(strict_types=1);`, typed signatures/return types, `final class` where sensible, aligned multi-line arrays, no noisy PHPDoc — write short Russian comments only where they explain "why". Do not retro-edit old files to this style.
 - Middleware: `auth`, `guest`, `signed` (auto-login link). Shared Inertia props are assembled in `app/Http/Middleware/HandleInertiaRequests.php` (`auth.user`, `flash`, `social`, `agreements`) — when you add globally shared data, extend this class AND `resources/js/types/index.ts` (`SharedProps`).
@@ -117,9 +118,9 @@ public_html/                   # web root (Laravel public dir via usePublicPath)
 ## 7. Request/data flows
 
 **How pages get data.**
-- Page GET endpoints (e.g. `GET /students`, `GET /lessons`, `GET /calendar`, `GET /`) return an Inertia page with props computed server-side.
+- Page GET endpoints (e.g. `GET /students`, `GET /lessons`, `GET /calendar`, `GET /planning`, `GET /`) return an Inertia page with props computed server-side.
 - Navigation and list **filtering** use Inertia: `<Link>` or `router.get('/lessons', { student_id })` (server re-renders the page with filtered props).
-- **Mutations are Inertia-native (post → redirect → get).** Student/lesson create/edit/delete/pay submit with `router.post('/students/edit', payload, { preserveScroll: true, onSuccess, onError })`; the controller returns `back()->with('success'|'error', lng(...))`, or on validation failure `back()->withErrors($validator)->withInput()`. The resulting Inertia visit refreshes the page props (`students`, `sortedLessons`, …) and shows the success/error **toast** (via the global `Toaster`, see §6) **without any browser reload**. `router.post` defaults to `preserveState: true`, so local component state (expanded groups, FullCalendar view) is preserved. Inertia handles CSRF automatically — no manual `X-XSRF-TOKEN`/`_token`. `payLesson` is a toggle and returns a bare `back()` (no flash).
+- **Mutations are Inertia-native (post → redirect → get).** Student/lesson/planning create/edit/delete/pay/status/review submit with `router.post('/students/edit', payload, { preserveScroll: true, onSuccess, onError })`; the controller returns `back()->with('success'|'error', lng(...))`, or on validation failure `back()->withErrors($validator)->withInput()`. The resulting Inertia visit refreshes the page props (`students`, `sortedLessons`, …) and shows the success/error **toast** (via the global `Toaster`, see §6) **without any browser reload**. `router.post` defaults to `preserveState: true`, so local component state (expanded groups, FullCalendar view) is preserved. Inertia handles CSRF automatically — no manual `X-XSRF-TOKEN`/`_token`. `payLesson` is a toggle and returns a bare `back()` (no flash).
 - **Form payload types must be `type` aliases, not `interface`** (e.g. `LessonFormData`/`StudentFormData` in `components/popups/*`); TS interfaces lack the implicit index signature Inertia's `RequestPayload` (`Record<string, FormDataConvertible>`) requires.
 
 **Remaining JSON endpoints (intentional).**
