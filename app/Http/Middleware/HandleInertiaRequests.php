@@ -46,6 +46,11 @@ final class HandleInertiaRequests extends Middleware
                 'error'   => fn (): ?string => $request->session()->get('error'),
             ],
             'agreements' => config('agreements.documents', []),
+            'locale'     => app()->getLocale(),
+            'locales'    => collect(config('locales.available', []))
+                ->map(fn (string $label, string $code): array => ['code' => $code, 'label' => $label])
+                ->values()
+                ->all(),
             'social' => [
                 [
                     'key'         => VkIdService::SOCIAL_VKONTAKTE,

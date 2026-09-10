@@ -21,6 +21,11 @@ export interface AgreementDocument {
   url: string
 }
 
+export interface LocaleOption {
+  code: string
+  label: string
+}
+
 export interface SharedProps {
   [key: string]: unknown
   auth: {
@@ -32,6 +37,8 @@ export interface SharedProps {
   }
   social: SocialProviderConfig[]
   agreements: AgreementDocument[]
+  locale: string
+  locales: LocaleOption[]
 }
 
 declare module '@inertiajs/vue3' {

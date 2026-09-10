@@ -52,6 +52,7 @@ Route::get('/auth', [AuthController::class, 'auth'])->name('auth')->middleware('
 // ─── User ───────────────────────────────────────────────────
 Route::post('/user/settings', [UserController::class, 'settings'])->middleware('auth');
 Route::post('/user/password', [UserController::class, 'password'])->middleware('auth');
+Route::post('/user/locale', [UserController::class, 'locale'])->middleware('auth');
 Route::post('/user/socials/link', [UserController::class, 'socialLink'])->middleware('auth');
 Route::get('/user/socials/link/yandex', [AuthController::class, 'yandexLink'])
     ->name('auth.yandex.link')

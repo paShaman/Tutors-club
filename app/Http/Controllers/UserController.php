@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
@@ -44,6 +45,24 @@ class UserController extends Controller
         }
 
         return back()->with('success', lng('success.settings'));
+    }
+
+    /**
+     * Смена языка интерфейса.
+     */
+    public function locale(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'locale' => ['required', 'string', Rule::in(array_keys(config('locales.available', [])))],
+        ]);
+
+        $user = Auth::user();
+        $user->locale = $validated['locale'];
+        $user->save();
+
+        app()->setLocale($validated['locale']);
+
+        return back()->with('success', lng('success.locale'));
     }
 
     /**

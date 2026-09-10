@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, router, usePage, useForm } from '@inertiajs/vue3'
-import { Settings, User, Shield, Save, Link2, Unlink } from 'lucide-vue-next'
+import { Settings, User, Shield, Save, Link2, Unlink, Languages } from 'lucide-vue-next'
 import Button from '@/components/ui/Button.vue'
 import Card from '@/components/ui/Card.vue'
 import CardHeader from '@/components/ui/CardHeader.vue'
@@ -30,6 +30,7 @@ const page = usePage<SettingsPageProps>()
 
 const user = computed(() => page.props.auth?.user ?? null)
 const socials = computed(() => page.props.socials ?? [])
+const locales = computed(() => page.props.locales ?? [])
 const configuredProviders = computed(() => (page.props.social ?? []).filter((p) => p.configured))
 
 function binding(provider: string): SocialBinding | null {
@@ -69,6 +70,17 @@ const passwordForm = useForm({
   password_confirmation: '',
 })
 
+const localeForm = useForm({
+  locale: page.props.locale ?? 'ru',
+})
+
+// Сохранённый язык может прийти асинхронно — синхронизируем селект
+watch(() => page.props.locale, (value) => {
+  if (value) {
+    localeForm.locale = value
+  }
+})
+
 // Sync form fields when user data arrives asynchronously
 watch(user, (u) => {
   if (u) {
@@ -95,6 +107,10 @@ function submitPassword(): void {
       passwordForm.reset()
     },
   })
+}
+
+function changeLocale(): void {
+  localeForm.post('/user/locale', { preserveScroll: true })
 }
 
 function logout(): void {
@@ -235,6 +251,39 @@ function cancelUnlink(): void {
           </Button>
         </div>
       </form>
+    </Card>
+
+    <!-- Language section -->
+    <Card>
+      <CardHeader>
+        <div class="flex items-center gap-3">
+          <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10">
+            <Languages class="h-5 w-5 text-emerald-500" />
+          </div>
+          <div>
+            <CardTitle>Язык</CardTitle>
+            <p class="text-sm text-muted-foreground">Язык интерфейса и уведомлений</p>
+          </div>
+        </div>
+      </CardHeader>
+
+      <div class="px-6 pb-6">
+        <label for="locale" class="block text-sm font-medium text-foreground mb-1.5">
+          Язык интерфейса
+        </label>
+        <select
+          id="locale"
+          v-model="localeForm.locale"
+          :disabled="localeForm.processing"
+          class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors disabled:opacity-60"
+          @change="changeLocale"
+        >
+          <option v-for="item in locales" :key="item.code" :value="item.code">
+            {{ item.label }}
+          </option>
+        </select>
+        <p v-if="localeForm.errors.locale" class="mt-1 text-xs text-destructive">{{ localeForm.errors.locale }}</p>
+      </div>
     </Card>
 
     <!-- Social section -->

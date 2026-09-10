@@ -64,6 +64,7 @@ return [
         'social_link' => 'Social account linked successfully',
         'social_unlink' => 'Social account unlinked successfully',
         'password' => 'Password saved successfully',
+        'locale' => 'Language changed successfully',
     ],
     'unauthorized' => 'You are not logged in',
     'only_for_guest' => 'Available only to unauthenticated users',
