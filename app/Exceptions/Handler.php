@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Inertia\Inertia;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Throwable;
 
@@ -33,7 +34,9 @@ final class Handler extends ExceptionHandler
             $e instanceof NotFoundHttpException
             || $e instanceof ModelNotFoundException
         ) {
-            return response()->view('errors.404', [], 404);
+            return Inertia::render('Error', ['status' => 404])
+                ->toResponse($request)
+                ->setStatusCode(404);
         }
 
         return parent::render($request, $e);
