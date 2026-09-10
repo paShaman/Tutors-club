@@ -6,6 +6,9 @@ namespace App\Http\Controllers;
 
 use App\Model\Lesson;
 use App\Model\Student;
+use App\Model\StudentTopic;
+use App\Model\Topic;
+use App\Model\TopicReview;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
@@ -159,6 +162,14 @@ final class StudentController extends Controller
             }
         }
 
+        $topicsBySubject = [];
+
+        foreach (Lesson::LESSON_SUBJECTS as $subject) {
+            $topicsBySubject[$subject] = Topic::treeForSubject((int) $user->id, $subject);
+        }
+
+        $topicStates = $this->topicStatesForStudent((int) $student->id);
+
         return Inertia::render('StudentDetail', [
             'student' => [
                 'id'            => $student->id,
@@ -183,8 +194,59 @@ final class StudentController extends Controller
                 'last_lesson_date'  => $lastLessonDate,
                 'lessons_planned'   => $lessons->where('is_future', 1)->count(),
             ],
-            'sortedLessons' => $sortedLessons,
+            'sortedLessons'   => $sortedLessons,
+            'subjects'        => Lesson::LESSON_SUBJECTS,
+            'topicsBySubject' => $topicsBySubject,
+            'topicStates'     => $topicStates,
         ]);
+    }
+
+    /**
+     * Состояния тем ученика и сводка по повторениям.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function topicStatesForStudent(int $studentId): array
+    {
+        $studentTopics = StudentTopic::where('student_id', $studentId)->get();
+
+        $reviews = TopicReview::where('student_id', $studentId)
+            ->orderBy('reviewed_on', 'desc')
+            ->orderBy('id', 'desc')
+            ->get();
+
+        $reviewsCount = [];
+        $lastReviewComment = [];
+
+        foreach ($reviews as $review) {
+            $topicId = (int) $review->topic_id;
+            $reviewsCount[$topicId] = ($reviewsCount[$topicId] ?? 0) + 1;
+
+            if (!isset($lastReviewComment[$topicId])) {
+                $lastReviewComment[$topicId] = $review->comment;
+            }
+        }
+
+        $result = [];
+
+        foreach ($studentTopics as $studentTopic) {
+            $topicId = (int) $studentTopic->topic_id;
+
+            $result[] = [
+                'topic_id'            => $topicId,
+                'status'              => $studentTopic->status,
+                'mastered_at'         => $studentTopic->mastered_at
+                    ? $studentTopic->mastered_at->toDateString()
+                    : null,
+                'last_reviewed_at'    => $studentTopic->last_reviewed_at
+                    ? $studentTopic->last_reviewed_at->toDateString()
+                    : null,
+                'reviews_count'       => $reviewsCount[$topicId] ?? 0,
+                'last_review_comment' => $lastReviewComment[$topicId] ?? null,
+            ];
+        }
+
+        return $result;
     }
 
     /**

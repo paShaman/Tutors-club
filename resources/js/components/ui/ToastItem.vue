@@ -19,7 +19,7 @@ const icons: Record<ToastVariant, Component> = {
 
 const variantClasses: Record<ToastVariant, string> = {
   success: 'border-emerald-200 bg-emerald-50 text-emerald-800',
-  error: 'border-destructive/30 bg-destructive/10 text-destructive',
+  error: 'border-red-200 bg-red-50 text-red-700',
   warning: 'border-amber-200 bg-amber-50 text-amber-800',
   info: 'border-blue-200 bg-blue-50 text-blue-800',
 }
@@ -64,7 +64,7 @@ onBeforeUnmount(clearTimer)
 <template>
   <div
     :class="cn(
-      'pointer-events-auto flex w-full items-start gap-3 rounded-xl border px-4 py-3 shadow-lg backdrop-blur',
+      'pointer-events-auto flex w-full items-start gap-3 rounded-xl border px-4 py-3 shadow-lg',
       variantClasses[toast.variant],
     )"
     :role="toast.variant === 'error' ? 'alert' : 'status'"

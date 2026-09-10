@@ -54,6 +54,22 @@ class Student extends Model
     }
 
     /**
+     * состояния тем у ученика
+     */
+    public function topicStates()
+    {
+        return $this->hasMany('App\Model\StudentTopic', 'student_id');
+    }
+
+    /**
+     * журнал повторений тем у ученика
+     */
+    public function topicReviews()
+    {
+        return $this->hasMany('App\Model\TopicReview', 'student_id');
+    }
+
+    /**
      * добавление урока
      *
      * @param $params

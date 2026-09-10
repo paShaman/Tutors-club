@@ -49,6 +49,14 @@ class User extends Authenticatable
         return $this->belongsToMany('App\Model\Student', 'students_to_users');
     }
 
+    /**
+     * темы преподавателя (справочник планирования)
+     */
+    public function topics()
+    {
+        return $this->hasMany('App\Model\Topic', 'user_id');
+    }
+
     /*
      * FUNCTIONS ---------------------------------
      */

@@ -198,6 +198,7 @@ function submit(): void {
                 >{{ doc.label }}</a>
                 <span v-else class="font-medium text-primary">{{ doc.label }}</span>
               </template>
+              <span class="text-destructive">*</span>
             </span>
           </label>
           <p v-if="form.errors.agreement" class="mt-1 text-xs text-destructive">{{ form.errors.agreement }}</p>
@@ -228,7 +229,6 @@ function submit(): void {
             id="first_name"
             v-model="form.first_name"
             type="text"
-            required
             autocomplete="given-name"
             class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
             :placeholder="t('ui.placeholder.first_name')"
@@ -239,7 +239,7 @@ function submit(): void {
         <!-- Email -->
         <div>
           <label for="email" class="block text-sm font-medium text-foreground mb-1.5">
-            Email
+            Email *
           </label>
           <input
             id="email"
@@ -298,6 +298,9 @@ function submit(): void {
 
         <!-- Captcha -->
         <div>
+          <p class="block text-sm font-medium text-foreground mb-1.5">
+            {{ t('ui.auth.captcha_label') }}
+          </p>
           <div
             ref="captchaContainer"
             class="w-full rounded-xl bg-white/50"

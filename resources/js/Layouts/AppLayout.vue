@@ -7,6 +7,7 @@ import {
   Calendar,
   Users,
   GraduationCap,
+  ListTree,
   Settings,
   LogOut,
   Menu,
@@ -67,6 +68,12 @@ const navItems: NavItem[] = [
     href: '/lessons',
     icon: Users,
     activeRoute: 'lessons',
+  },
+  {
+    labelKey: 'ui.nav.planning',
+    href: '/planning',
+    icon: ListTree,
+    activeRoute: 'planning',
   },
 ]
 

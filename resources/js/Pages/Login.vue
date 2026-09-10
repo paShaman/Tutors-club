@@ -51,7 +51,7 @@ function submit(): void {
         <!-- Email -->
         <div>
           <label for="email" class="block text-sm font-medium text-foreground mb-1.5">
-            Email
+            Email *
           </label>
           <input
             id="email"

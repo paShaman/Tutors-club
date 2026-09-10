@@ -9,6 +9,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AvatarController;
 use App\Http\Controllers\LessonController;
 use App\Http\Controllers\StudentController;
+use App\Http\Controllers\PlanningController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ChangelogController;
 use Illuminate\Support\Facades\Route;
@@ -79,3 +80,11 @@ Route::get('/lessons', [LessonController::class, 'getLessons'])->middleware('aut
 Route::post('/lessons/edit', [LessonController::class, 'editLesson'])->middleware('auth');
 Route::post('/lessons/delete', [LessonController::class, 'deleteLesson'])->middleware('auth');
 Route::post('/lessons/pay', [LessonController::class, 'payLesson'])->middleware('auth');
+
+// ─── Planning ───────────────────────────────────────────────
+Route::get('/planning', [PlanningController::class, 'index'])->middleware('auth')->name('planning');
+Route::post('/topics/edit', [PlanningController::class, 'edit'])->middleware('auth');
+Route::post('/topics/delete', [PlanningController::class, 'delete'])->middleware('auth');
+Route::post('/topics/reorder', [PlanningController::class, 'reorder'])->middleware('auth');
+Route::post('/student-topics/status', [PlanningController::class, 'setStatus'])->middleware('auth');
+Route::post('/student-topics/review', [PlanningController::class, 'review'])->middleware('auth');

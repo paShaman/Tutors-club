@@ -380,6 +380,7 @@ function cancelUnlink(): void {
                 id="current_password"
                 v-model="passwordForm.current_password"
                 type="password"
+                required
                 autocomplete="current-password"
                 class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
               />
@@ -394,6 +395,7 @@ function cancelUnlink(): void {
                 id="new_password"
                 v-model="passwordForm.password"
                 type="password"
+                required
                 autocomplete="new-password"
                 class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
               />
@@ -408,6 +410,7 @@ function cancelUnlink(): void {
                 id="password_confirmation"
                 v-model="passwordForm.password_confirmation"
                 type="password"
+                required
                 autocomplete="new-password"
                 class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
               />

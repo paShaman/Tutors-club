@@ -90,6 +90,7 @@ const title = computed(() => props.mode === 'edit' ? t('ui.students.form.edit_ti
                 <label class="block text-sm font-medium text-foreground mb-1.5">{{ t('ui.students.form.class') }}</label>
                 <input
                   v-model="form.student_class"
+                  required
                   class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
                   :placeholder="t('ui.students.form.class_placeholder')"
                 />
