@@ -1,10 +1,9 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import axios from 'axios'
+import { ref, computed, watch } from 'vue'
 import { X, GitFork, ChevronDown, Loader2 } from 'lucide-vue-next'
 import Button from '@/components/ui/Button.vue'
 
-defineProps<{
+const props = defineProps<{
   show: boolean
 }>()
 
@@ -25,8 +24,9 @@ interface ChangelogVersion {
 
 const versions = ref<ChangelogVersion[]>([])
 const openVersions = ref<Set<string>>(new Set())
-const loading = ref(true)
+const loading = ref(false)
 const error = ref('')
+const loaded = ref(false)
 
 const latest = computed(() => versions.value[0] ?? null)
 
@@ -36,11 +36,27 @@ const latestDateLabel = computed(() => {
 })
 
 async function loadChangelog() {
+  if (loading.value) {
+    return
+  }
+
   loading.value = true
   error.value = ''
   try {
-    const { data } = await axios.get('/changelog')
+    const response = await fetch('/changelog', {
+      headers: {
+        Accept: 'application/json',
+        'X-Requested-With': 'XMLHttpRequest',
+      },
+    })
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`)
+    }
+
+    const data = await response.json()
     versions.value = data.changelog ?? []
+    loaded.value = true
     const first = versions.value[0]
     openVersions.value = new Set(first ? [first.version] : [])
   } catch (e: any) {
@@ -76,7 +92,15 @@ function formatDate(isoDate: string): string {
   return label.charAt(0).toUpperCase() + label.slice(1)
 }
 
-onMounted(loadChangelog)
+watch(
+  () => props.show,
+  (visible) => {
+    if (visible && !loaded.value) {
+      loadChangelog()
+    }
+  },
+  { immediate: true },
+)
 </script>
 
 <template>

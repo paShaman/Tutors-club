@@ -29,9 +29,6 @@ Route::get('/register', [PageController::class, 'register'])
 Route::get('/settings', [PageController::class, 'settings'])
     ->name('settings');
 
-Route::get('/info/{page}', [PageController::class, 'page'])
-    ->where('page', '[A-Za-z\-]+');
-
 // ─── Calendar ───────────────────────────────────────────────
 Route::get('/calendar', [CalendarController::class, 'index'])
     ->middleware('auth');
