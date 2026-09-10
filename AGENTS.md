@@ -16,7 +16,7 @@ Guidance for AI coding agents working in this repository. Read this file before 
 
 The user-facing UI is Russian; backend locale is `ru` (with `en` translation files that must be kept in sync for backend strings, see §7).
 
-Monetization: there are two **tariff plans** — free "Basic" (full functionality, 1 student) and paid "Paid" (100 ₽/month or 1000 ₽/year, unlimited). Payments and self-service plan switching are **not implemented**; plans are assigned manually in the DB via the `user_subscriptions` table (see §5).
+Monetization: there are two **tariff plans** — free "Free" (full functionality, 1 student) and paid "Paid" (100 ₽/month or 1000 ₽/year, unlimited). Payments and self-service plan switching are **not implemented**; plans are assigned manually in the DB via the `user_subscriptions` table (see §5).
 
 ## 2. Non-negotiable rules (read first)
 

@@ -420,13 +420,13 @@ return [
             'subtitle' => 'Your plan, limits and usage',
             'current'  => 'Your plan',
             'plans' => [
-                'free' => 'Basic',
+                'free' => 'Free',
                 'paid' => 'Paid',
             ],
             'active_until' => 'Active until :date',
             'expired' => [
                 'title' => 'Your paid plan has expired',
-                'text'  => 'The plan ended on :date. The basic plan with a 1-student limit is now active.',
+                'text'  => 'The plan ended on :date. The free plan with a 1-student limit is now active.',
             ],
             'usage' => [
                 'students' => 'Students',
