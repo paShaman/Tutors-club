@@ -176,7 +176,17 @@ There is no automated test suite, no linter and no formatter configured — do n
 
 ## 10. Changelog
 
-The changelog is a hardcoded, versioned array inside `ChangelogController::getChangelog()` and is shown in `ChangelogModal` (fetched via axios from `/changelog`). New versions are prepended as `['version' => '1.x', 'date' => 'YYYY-MM-DD', 'categories' => [['title' => ..., 'items' => [...]]]]` with a top version number bump. **Only touch it when the user explicitly asks.**
+The changelog is a hardcoded, versioned array inside `ChangelogController::getChangelog()` and is shown in `ChangelogModal` (fetched via axios from `/changelog`). New versions are prepended as `['version' => '1.x', 'date' => 'YYYY-MM-DD', 'categories' => [['title' => ..., 'items' => [...]]]]`.
+
+**The changelog is maintained automatically from your sessions.** When your work in a session produces user-facing changes, prepend a new entry describing them (wording in Russian, user-facing tone, grouped under emoji categories like the existing entries). Do not wait to be asked, and do not only do it when the user mentions the changelog.
+
+The `date` field must always be the **current date** in `YYYY-MM-DD` format (the day you make the change), never a past or planned future date.
+
+The only thing to ask the user is the bump type:
+- **minor** — `1.*` (e.g. `1.5`): new features or noticeable behavior/UI changes;
+- **patch** — `1.*.*` (e.g. `1.5.1`): fixes and small tweaks.
+
+Only include changes that make sense to describe to a user of the system (new functionality, visible UI/behavior changes, user-visible fixes). **Do not describe internal/technical changes** (refactors, code cleanup, package/infra moves, type-only edits) — omit them entirely from the entry.
 
 ## 11. Do / Don't checklist
 
@@ -194,7 +204,7 @@ The changelog is a hardcoded, versioned array inside `ChangelogController::getCh
 - Touch git in any way (§2).
 - Read or modify `.env`, or output secrets/credentials.
 - Run migrations, seeds, or `artisan config:cache`/`optimize` without explicit permission.
-- Add packages, refactor `App\Model`/`App\Common`/`App\Access`/legacy controllers, add tests, or update the changelog unless asked.
+- Add packages, refactor `App\Model`/`App\Common`/`App\Access`/legacy controllers, or add tests unless asked (the changelog is the exception — it updates automatically at the end of a session, see §10).
 - Add new `fetch` JSON endpoints or `window.location.reload()` patterns; prefer Inertia-native flows.
 - Re-add inline flash banners or blocking alert modals for user messages — the global `Toaster` handles them (§6/§7).
 - Hardcode plan limits/prices or Russian plan strings; add payment flows or self-service plan switching (§2).
