@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Model\Lesson;
 use App\Model\Student;
+use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
@@ -39,6 +41,149 @@ final class StudentController extends Controller
             'students'        => $students->toArray(),
             'deletedFlag'     => $deletedFlag,
             'specialFlag'     => $specialFlag,
+        ]);
+    }
+
+    /**
+     * Student detail page with statistics.
+     */
+    public function show(Student $student): Response
+    {
+        $user = Auth::user();
+
+        $isOwner = $user->students()->where('students.id', $student->id)->exists();
+
+        if (!$isOwner) {
+            abort(404);
+        }
+
+        $lessons = Lesson::where('student_id', $student->id)
+            ->where('is_deleted', 0)
+            ->orderBy('date', 'desc')
+            ->orderBy('time', 'desc')
+            ->get();
+
+        $totalLessons = 0;
+        $paidLessons = 0;
+        $earned = 0;
+        $debt = 0;
+        $totalMinutes = 0;
+        $firstLessonDate = null;
+        $lastLessonDate = null;
+
+        foreach ($lessons as $lesson) {
+            if (!empty($lesson->is_future)) {
+                continue;
+            }
+
+            $date = $lesson->date ? Carbon::parse($lesson->date)->toDateString() : null;
+
+            $totalLessons++;
+            $totalMinutes += (int) $lesson->duration > 0 ? (int) $lesson->duration : 60;
+
+            if (!empty($lesson->is_payed)) {
+                $paidLessons++;
+                $earned += (int) $lesson->price;
+            } else {
+                $debt += (int) $lesson->price;
+            }
+
+            if ($date !== null) {
+                if ($firstLessonDate === null || $date < $firstLessonDate) {
+                    $firstLessonDate = $date;
+                }
+
+                if ($lastLessonDate === null || $date > $lastLessonDate) {
+                    $lastLessonDate = $date;
+                }
+            }
+        }
+
+        $sortedLessons = [];
+
+        foreach ($lessons as $lesson) {
+            $date = Carbon::parse($lesson->date);
+            $year = (int) $date->year;
+            $month = (int) $date->month;
+
+            if (empty($sortedLessons[$year])) {
+                $sortedLessons[$year] = [
+                    'sum'    => 0,
+                    'debt'   => 0,
+                    'cnt'    => 0,
+                    'cnt_all' => 0,
+                    'months' => [],
+                ];
+            }
+
+            if (empty($sortedLessons[$year]['months'][$month])) {
+                $sortedLessons[$year]['months'][$month] = [
+                    'sum'     => 0,
+                    'debt'    => 0,
+                    'cnt'     => 0,
+                    'cnt_all' => 0,
+                    'lessons' => [],
+                ];
+            }
+
+            $sortedLessons[$year]['months'][$month]['lessons'][] = [
+                'id'         => $lesson->id,
+                'subject'    => $lesson->subject,
+                'theme'      => $lesson->theme,
+                'price'      => (int) $lesson->price,
+                'duration'   => (int) $lesson->duration,
+                'date'       => $date->toDateString(),
+                'time'       => $lesson->time ? substr((string) $lesson->time, 0, 5) : null,
+                'is_payed'   => (int) $lesson->is_payed,
+                'is_future'  => (int) $lesson->is_future,
+                'date_payed' => $lesson->date_payed
+                    ? Carbon::parse($lesson->date_payed)->format('Y-m-d H:i')
+                    : null,
+            ];
+
+            if (!empty($lesson->is_future)) {
+                continue;
+            }
+
+            $sortedLessons[$year]['cnt_all']++;
+            $sortedLessons[$year]['months'][$month]['cnt_all']++;
+
+            if (!empty($lesson->is_payed)) {
+                $sortedLessons[$year]['sum'] += (int) $lesson->price;
+                $sortedLessons[$year]['cnt']++;
+                $sortedLessons[$year]['months'][$month]['sum'] += (int) $lesson->price;
+                $sortedLessons[$year]['months'][$month]['cnt']++;
+            } else {
+                $sortedLessons[$year]['debt'] += (int) $lesson->price;
+                $sortedLessons[$year]['months'][$month]['debt'] += (int) $lesson->price;
+            }
+        }
+
+        return Inertia::render('StudentDetail', [
+            'student' => [
+                'id'            => $student->id,
+                'name'          => $student->name,
+                'class'         => $student->class,
+                'current_class' => $student->current_class,
+                'type'          => $student->type,
+                'description'   => $student->description,
+                'avatar'        => $student->avatar,
+                'is_deleted'    => (int) $student->is_deleted,
+                'created_at'    => $student->created_at
+                    ? Carbon::parse($student->created_at)->toDateString()
+                    : null,
+            ],
+            'summary' => [
+                'total_lessons'     => $totalLessons,
+                'paid_lessons'      => $paidLessons,
+                'earned'            => $earned,
+                'debt'              => $debt,
+                'total_minutes'     => $totalMinutes,
+                'first_lesson_date' => $firstLessonDate,
+                'last_lesson_date'  => $lastLessonDate,
+                'lessons_planned'   => $lessons->where('is_future', 1)->count(),
+            ],
+            'sortedLessons' => $sortedLessons,
         ]);
     }
 

@@ -64,6 +64,9 @@ Route::post('/avatar/upload', [AvatarController::class, 'upload'])->middleware('
 
 // ─── Students ───────────────────────────────────────────────
 Route::get('/students', [StudentController::class, 'getStudents'])->middleware('auth');
+Route::get('/students/{student}', [StudentController::class, 'show'])
+    ->whereNumber('student')
+    ->middleware('auth');
 Route::post('/students/edit', [StudentController::class, 'editStudent'])->middleware('auth');
 Route::post('/students/delete', [StudentController::class, 'deleteStudent'])->middleware('auth');
 

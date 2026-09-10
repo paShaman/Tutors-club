@@ -89,8 +89,8 @@ function openAddModal() {
   showAddModal.value = true
 }
 
-function openLessonsForStudent(student: any) {
-  router.get('/lessons', { student_id: student.id })
+function openStudent(student: any) {
+  router.get(`/students/${student.id}`)
 }
 
 function openEditModal(student: any) {
@@ -190,7 +190,7 @@ function deleteStudent(student: any) {
               'p-5 transition-all duration-200 hover:shadow-md cursor-pointer',
               student.is_deleted && 'opacity-60 grayscale',
             )"
-            @click="openLessonsForStudent(student)"
+            @click="openStudent(student)"
           >
             <div class="flex items-start justify-between">
               <div class="flex items-center gap-3">
@@ -252,7 +252,7 @@ function deleteStudent(student: any) {
               'p-5 transition-all duration-200 hover:shadow-md border-amber-200/50 bg-amber-50/30 cursor-pointer',
               student.is_deleted && 'opacity-60 grayscale',
             )"
-            @click="openLessonsForStudent(student)"
+            @click="openStudent(student)"
           >
             <div class="flex items-start justify-between">
               <div class="flex items-center gap-3">
