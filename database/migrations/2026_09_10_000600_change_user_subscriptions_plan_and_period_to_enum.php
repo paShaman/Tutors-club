@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::table('user_subscriptions', function (Blueprint $table) {
             $table->enum('plan', ['free', 'paid'])->default('free')->change();
-            $table->enum('period', ['month', 'year'])->nullable()->change();
+            $table->enum('period', ['m', 'y'])->nullable()->change();
         });
     }
 

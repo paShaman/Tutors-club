@@ -31,7 +31,7 @@ export type TariffFeature = 'students' | 'lessons' | 'topics'
 export interface TariffInfo {
   plan: string
   is_paid: boolean
-  period: 'month' | 'year' | null
+  period: 'm' | 'y' | null
   until: string | null
   started_at: string | null
   expired: boolean

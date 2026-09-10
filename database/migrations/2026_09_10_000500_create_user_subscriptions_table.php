@@ -15,7 +15,7 @@ return new class extends Migration
             $table->increments('id');
             $table->integer('user_id')->index();
             $table->string('plan', 16)->default('free');   // free | paid
-            $table->string('period', 8)->nullable();        // month | year
+            $table->string('period', 8)->nullable();        // m | y
             $table->timestamp('starts_at')->nullable();
             $table->timestamp('expires_at')->nullable();    // null — бессрочно
             $table->timestamps();
