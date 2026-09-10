@@ -212,6 +212,8 @@ return [
             'regular'          => 'Regular students',
             'special'          => 'Special group',
             'class_not_set'    => 'Class not specified',
+            'class_format'     => 'Grade :class',
+            'graduated'        => 'Graduated',
             'restore_confirm'  => 'Restore student?',
             'delete_confirm'   => 'Delete student?',
             'empty_deleted'    => 'No deleted students',

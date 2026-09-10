@@ -39,10 +39,10 @@ class Student extends Model
         $currentClass = $initialClass + $yearsPassed;
 
         if ($currentClass > 11) {
-            return 'окончил школу';
+            return lng('ui.students.graduated');
         }
 
-        return $currentClass . ' класс';
+        return lng('ui.students.class_format', ['class' => $currentClass]);
     }
 
     /**

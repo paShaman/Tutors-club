@@ -214,6 +214,8 @@ return [
             'regular'          => 'Обычные ученики',
             'special'          => 'Особая группа',
             'class_not_set'    => 'Класс не указан',
+            'class_format'     => ':class класс',
+            'graduated'        => 'окончил школу',
             'restore_confirm'  => 'Восстановить ученика?',
             'delete_confirm'   => 'Удалить ученика?',
             'empty_deleted'    => 'Нет удалённых учеников',
