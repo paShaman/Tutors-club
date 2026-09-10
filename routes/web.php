@@ -27,7 +27,8 @@ Route::get('/register', [PageController::class, 'register'])
     ->middleware('guest');
 
 Route::get('/settings', [PageController::class, 'settings'])
-    ->name('settings');
+    ->name('settings')
+    ->middleware('auth');
 
 // ─── Calendar ───────────────────────────────────────────────
 Route::get('/calendar', [CalendarController::class, 'index'])

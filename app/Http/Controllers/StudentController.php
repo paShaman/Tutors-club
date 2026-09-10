@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Form;
 use App\Model\Student;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
@@ -40,8 +39,6 @@ final class StudentController extends Controller
             'students'        => $students->toArray(),
             'deletedFlag'     => $deletedFlag,
             'specialFlag'     => $specialFlag,
-            'modalAddStudent' => Form::buildModal('student.add', lng('add_student')),
-            'modalEditStudent' => Form::buildModal('student.edit', lng('add_student')),
         ]);
     }
 

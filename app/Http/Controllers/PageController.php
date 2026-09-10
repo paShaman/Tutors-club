@@ -11,14 +11,6 @@ use Illuminate\Support\Facades\DB;
 
 final class PageController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('auth')->except([
-            'login',
-            'register',
-        ]);
-    }
-
     /**
      * Login page.
      */

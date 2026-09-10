@@ -2,7 +2,6 @@
 
 namespace App\Model;
 
-use App\Notification;
 use Illuminate\Database\Eloquent\Model;
 
 class Student extends Model
@@ -83,7 +82,6 @@ class Student extends Model
 
             return true;
         } catch (\Exception $e) {
-            Notification::put($e->getMessage());
             return false;
         }
     }

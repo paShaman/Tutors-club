@@ -2,7 +2,6 @@
 
 namespace App\Model;
 
-use App\Notification;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 
@@ -42,7 +41,6 @@ class Lesson extends Model
 
             return true;
         } catch (\Throwable $e) {
-            Notification::put($e->getMessage());
             return false;
         }
     }
@@ -72,7 +70,6 @@ class Lesson extends Model
 
             return true;
         } catch (\Throwable $e) {
-            Notification::put($e->getMessage());
             return false;
         }
     }
@@ -110,7 +107,6 @@ class Lesson extends Model
 
             return true;
         } catch (\Throwable $e) {
-            Notification::put($e->getMessage());
             return false;
         }
     }
