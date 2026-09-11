@@ -698,6 +698,7 @@ function formatDatePayed(dateStr: string | null): string {
       :topicStatuses="page.props.topicStatuses"
       :defaultPrice="page.props.defaultPrice"
       :defaultDuration="page.props.defaultDuration"
+      :canAddTopic="page.props.tariff?.can.topics ?? true"
       :initialForm="lessonPopupInitial"
       @close="closeLessonPopup"
       @submit="handleLessonSubmit"

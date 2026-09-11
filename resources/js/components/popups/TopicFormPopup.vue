@@ -17,6 +17,7 @@ const props = defineProps<{
   subject: string
   parent?: { id: number; name: string } | null
   initial?: TopicFormData | null
+  nested?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -60,10 +61,15 @@ const title = computed(() => {
 <template>
   <Teleport to="body">
     <Transition name="overlay">
-      <div v-if="show" class="fixed inset-0 z-60 bg-black/40 backdrop-blur-sm" @click="emit('close')" />
+      <div
+        v-if="show"
+        :class="nested ? 'z-80' : 'z-60'"
+        class="fixed inset-0 bg-black/40 backdrop-blur-sm"
+        @click="emit('close')"
+      />
     </Transition>
     <Transition name="modal">
-      <div v-if="show" class="fixed inset-0 z-70 overflow-y-auto">
+      <div v-if="show" :class="nested ? 'z-90' : 'z-70'" class="fixed inset-0 overflow-y-auto">
         <div class="flex min-h-full items-center justify-center p-4" @click.self="emit('close')">
           <Card class="relative w-full max-w-md p-6 shadow-xl">
             <h2 class="text-2xl font-semibold text-foreground mb-5">

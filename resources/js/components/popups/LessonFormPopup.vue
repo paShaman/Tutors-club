@@ -1,10 +1,16 @@
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue'
+import { ref, watch, computed, nextTick } from 'vue'
+import { router } from '@inertiajs/vue3'
+import { Plus } from 'lucide-vue-next'
 import Card from '@/components/ui/Card.vue'
 import Button from '@/components/ui/Button.vue'
+import TopicFormPopup from '@/components/popups/TopicFormPopup.vue'
+import type { TopicFormData } from '@/components/popups/TopicFormPopup.vue'
+import { useToast } from '@/lib/toast'
 import { useI18n } from '@/lib/i18n'
 
 const { t } = useI18n()
+const toast = useToast()
 
 export interface StudentOption {
   id: number
@@ -49,6 +55,7 @@ const props = defineProps<{
   topicStatuses: Record<number, Record<number, string>>
   defaultPrice: number
   defaultDuration: number
+  canAddTopic: boolean
   initialForm?: LessonFormData | null
 }>()
 
@@ -86,6 +93,64 @@ const selectedTopic = computed<TopicNode | null>(
 const subtopics = computed<TopicNode[]>(() => selectedTopic.value?.children ?? [])
 
 const hasTopic = computed(() => form.value.lesson_topic_id !== null)
+
+// ─── Быстрое добавление темы/подтемы ────────────────────────
+const showTopicForm = ref(false)
+const topicFormParent = ref<{ id: number; name: string } | null>(null)
+
+function openAddTopic(): void {
+  if (!props.canAddTopic) {
+    toast.warning(t('ui.tariff.limit.topics'))
+    return
+  }
+
+  topicFormParent.value = null
+  showTopicForm.value = true
+}
+
+function openAddSubtopic(): void {
+  if (!selectedTopic.value) return
+
+  if (!props.canAddTopic) {
+    toast.warning(t('ui.tariff.limit.topics'))
+    return
+  }
+
+  topicFormParent.value = { id: selectedTopic.value.id, name: selectedTopic.value.name }
+  showTopicForm.value = true
+}
+
+/** После перезагрузки props находим только что созданную тему и выбираем её. */
+function selectCreatedTopic(name: string, isSubtopic: boolean): void {
+  const roots = props.topicTree?.[form.value.lesson_subject] ?? []
+
+  if (isSubtopic) {
+    const parent = roots.find((topic) => topic.id === form.value.lesson_topic_id)
+    const created = parent?.children.find((child) => child.name === name)
+    if (created) form.value.lesson_subtopic_id = created.id
+    return
+  }
+
+  const created = roots.find((topic) => topic.name === name)
+  if (created) {
+    form.value.lesson_topic_id = created.id
+    form.value.lesson_subtopic_id = null
+  }
+}
+
+function submitNewTopic(data: TopicFormData): void {
+  const isSubtopic = topicFormParent.value !== null
+
+  router.post('/topics/edit', data, {
+    preserveScroll: true,
+    onSuccess: () => {
+      showTopicForm.value = false
+      // Ждём, пока Inertia обновит props с новым деревом тем.
+      nextTick(() => selectCreatedTopic(data.name, isSubtopic))
+    },
+    onError: () => toast.error(t('error.add_topic')),
+  })
+}
 
 // Статус по умолчанию — «проходим»; для уже усвоенной темы сохраняем «усвоено».
 function syncTopicStatus(): void {
@@ -137,6 +202,10 @@ watch(() => props.show, (val) => {
   if (val && !props.initialForm) {
     form.value = emptyForm()
   }
+
+  if (!val) {
+    showTopicForm.value = false
+  }
 })
 
 const title = computed(() => props.mode === 'edit' ? t('ui.lessons.form.edit_title') : t('ui.lessons.form.new_title'))
@@ -145,7 +214,7 @@ const title = computed(() => props.mode === 'edit' ? t('ui.lessons.form.edit_tit
 <template>
   <Teleport to="body">
     <Transition name="overlay">
-      <div v-if="show" class="fixed inset-0 z-60 bg-black/40 backdrop-blur-sm" @click="emit('close')" />
+      <div v-if="show && !showTopicForm" class="fixed inset-0 z-60 bg-black/40 backdrop-blur-sm" @click="emit('close')" />
     </Transition>
     <Transition name="modal">
       <div v-if="show" class="fixed inset-0 z-70 overflow-y-auto">
@@ -189,7 +258,18 @@ const title = computed(() => props.mode === 'edit' ? t('ui.lessons.form.edit_tit
             <!-- Topic & Subtopic -->
             <div class="grid grid-cols-2 gap-4">
               <div>
-                <label class="block text-sm font-medium text-foreground mb-1.5">{{ t('ui.lessons.form.topic') }}</label>
+                <div class="mb-1.5 flex items-center justify-between gap-2">
+                  <label class="block text-sm font-medium text-foreground">{{ t('ui.lessons.form.topic') }}</label>
+                  <button
+                    type="button"
+                    :disabled="!form.lesson_subject"
+                    class="inline-flex shrink-0 items-center justify-center rounded-lg h-6 w-6 text-primary hover:bg-primary/10 transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-40"
+                    :title="t('ui.lessons.form.add_topic')"
+                    @click="openAddTopic"
+                  >
+                    <Plus class="h-4 w-4" />
+                  </button>
+                </div>
                 <select
                   v-model="form.lesson_topic_id"
                   :disabled="!form.lesson_subject"
@@ -201,8 +281,18 @@ const title = computed(() => props.mode === 'edit' ? t('ui.lessons.form.edit_tit
                   </option>
                 </select>
               </div>
-              <div v-if="subtopics.length">
-                <label class="block text-sm font-medium text-foreground mb-1.5">{{ t('ui.lessons.form.subtopic') }}</label>
+              <div v-if="hasTopic">
+                <div class="mb-1.5 flex items-center justify-between gap-2">
+                  <label class="block text-sm font-medium text-foreground">{{ t('ui.lessons.form.subtopic') }}</label>
+                  <button
+                    type="button"
+                    class="inline-flex shrink-0 items-center justify-center rounded-lg h-6 w-6 text-primary hover:bg-primary/10 transition-colors cursor-pointer"
+                    :title="t('ui.lessons.form.add_subtopic')"
+                    @click="openAddSubtopic"
+                  >
+                    <Plus class="h-4 w-4" />
+                  </button>
+                </div>
                 <select
                   v-model="form.lesson_subtopic_id"
                   class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
@@ -337,4 +427,15 @@ const title = computed(() => props.mode === 'edit' ? t('ui.lessons.form.edit_tit
       </div>
     </Transition>
   </Teleport>
+
+  <TopicFormPopup
+    :show="showTopicForm"
+    mode="add"
+    :subject="form.lesson_subject"
+    :parent="topicFormParent"
+    :initial="null"
+    :nested="true"
+    @close="showTopicForm = false"
+    @submit="submitNewTopic"
+  />
 </template>

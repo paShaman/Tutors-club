@@ -15,6 +15,7 @@ import type { LessonFormData, TopicNode } from '@/components/popups/LessonFormPo
 import ConfirmDialog from '@/components/popups/ConfirmDialog.vue'
 import { useToast } from '@/lib/toast'
 import { useI18n } from '@/lib/i18n'
+import type { TariffInfo } from '@/types'
 
 // Соответствие кода языка и локали FullCalendar (список расширяется вместе с config/locales.php)
 const FC_LOCALES: Record<string, any> = {
@@ -37,6 +38,7 @@ const page = usePage<{
   defaultPrice: number
   defaultDuration: number
   defaultDate: string
+  tariff: TariffInfo | null
 }>()
 
 const toast = useToast()
@@ -210,6 +212,7 @@ function handleLessonDelete() {
       :topicStatuses="page.props.topicStatuses"
       :defaultPrice="page.props.defaultPrice"
       :defaultDuration="page.props.defaultDuration"
+      :canAddTopic="page.props.tariff?.can.topics ?? true"
       :initialForm="lessonPopupInitial"
       @close="closeLessonPopup"
       @submit="handleLessonSubmit"
