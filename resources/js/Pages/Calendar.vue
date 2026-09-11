@@ -9,7 +9,7 @@ import timeGridPlugin from '@fullcalendar/timegrid'
 import interactionPlugin from '@fullcalendar/interaction'
 import ruLocale from '@fullcalendar/core/locales/ru'
 import enLocale from '@fullcalendar/core/locales/en-gb'
-import type { CalendarOptions, EventClickArg, DatesSetArg } from '@fullcalendar/core'
+import type { CalendarOptions, EventClickArg } from '@fullcalendar/core'
 import LessonFormPopup from '@/components/popups/LessonFormPopup.vue'
 import type { LessonFormData, TopicNode } from '@/components/popups/LessonFormPopup.vue'
 import ConfirmDialog from '@/components/popups/ConfirmDialog.vue'
@@ -46,7 +46,6 @@ const toast = useToast()
 const { t, locale } = useI18n()
 
 const calendarRef = ref<InstanceType<typeof FullCalendar> | null>(null)
-const events = ref<any[]>([])
 
 const fullCalendarLocale = computed(() => FC_LOCALES[locale.value] ?? ruLocale)
 
@@ -66,9 +65,8 @@ const calendarOptions = computed<CalendarOptions>(() => ({
     week: t('ui.calendar.week'),
     day: t('ui.calendar.day'),
   },
-  events: events.value,
+  events: '/calendar/events',
   eventClick: handleEventClick,
-  datesSet: handleDatesSet,
   editable: false,
   selectable: false,
   firstDay: 1,
@@ -129,19 +127,6 @@ function handleEventClick(arg: EventClickArg) {
   }
 
   showLessonPopup.value = true
-}
-
-function handleDatesSet(arg: DatesSetArg) {
-  const view = arg.view
-
-  fetch('/calendar/events?' + new URLSearchParams({
-    start: view.activeStart.toISOString(),
-    end: view.activeEnd.toISOString(),
-  }))
-    .then(res => res.json())
-    .then(data => {
-      events.value = data
-    })
 }
 
 function closeLessonPopup() {
