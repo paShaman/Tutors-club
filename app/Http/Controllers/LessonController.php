@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Model\Lesson;
 use App\Model\Student;
 use App\Model\StudentTopic;
+use App\Model\Subject;
 use App\Model\Topic;
 use App\Model\TopicReview;
 use App\Services\TariffService;
@@ -35,6 +36,8 @@ final class LessonController extends Controller
         }
 
         $lessons = $lessonsQuery->orderBy('date', 'desc')->get()->toArray();
+
+        $subjectCodes = Subject::codes();
 
         // Названия выбранных тем/подтем, чтобы показывать их в списке без N+1.
         $topicNames = Topic::where('user_id', Auth::id())
@@ -157,8 +160,9 @@ final class LessonController extends Controller
             'sortedLessons'     => $sortedLessons,
             'students'          => $activeStudents,
             'selectedStudentId' => $selectedStudentId ? (int) $selectedStudentId : null,
-            'lessonsSubjects'   => Lesson::LESSON_SUBJECTS,
-            'topicTree'         => Topic::treesBySubject((int) Auth::id(), Lesson::LESSON_SUBJECTS),
+            'lessonsSubjects'   => $subjectCodes,
+            'subjectNames'      => Subject::nameMap(),
+            'topicTree'         => Topic::treesBySubject((int) Auth::id(), $subjectCodes),
             'topicStatuses'     => StudentTopic::statusMapForStudents(array_keys($students)),
             'defaultPrice'      => config('lesson.default_price'),
             'defaultDuration'   => config('lesson.default_duration'),
@@ -320,7 +324,7 @@ final class LessonController extends Controller
             $topic = Topic::where('user_id', $userId)
                 ->where('is_deleted', 0)
                 ->whereNull('parent_id')
-                ->where('subject', $subject)
+                ->whereHas('subject', fn ($query) => $query->where('code', $subject))
                 ->find($topicId);
 
             if (!$topic) {
@@ -331,7 +335,7 @@ final class LessonController extends Controller
         if ($subtopicId !== null) {
             $subtopic = Topic::where('user_id', $userId)
                 ->where('is_deleted', 0)
-                ->where('subject', $subject)
+                ->whereHas('subject', fn ($query) => $query->where('code', $subject))
                 ->whereNotNull('parent_id')
                 ->find($subtopicId);
 

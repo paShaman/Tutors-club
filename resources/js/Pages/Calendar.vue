@@ -33,6 +33,7 @@ const page = usePage<{
     type: string | null
   }>
   lessonsSubjects: string[]
+  subjectNames: Record<string, string>
   topicTree: Record<string, TopicNode[]>
   topicStatuses: Record<number, Record<number, string>>
   defaultPrice: number
@@ -208,6 +209,7 @@ function handleLessonDelete() {
       mode="edit"
       :students="page.props.students.map(s => ({ id: s.id, name: s.name, current_class: s.current_class }))"
       :subjects="page.props.lessonsSubjects"
+      :subjectNames="page.props.subjectNames"
       :topicTree="page.props.topicTree"
       :topicStatuses="page.props.topicStatuses"
       :defaultPrice="page.props.defaultPrice"

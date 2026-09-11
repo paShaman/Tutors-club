@@ -115,6 +115,7 @@ const page = usePage<{
   summary: Summary
   sortedLessons: Record<number, YearGroup>
   subjects: string[]
+  subjectNames: Record<string, string>
   topicsBySubject: Record<string, TopicNode[]>
   topicStates: TopicState[]
 }>()
@@ -162,8 +163,7 @@ function toggleMonth(year: number, month: number) {
 }
 
 function subjectName(key: string): string {
-  const label = t(key)
-  return label === key ? key : label
+  return page.props.subjectNames?.[key] ?? t(key)
 }
 
 function formatNumber(value: number): string {
@@ -219,8 +219,7 @@ const showNotStarted = ref(false)
 const statusFilter = ref<'all' | 'not_started' | 'in_progress' | 'mastered'>('all')
 
 function subjectLabel(key: string): string {
-  const label = t(key)
-  return label === key ? key : label
+  return page.props.subjectNames?.[key] ?? t(key)
 }
 
 function statusOf(topicId: number): string {

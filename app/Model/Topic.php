@@ -11,10 +11,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 final class Topic extends Model
 {
     protected $fillable = [
-        'user_id', 'subject', 'parent_id', 'name', 'position', 'is_deleted',
+        'user_id', 'subject_id', 'parent_id', 'name', 'position', 'is_deleted',
     ];
 
     protected $casts = [
+        'subject_id' => 'integer',
         'parent_id'  => 'integer',
         'position'   => 'integer',
         'is_deleted' => 'boolean',
@@ -23,6 +24,11 @@ final class Topic extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function subject(): BelongsTo
+    {
+        return $this->belongsTo(Subject::class, 'subject_id');
     }
 
     public function parent(): BelongsTo
@@ -54,6 +60,7 @@ final class Topic extends Model
 
     /**
      * Дерево тем преподавателя по предмету (тема → подтемы).
+     * Предмет задаётся кодом из таблицы subjects.
      *
      * @return array<int, array<string, mixed>>
      */
@@ -61,7 +68,7 @@ final class Topic extends Model
     {
         $topics = self::query()
             ->where('user_id', $userId)
-            ->where('subject', $subject)
+            ->whereHas('subject', fn ($query) => $query->where('code', $subject))
             ->where('is_deleted', 0)
             ->orderBy('position')
             ->orderBy('id')

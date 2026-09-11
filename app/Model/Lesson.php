@@ -7,12 +7,6 @@ use Illuminate\Database\Eloquent\Model;
 
 class Lesson extends Model
 {
-    const LESSON_SUBJECTS = [
-        'lesson_subject_maths',
-        'lesson_subject_informatics',
-        'lesson_subject_english',
-    ];
-
     protected $fillable = [
         'student_id', 'subject', 'topic_id', 'subtopic_id', 'comment', 'price', 'duration', 'is_payed', 'date', 'date_payed', 'time', 'is_deleted', 'is_future'
     ];

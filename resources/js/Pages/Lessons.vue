@@ -97,6 +97,7 @@ const page = usePage<{
   students: StudentData[]
   selectedStudentId: number | null
   lessonsSubjects: string[]
+  subjectNames: Record<string, string>
   topicTree: Record<string, TopicNode[]>
   topicStatuses: Record<number, Record<number, string>>
   defaultPrice: number
@@ -135,8 +136,7 @@ const monthNames = computed(() => {
 })
 
 function subjectName(key: string): string {
-  const label = t(key)
-  return label === key ? key : label
+  return page.props.subjectNames?.[key] ?? t(key)
 }
 
 function lessonTopicStatus(lesson: Lesson): string {
@@ -694,6 +694,7 @@ function formatDatePayed(dateStr: string | null): string {
       :mode="lessonPopupMode"
       :students="page.props.students.map(s => ({ id: s.id, name: s.name, current_class: s.current_class }))"
       :subjects="page.props.lessonsSubjects"
+      :subjectNames="page.props.subjectNames"
       :topicTree="page.props.topicTree"
       :topicStatuses="page.props.topicStatuses"
       :defaultPrice="page.props.defaultPrice"

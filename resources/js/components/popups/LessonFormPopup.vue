@@ -41,16 +41,12 @@ export type LessonFormData = {
   lesson_is_future: boolean
 }
 
-function subjectName(key: string): string {
-  const label = t(key)
-  return label === key ? key : label
-}
-
 const props = defineProps<{
   show: boolean
   mode: 'add' | 'edit'
   students: StudentOption[]
   subjects: string[]
+  subjectNames: Record<string, string>
   topicTree: Record<string, TopicNode[]>
   topicStatuses: Record<number, Record<number, string>>
   defaultPrice: number
@@ -58,6 +54,10 @@ const props = defineProps<{
   canAddTopic: boolean
   initialForm?: LessonFormData | null
 }>()
+
+function subjectName(key: string): string {
+  return props.subjectNames?.[key] ?? t(key)
+}
 
 const emit = defineEmits<{
   close: []

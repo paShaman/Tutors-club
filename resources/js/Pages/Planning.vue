@@ -30,6 +30,7 @@ interface TopicNode {
 
 const page = usePage<{
   subjects: string[]
+  subjectNames: Record<string, string>
   selectedSubject: string
   topicTree: TopicNode[]
   tariff: TariffInfo | null
@@ -57,8 +58,7 @@ const totalCount = computed(() =>
 )
 
 function subjectLabel(key: string): string {
-  const label = t(key)
-  return label === key ? key : label
+  return page.props.subjectNames?.[key] ?? t(key)
 }
 
 function goSubject(subject: string): void {

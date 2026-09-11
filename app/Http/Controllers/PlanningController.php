@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Model\Lesson;
 use App\Model\StudentTopic;
+use App\Model\Subject;
 use App\Model\Topic;
 use App\Model\TopicReview;
 use App\Services\TariffService;
@@ -23,7 +23,7 @@ final class PlanningController extends Controller
      */
     public function index(): Response
     {
-        $subjects = Lesson::LESSON_SUBJECTS;
+        $subjects = Subject::codes();
         $selectedSubject = (string) request()->query('subject', $subjects[0] ?? '');
 
         if (!in_array($selectedSubject, $subjects, true)) {
@@ -32,6 +32,7 @@ final class PlanningController extends Controller
 
         return Inertia::render('Planning', [
             'subjects'        => $subjects,
+            'subjectNames'    => Subject::nameMap(),
             'selectedSubject' => $selectedSubject,
             'topicTree'       => Topic::treeForSubject((int) Auth::id(), $selectedSubject),
         ]);
@@ -69,7 +70,7 @@ final class PlanningController extends Controller
             $result = $topic->save();
             $str = 'edit_topic';
         } else {
-            $subject = (string) ($post['subject'] ?? '');
+            $subjectId = null;
             $parentId = !empty($post['parent_id']) ? (int) $post['parent_id'] : null;
 
             if ($parentId !== null) {
@@ -82,10 +83,16 @@ final class PlanningController extends Controller
                     return back()->with('error', lng('error.add_topic'));
                 }
 
-                $subject = (string) $parent->subject;
+                $subjectId = (int) $parent->subject_id;
+            } else {
+                $subjectCode = (string) ($post['subject'] ?? '');
+
+                $subjectId = Subject::where('code', $subjectCode)
+                    ->where('is_deleted', 0)
+                    ->value('id');
             }
 
-            if (!in_array($subject, Lesson::LESSON_SUBJECTS, true)) {
+            if (!$subjectId) {
                 return back()->with('error', lng('error.add_topic'));
             }
 
@@ -94,14 +101,14 @@ final class PlanningController extends Controller
             }
 
             $maxPosition = (int) Topic::where('user_id', $userId)
-                ->where('subject', $subject)
+                ->where('subject_id', $subjectId)
                 ->where('parent_id', $parentId)
                 ->where('is_deleted', 0)
                 ->max('position');
 
             $topic = new Topic([
                 'user_id'    => $userId,
-                'subject'    => $subject,
+                'subject_id' => $subjectId,
                 'parent_id'  => $parentId,
                 'name'       => $name,
                 'position'   => $maxPosition + 1,

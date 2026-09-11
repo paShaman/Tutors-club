@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Model\Lesson;
 use App\Model\Student;
 use App\Model\StudentTopic;
+use App\Model\Subject;
 use App\Model\Topic;
 use App\Model\TopicReview;
 use App\Services\TariffService;
@@ -173,7 +174,9 @@ final class StudentController extends Controller
 
         $topicsBySubject = [];
 
-        foreach (Lesson::LESSON_SUBJECTS as $subject) {
+        $subjectCodes = Subject::codes();
+
+        foreach ($subjectCodes as $subject) {
             $topicsBySubject[$subject] = Topic::treeForSubject((int) $user->id, $subject);
         }
 
@@ -205,7 +208,8 @@ final class StudentController extends Controller
                 'lessons_planned'   => $lessons->where('is_future', 1)->count(),
             ],
             'sortedLessons'   => $sortedLessons,
-            'subjects'        => Lesson::LESSON_SUBJECTS,
+            'subjects'        => $subjectCodes,
+            'subjectNames'    => Subject::nameMap(),
             'topicsBySubject' => $topicsBySubject,
             'topicStates'     => $topicStates,
         ]);
