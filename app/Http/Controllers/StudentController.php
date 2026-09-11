@@ -200,7 +200,11 @@ final class StudentController extends Controller
                 'total_minutes'     => $totalMinutes,
                 'first_lesson_date' => $firstLessonDate,
                 'last_lesson_date'  => $lastLessonDate,
-                'lessons_planned'   => $lessons->where('is_future', 1)->count(),
+                'lessons_planned'   => $lessons
+                    ->filter(fn ($lesson) => !empty($lesson->is_future)
+                        && $lesson->date
+                        && Carbon::parse($lesson->date)->gte(Carbon::today()))
+                    ->count(),
             ],
             'sortedLessons'   => $sortedLessons,
             'subjects'        => $subjectCodes,
