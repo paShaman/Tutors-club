@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, type PropType } from 'vue'
+import { computed, type Component, type PropType } from 'vue'
 import { cn } from '@/lib/utils'
 import { cva, type VariantProps } from 'class-variance-authority'
 
@@ -32,7 +32,7 @@ const buttonVariants = cva(
 interface Props {
   variant?: VariantProps<typeof buttonVariants>['variant']
   size?: VariantProps<typeof buttonVariants>['size']
-  as?: string
+  as?: string | Component
   class?: string
 }
 

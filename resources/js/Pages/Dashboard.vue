@@ -4,6 +4,7 @@ import AppLayout from '@/Layouts/AppLayout.vue'
 import Card from '@/components/ui/Card.vue'
 import CardHeader from '@/components/ui/CardHeader.vue'
 import CardTitle from '@/components/ui/CardTitle.vue'
+import Button from '@/components/ui/Button.vue'
 import StudentAvatar from '@/components/ui/StudentAvatar.vue'
 import { cn } from '@/lib/utils'
 import {
@@ -17,6 +18,8 @@ import {
   ChevronRight,
   BookOpen,
   Coins,
+  LineChart,
+  BarChart3,
 } from 'lucide-vue-next'
 import { Line, Bar } from 'vue-chartjs'
 import {
@@ -84,6 +87,12 @@ const props = defineProps<{
 const totalHoursThisWeek = computed(() =>
   props.chartData.reduce((sum, d) => sum + d.hours, 0),
 )
+
+// Пустые данные всё равно приходят полными массивами (7 дней / 12 месяцев с нулями),
+// поэтому графики показываем только при наличии ненулевых значений.
+const hasStudents = computed(() => props.students.length > 0)
+const hasWorkloadData = computed(() => props.chartData.some(d => d.hours > 0))
+const hasEarningsData = computed(() => props.earningsByMonth.some(m => m.amount > 0))
 
 const paidPercent = computed(() => {
   if (!props.students.length) return 0
@@ -278,6 +287,7 @@ const barChartOptions = computed(() => ({
       </Card>
     </div>
 
+    <template v-if="hasStudents">
     <!-- Main grid: Next lesson + Students -->
     <div class="grid gap-6 lg:grid-cols-5">
       <!-- Next lesson card (takes 2 cols) -->
@@ -378,8 +388,15 @@ const barChartOptions = computed(() => ({
           <p class="text-sm text-muted-foreground">{{ t('ui.dashboard.current_week') }}</p>
         </CardHeader>
         <div class="px-2 pb-4">
-          <div class="h-[240px]">
+          <div v-if="hasWorkloadData" class="h-[200px] 2xl:h-[240px]">
             <Line :data="chartJsData" :options="chartJsOptions" />
+          </div>
+          <div v-else class="flex h-[88px] items-center justify-center gap-3 px-2 text-center">
+            <LineChart class="h-6 w-6 shrink-0 text-muted-foreground/40" />
+            <p class="text-sm text-muted-foreground">{{ t('ui.dashboard.empty_workload') }}</p>
+            <Link href="/lessons" class="shrink-0 text-sm font-medium text-primary hover:underline transition-colors">
+              {{ t('ui.student.add_lesson') }}
+            </Link>
           </div>
         </div>
       </Card>
@@ -391,11 +408,33 @@ const barChartOptions = computed(() => ({
           <p class="text-sm text-muted-foreground">{{ t('ui.dashboard.year', { year: new Date().getFullYear() }) }}</p>
         </CardHeader>
         <div class="px-2 pb-4">
-          <div class="h-[240px]">
+          <div v-if="hasEarningsData" class="h-[200px] 2xl:h-[240px]">
             <Bar :data="barChartData" :options="barChartOptions" />
+          </div>
+          <div v-else class="flex h-[88px] items-center justify-center gap-3 px-2 text-center">
+            <BarChart3 class="h-6 w-6 shrink-0 text-muted-foreground/40" />
+            <p class="text-sm text-muted-foreground">{{ t('ui.dashboard.empty_earnings') }}</p>
+            <Link href="/lessons" class="shrink-0 text-sm font-medium text-primary hover:underline transition-colors">
+              {{ t('ui.student.add_lesson') }}
+            </Link>
           </div>
         </div>
       </Card>
     </div>
+    </template>
+
+    <!-- Онбординг: у пользователя ещё нет учеников -->
+    <Card v-else class="p-8">
+      <div class="flex flex-col items-center justify-center gap-3 text-center">
+        <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
+          <GraduationCap class="h-7 w-7 text-primary" />
+        </div>
+        <h2 class="text-lg font-semibold text-foreground">{{ t('ui.students.empty') }}</h2>
+        <p class="max-w-sm text-sm text-muted-foreground">{{ t('ui.dashboard.onboarding_text') }}</p>
+        <Button :as="Link" href="/students" class="mt-1">
+          {{ t('ui.students.add_first') }}
+        </Button>
+      </div>
+    </Card>
   </div>
 </template>

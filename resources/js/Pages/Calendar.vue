@@ -70,7 +70,7 @@ const calendarOptions = computed<CalendarOptions>(() => ({
   editable: false,
   selectable: false,
   firstDay: 1,
-  height: 'auto',
+  height: '100%',
   eventTimeFormat: {
     hour: '2-digit',
     minute: '2-digit',
@@ -170,9 +170,9 @@ function handleLessonDelete() {
 <template>
   <Head :title="t('ui.calendar.title')" />
 
-  <div class="space-y-6 animate-fade-up">
+  <div class="flex h-[calc(100vh-7rem)] flex-col gap-6 animate-fade-up">
     <!-- Page header -->
-    <div class="flex items-center justify-between flex-wrap gap-4">
+    <div class="flex shrink-0 items-center justify-between flex-wrap gap-4">
       <div class="flex items-center gap-4">
         <h1 class="text-2xl font-bold tracking-tight text-foreground">
           {{ t('ui.calendar.title') }}
@@ -181,9 +181,10 @@ function handleLessonDelete() {
     </div>
 
     <!-- Calendar -->
-    <Card class="p-4 fc-theme-custom">
+    <Card class="fc-theme-custom flex min-h-0 flex-1 flex-col overflow-hidden p-4">
       <FullCalendar
         ref="calendarRef"
+        class="min-h-0 flex-1"
         :options="calendarOptions"
       />
     </Card>

@@ -222,6 +222,9 @@ return [
             'earnings'          => 'Earnings',
             'hours'             => 'Hours',
             'year'              => ':year',
+            'empty_workload'    => 'No lessons this week yet',
+            'empty_earnings'    => 'No paid lessons yet',
+            'onboarding_text'   => 'Add your first student — lessons, workload and earnings will appear here.',
         ],
         'students' => [
             'title'            => 'Students',

@@ -25,7 +25,7 @@ function submit(): void {
 <template>
   <Head :title="t('ui.auth.login_page_title')" />
 
-  <div class="flex min-h-[80vh] items-center justify-center px-4">
+  <div class="flex min-h-screen items-center justify-center px-4 py-8">
     <div class="w-full max-w-md">
       <!-- Header -->
       <div class="mb-8 text-center">
