@@ -7,6 +7,8 @@ import StudentAvatar from '@/components/ui/StudentAvatar.vue'
 import TopicStatusBadge from '@/components/ui/TopicStatusBadge.vue'
 import ReviewFormPopup from '@/components/popups/ReviewFormPopup.vue'
 import type { ReviewFormData } from '@/components/popups/ReviewFormPopup.vue'
+import StudentFormPopup from '@/components/popups/StudentFormPopup.vue'
+import type { StudentFormData } from '@/components/popups/StudentFormPopup.vue'
 import { useToast } from '@/lib/toast'
 import { computed, onMounted, ref } from 'vue'
 import { cn } from '@/lib/utils'
@@ -25,6 +27,7 @@ import {
   EyeOff,
   GraduationCap,
   ListChecks,
+  Pencil,
   Plus,
   RotateCcw,
   Star,
@@ -125,6 +128,33 @@ const { t, tp, intlLocale } = useI18n()
 
 const student = computed(() => page.props.student)
 const summary = computed(() => page.props.summary)
+
+// ─── Edit student ───────────────────────────────────────────
+const showEditModal = ref(false)
+const editForm = ref<StudentFormData | null>(null)
+
+function openEditModal(): void {
+  const s = student.value
+  editForm.value = {
+    student_id: s.id,
+    student_name: s.name,
+    student_gender: s.gender ?? 'boy',
+    student_color: s.color ?? '',
+    student_class: s.class ?? '',
+    student_type: s.type ?? '',
+    student_description: s.description ?? '',
+  }
+  showEditModal.value = true
+}
+
+function submitStudent(formData: StudentFormData): void {
+  router.post('/students/edit', formData, {
+    preserveScroll: true,
+    onSuccess: () => { showEditModal.value = false },
+    onError: (errors) => toast.error(Object.values(errors).join('\n')),
+  })
+}
+
 
 const years = computed(() =>
   Object.entries(page.props.sortedLessons ?? {})
@@ -388,12 +418,18 @@ function formatTopicDate(dateStr: string | null): string {
             </p>
           </div>
 
-          <Link :href="`/lessons?student_id=${student.id}`" class="shrink-0">
-            <Button variant="outline" size="sm">
-              <BookOpen class="h-4 w-4" />
-              {{ t('ui.student.all_lessons') }}
+          <div class="flex shrink-0 items-center gap-2">
+            <Button v-if="!student.is_deleted" variant="outline" size="sm" @click="openEditModal">
+              <Pencil class="h-4 w-4" />
+              {{ t('ui.common.edit') }}
             </Button>
-          </Link>
+            <Link :href="`/lessons?student_id=${student.id}`">
+              <Button variant="outline" size="sm">
+                <BookOpen class="h-4 w-4" />
+                {{ t('ui.student.all_lessons') }}
+              </Button>
+            </Link>
+          </div>
         </div>
       </div>
     </Card>
@@ -892,6 +928,14 @@ function formatTopicDate(dateStr: string | null): string {
       :topic-name="reviewTopic?.name ?? ''"
       @close="showReviewForm = false"
       @submit="submitReview"
+    />
+
+    <StudentFormPopup
+      :show="showEditModal"
+      mode="edit"
+      :initial-form="editForm"
+      @close="showEditModal = false"
+      @submit="submitStudent"
     />
   </div>
 </template>
