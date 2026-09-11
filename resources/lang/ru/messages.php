@@ -59,6 +59,9 @@ return [
         'tariff_topics_limit'   => 'Достигнут лимит тем на вашем тарифе',
         'feedback_sent'         => 'Не удалось отправить сообщение, попробуйте позже',
         'feedback_not_configured' => 'Обратная связь временно недоступна',
+        'feedback_photo_limit'    => 'Можно прикрепить не больше 3 фото',
+        'feedback_photo_invalid'  => 'Прикрепить можно только изображения',
+        'feedback_photo_too_large' => 'Каждое фото должно быть не больше 10 МБ',
     ],
     'success' => [
         'register'          => 'Успешная регистрация',
@@ -489,6 +492,11 @@ return [
             'contact_placeholder'  => 'Email или телефон',
             'message'              => 'Сообщение',
             'message_placeholder'  => 'Опишите вопрос или предложение',
+            'attach'               => 'Прикрепить фото',
+            'attach_hint'          => 'До 3 изображений. Можно вставить из буфера обмена (Ctrl+V).',
+            'photos_limit'         => 'Можно прикрепить не больше 3 фото',
+            'photo_too_large'      => 'Фото больше 10 МБ',
+            'remove_photo'         => 'Удалить фото',
             'submit'               => 'Отправить',
         ],
         'documents' => [

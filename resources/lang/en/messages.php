@@ -59,6 +59,9 @@ return [
         'tariff_topics_limit'   => 'You have reached the topic limit on your plan',
         'feedback_sent'         => 'Could not send the message, please try again later',
         'feedback_not_configured' => 'Feedback is temporarily unavailable',
+        'feedback_photo_limit'    => 'You can attach up to 3 photos',
+        'feedback_photo_invalid'  => 'Only images can be attached',
+        'feedback_photo_too_large' => 'Each photo must be no larger than 10 MB',
     ],
     'success' => [
         'register' => 'Registration successful',
@@ -481,6 +484,11 @@ return [
             'contact_placeholder'  => 'Email or phone',
             'message'              => 'Message',
             'message_placeholder'  => 'Describe your question or suggestion',
+            'attach'               => 'Attach photo',
+            'attach_hint'          => 'Up to 3 images. You can paste from the clipboard (Ctrl+V).',
+            'photos_limit'         => 'You can attach up to 3 photos',
+            'photo_too_large'      => 'Photo is larger than 10 MB',
+            'remove_photo'         => 'Remove photo',
             'submit'               => 'Send',
         ],
         'documents' => [

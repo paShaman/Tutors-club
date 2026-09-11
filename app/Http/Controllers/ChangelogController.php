@@ -16,6 +16,18 @@ class ChangelogController extends Controller
     {
         $changelog = [
             [
+                'version' => '1.4.2',
+                'date' => '2026-09-11',
+                'categories' => [
+                    [
+                        'title' => '💬 Обратная связь',
+                        'items' => [
+                            'В форму обратной связи можно прикрепить до 3 фото или вставить изображение из буфера обмена (Ctrl+V)',
+                        ],
+                    ],
+                ],
+            ],
+            [
                 'version' => '1.4.1',
                 'date' => '2026-09-11',
                 'categories' => [
