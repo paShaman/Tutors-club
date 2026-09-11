@@ -12,6 +12,8 @@ return [
         'student_name'          => 'Название',
         'student_class'         => 'Класс',
         'smart-token'           => 'Капча',
+        'contact'               => 'Контакт для ответа',
+        'message'               => 'Сообщение',
     ],
     'required'  => 'Обязательное поле ":attribute"',
     'email'     => 'Некорректный email',

@@ -15,11 +15,13 @@ import {
   ChevronDown,
   GitCommit,
   AlertTriangle,
+  MessageCircle,
 } from 'lucide-vue-next'
 import Button from '@/components/ui/Button.vue'
 import UserAvatar from '@/components/ui/UserAvatar.vue'
 import ChangelogModal from '@/components/popups/ChangelogModal.vue'
 import RequisitesModal from '@/components/popups/RequisitesModal.vue'
+import FeedbackWidget from '@/components/FeedbackWidget.vue'
 import { cn } from '@/lib/utils'
 import { useI18n } from '@/lib/i18n'
 
@@ -32,6 +34,7 @@ const userMenuOpen = ref(false)
 const userMenuRef = ref<HTMLElement | null>(null)
 const changelogOpen = ref(false)
 const requisitesOpen = ref(false)
+const feedbackOpen = ref(false)
 
 // Compact sidebar (1024px – 1199px)
 const sidebarCompact = ref(false)
@@ -135,6 +138,11 @@ const showTariffNotice = computed(() => {
 
 function logout(): void {
   router.visit('/logout', { method: 'get' })
+}
+
+function openFeedback(): void {
+  sidebarOpen.value = false
+  feedbackOpen.value = true
 }
 
 // Форматированная текущая дата
@@ -249,8 +257,16 @@ onUnmounted(() => {
           </Link>
         </nav>
 
-        <!-- Changelog button -->
+        <!-- Changelog / feedback buttons -->
         <div class="mt-auto pt-3 px-2 space-y-2">
+          <button
+            v-if="!sidebarCompact || sidebarOpen"
+            class="flex items-center gap-2 rounded-xl px-2.5 py-2 text-xs font-medium text-muted-foreground hover:bg-accent hover:text-foreground transition-colors cursor-pointer w-full"
+            @click="openFeedback"
+          >
+            <MessageCircle class="h-3.5 w-3.5" />
+            <span class="whitespace-nowrap">{{ t('ui.feedback.open') }}</span>
+          </button>
           <button
             v-if="!sidebarCompact || sidebarOpen"
             class="flex items-center gap-2 rounded-xl px-2.5 py-2 text-xs font-medium text-muted-foreground hover:bg-accent hover:text-foreground transition-colors cursor-pointer w-full"
@@ -407,5 +423,8 @@ onUnmounted(() => {
 
     <!-- Requisites Modal -->
     <RequisitesModal :show="requisitesOpen" @close="requisitesOpen = false" />
+
+    <!-- Feedback widget -->
+    <FeedbackWidget :show="feedbackOpen" @close="feedbackOpen = false" />
   </div>
 </template>

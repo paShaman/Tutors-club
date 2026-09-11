@@ -12,6 +12,7 @@ use App\Http\Controllers\StudentController;
 use App\Http\Controllers\PlanningController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ChangelogController;
+use App\Http\Controllers\FeedbackController;
 use Illuminate\Support\Facades\Route;
 
 // ─── Pages ──────────────────────────────────────────────────
@@ -74,6 +75,9 @@ Route::post('/students/delete', [StudentController::class, 'deleteStudent'])->mi
 // ─── Changelog ──────────────────────────────────────────
 Route::get('/changelog', [ChangelogController::class, 'getChangelog'])
     ->middleware('auth');
+
+// ─── Feedback ───────────────────────────────────────────────
+Route::post('/feedback', [FeedbackController::class, 'send'])->middleware('auth');
 
 // ─── Lessons ────────────────────────────────────────────────
 Route::get('/lessons', [LessonController::class, 'getLessons'])->middleware('auth')->name('lessons');

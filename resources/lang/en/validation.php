@@ -12,6 +12,8 @@ return [
         'student_name'          => 'Title',
         'student_class'         => 'Class',
         'smart-token'           => 'Captcha',
+        'contact'               => 'Contact for a reply',
+        'message'               => 'Message',
     ],
     'required'  => 'The ":attribute" field is required',
     'email'     => 'Invalid email',

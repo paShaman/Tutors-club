@@ -57,6 +57,8 @@ return [
         'tariff_students_limit' => 'You have reached the student limit on your plan',
         'tariff_lessons_limit'  => 'You have reached the lesson limit on your plan',
         'tariff_topics_limit'   => 'You have reached the topic limit on your plan',
+        'feedback_sent'         => 'Could not send the message, please try again later',
+        'feedback_not_configured' => 'Feedback is temporarily unavailable',
     ],
     'success' => [
         'register' => 'Registration successful',
@@ -80,6 +82,7 @@ return [
         'reorder_topics' => 'Topic order saved',
         'set_topic_status' => 'Topic status updated',
         'review_topic' => 'Review saved',
+        'feedback_sent' => 'Thank you! Your message has been sent',
     ],
     'unauthorized' => 'You are not logged in',
     'only_for_guest' => 'Available only to unauthenticated users',
@@ -469,6 +472,16 @@ return [
                 'bik'          => 'BIC',
                 'email'        => 'E-mail',
             ],
+        ],
+        'feedback' => [
+            'open'                 => 'Feedback',
+            'title'                => 'Feedback',
+            'hint'                 => 'Ask a question or share a suggestion — we will reply to the contact you provide.',
+            'contact'              => 'Contact for a reply',
+            'contact_placeholder'  => 'Email or phone',
+            'message'              => 'Message',
+            'message_placeholder'  => 'Describe your question or suggestion',
+            'submit'               => 'Send',
         ],
         'documents' => [
             'privacy_policy' => [

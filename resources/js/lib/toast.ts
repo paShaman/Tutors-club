@@ -22,10 +22,29 @@ const DEFAULT_DURATION: Record<ToastVariant, number> = {
   error: 12000,
 }
 
+// Ограничение стека тостов: на мобильных меньше, чтобы не перекрывать контент
+const MOBILE_LIMIT = 3
+const DESKTOP_LIMIT = 5
+
 const toasts = reactive<Toast[]>([])
 let nextId = 1
 
+function toastLimit(): number {
+  if (typeof window === 'undefined') {
+    return DESKTOP_LIMIT
+  }
+
+  return window.matchMedia('(min-width: 640px)').matches ? DESKTOP_LIMIT : MOBILE_LIMIT
+}
+
 function push(message: string, variant: ToastVariant, duration?: number): number {
+  // Дубликаты не копим: старый такой же тост убираем, чтобы активным был только новый
+  for (let i = toasts.length - 1; i >= 0; i--) {
+    if (toasts[i].message === message && toasts[i].variant === variant) {
+      toasts.splice(i, 1)
+    }
+  }
+
   const id = nextId++
 
   toasts.push({
@@ -34,6 +53,10 @@ function push(message: string, variant: ToastVariant, duration?: number): number
     variant,
     duration: duration ?? DEFAULT_DURATION[variant],
   })
+
+  while (toasts.length > toastLimit()) {
+    toasts.shift()
+  }
 
   return id
 }
