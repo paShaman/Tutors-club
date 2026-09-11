@@ -35,15 +35,6 @@ final class DashboardController
                 ->get();
         }
 
-        $avatarColors = [
-            'from-purple-500 to-indigo-500',
-            'from-blue-500 to-cyan-500',
-            'from-pink-500 to-rose-500',
-            'from-amber-500 to-orange-500',
-            'from-emerald-500 to-teal-500',
-            'from-red-500 to-orange-500',
-        ];
-
         // For each student, get their last lesson date (for sorting)
         $studentLastLessonDates = [];
         foreach ($studentsRaw as $student) {
@@ -69,7 +60,6 @@ final class DashboardController
         $todayEnd = Carbon::today()->endOfDay()->toDateTimeString();
 
         $students = [];
-        $colorIdx = 0;
         foreach ($studentsRaw as $student) {
             $totalLessons = $student->lessons()
                 ->where('is_deleted', 0)
@@ -92,10 +82,9 @@ final class DashboardController
                 'studentClass' => $student->current_class,
                 'totalLessons' => $totalLessons,
                 'paidLessons'  => $paidLessons,
-                'avatar'       => $student->avatar,
-                'avatarColor'  => $avatarColors[$colorIdx % count($avatarColors)],
+                'gender'       => $student->gender,
+                'color'        => $student->color,
             ];
-            $colorIdx++;
         }
 
         // Next upcoming lesson (future, not deleted) — fall back to last past lesson if none

@@ -109,9 +109,10 @@ class User extends Authenticatable
 
             $student = new Student([
                 'name'            => $params['name'],
+                'gender'          => $params['gender'] ?? 'boy',
+                'color'           => $params['color'] ?? Student::randomColor(),
                 'class'           => $params['class'] ?? '',
                 'description'     => $params['description'] ?? '',
-                'avatar'          => $params['avatar'] ?? null,
             ]);
 
             $this->students()->save($student);

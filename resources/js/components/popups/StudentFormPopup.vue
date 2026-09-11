@@ -2,7 +2,9 @@
 import { ref, watch, computed } from 'vue'
 import Card from '@/components/ui/Card.vue'
 import Button from '@/components/ui/Button.vue'
-import AvatarPicker from '@/components/ui/AvatarPicker.vue'
+import StudentAvatar from '@/components/ui/StudentAvatar.vue'
+import StudentColorPicker from '@/components/ui/StudentColorPicker.vue'
+import { randomStudentColor } from '@/lib/studentColors'
 import { useI18n } from '@/lib/i18n'
 
 const { t } = useI18n()
@@ -10,10 +12,11 @@ const { t } = useI18n()
 export type StudentFormData = {
   student_id: number | null
   student_name: string
+  student_gender: string
+  student_color: string
   student_class: string
   student_type: string
   student_description: string
-  student_avatar: string
 }
 
 const props = withDefaults(defineProps<{
@@ -30,10 +33,11 @@ const emit = defineEmits<{
 const emptyForm = (): StudentFormData => ({
   student_id: null,
   student_name: '',
+  student_gender: 'boy',
+  student_color: randomStudentColor(),
   student_class: '',
   student_type: '',
   student_description: '',
-  student_avatar: '',
 })
 
 const form = ref<StudentFormData>(emptyForm())
@@ -67,13 +71,47 @@ const title = computed(() => props.mode === 'edit' ? t('ui.students.form.edit_ti
             </h2>
 
             <form @submit.prevent="emit('submit', form)" class="space-y-4">
-              <div v-if="form.student_id" class="border-b border-border/60 pb-4">
-                <p class="block text-sm font-medium text-foreground mb-3">{{ t('ui.students.form.photo') }}</p>
-                <AvatarPicker
-                  v-model="form.student_avatar"
+              <div class="flex items-start gap-4 border-b border-border/60 pb-4">
+                <StudentAvatar
                   :name="form.student_name"
-                  :show-remove="true"
+                  :gender="form.student_gender"
+                  :color="form.student_color"
+                  class="h-16 w-16"
                 />
+                <div class="flex-1 space-y-2">
+                  <p class="text-sm font-medium text-foreground">{{ t('ui.students.form.color') }}</p>
+                  <StudentColorPicker v-model="form.student_color" />
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-foreground mb-1.5">{{ t('ui.students.form.gender') }}</label>
+                <div class="flex gap-2">
+                  <Button
+                    type="button"
+                    :variant="form.student_gender === 'boy' ? 'default' : 'outline'"
+                    class="flex-1"
+                    @click="form.student_gender = 'boy'"
+                  >
+                    {{ t('ui.students.form.boy') }}
+                  </Button>
+                  <Button
+                    type="button"
+                    :variant="form.student_gender === 'girl' ? 'default' : 'outline'"
+                    class="flex-1"
+                    @click="form.student_gender = 'girl'"
+                  >
+                    {{ t('ui.students.form.girl') }}
+                  </Button>
+                  <Button
+                    type="button"
+                    :variant="form.student_gender === 'none' ? 'default' : 'outline'"
+                    class="flex-1"
+                    @click="form.student_gender = 'none'"
+                  >
+                    {{ t('ui.students.form.none') }}
+                  </Button>
+                </div>
               </div>
 
               <div>

@@ -9,7 +9,7 @@ return [
         'password'              => 'Пароль',
         'password_confirmation' => 'Повторите пароль',
         'policy_agree'          => 'Политика конфеденциальности',
-        'student_name'          => 'Имя',
+        'student_name'          => 'Название',
         'student_class'         => 'Класс',
         'smart-token'           => 'Капча',
     ],

@@ -9,7 +9,7 @@ return [
         'password'              => 'Password',
         'password_confirmation' => 'Repeat password',
         'policy_agree'          => 'Privacy policy',
-        'student_name'          => 'Name',
+        'student_name'          => 'Title',
         'student_class'         => 'Class',
         'smart-token'           => 'Captcha',
     ],

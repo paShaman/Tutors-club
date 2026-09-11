@@ -183,11 +183,12 @@ final class StudentController extends Controller
             'student' => [
                 'id'            => $student->id,
                 'name'          => $student->name,
+                'gender'        => $student->gender,
+                'color'         => $student->color,
                 'class'         => $student->class,
                 'current_class' => $student->current_class,
                 'type'          => $student->type,
                 'description'   => $student->description,
-                'avatar'        => $student->avatar,
                 'is_deleted'    => (int) $student->is_deleted,
                 'created_at'    => $student->created_at
                     ? Carbon::parse($student->created_at)->toDateString()
@@ -276,12 +277,21 @@ final class StudentController extends Controller
             return back()->withErrors($validator)->withInput();
         }
 
+        $gender = in_array($post['student_gender'] ?? '', Student::GENDERS, true)
+            ? $post['student_gender']
+            : 'boy';
+
+        $color = in_array($post['student_color'] ?? '', Student::COLORS, true)
+            ? $post['student_color']
+            : Student::randomColor();
+
         $params = [
             'name'          => $post['student_name'],
+            'gender'        => $gender,
+            'color'         => $color,
             'class'         => $post['student_class'] ?? null,
             'type'          => $post['student_type'] ?? null,
             'description'   => $post['student_description'] ?? '',
-            'avatar'        => !empty($post['student_avatar']) ? (string) $post['student_avatar'] : null,
         ];
 
         $str = 'add_student';
@@ -291,19 +301,14 @@ final class StudentController extends Controller
 
             $student = Student::findOrFail($post['student_id']);
 
-            $oldAvatar = $student->avatar;
-
             $student->name = $params['name'];
+            $student->gender = $params['gender'];
+            $student->color = $params['color'];
             $student->class = $params['class'];
             $student->type = $params['type'];
             $student->description = $params['description'];
-            $student->avatar = $params['avatar'];
 
             $result = $student->save();
-
-            if ($result && $oldAvatar !== $student->avatar) {
-                \App\Image::deleteStoredAvatar($oldAvatar);
-            }
         } else {
             $user = Auth::user();
 

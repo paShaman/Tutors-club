@@ -3,7 +3,7 @@ import { Head, Link, router, usePage } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import Card from '@/components/ui/Card.vue'
 import Button from '@/components/ui/Button.vue'
-import UserAvatar from '@/components/ui/UserAvatar.vue'
+import StudentAvatar from '@/components/ui/StudentAvatar.vue'
 import TopicStatusBadge from '@/components/ui/TopicStatusBadge.vue'
 import ReviewFormPopup from '@/components/popups/ReviewFormPopup.vue'
 import type { ReviewFormData } from '@/components/popups/ReviewFormPopup.vue'
@@ -77,7 +77,8 @@ interface StudentDetailData {
   current_class: string
   type: string | null
   description: string | null
-  avatar: string | null
+  gender: string
+  color: string | null
   is_deleted: number
   created_at: string | null
 }
@@ -349,15 +350,11 @@ function formatTopicDate(dateStr: string | null): string {
     <Card class="overflow-hidden">
       <div class="bg-gradient-to-br from-primary/5 via-primary/10 to-purple-500/5 p-6">
         <div class="flex items-start gap-5 flex-wrap">
-          <UserAvatar
+          <StudentAvatar
             :name="student.name"
-            :src="student.avatar"
-            :class="cn(
-              'h-20 w-20 text-2xl font-semibold text-white shadow-lg',
-              student.type
-                ? 'bg-gradient-to-br from-amber-500 to-orange-500'
-                : 'bg-gradient-to-br from-blue-500 to-indigo-500',
-            )"
+            :gender="student.gender"
+            :color="student.color"
+            class="h-20 w-20"
           />
 
           <div class="flex-1 min-w-[220px]">

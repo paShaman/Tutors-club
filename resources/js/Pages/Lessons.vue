@@ -19,7 +19,7 @@ import {
 } from 'lucide-vue-next'
 import LessonFormPopup from '@/components/popups/LessonFormPopup.vue'
 import type { LessonFormData, TopicNode } from '@/components/popups/LessonFormPopup.vue'
-import UserAvatar from '@/components/ui/UserAvatar.vue'
+import StudentAvatar from '@/components/ui/StudentAvatar.vue'
 import TopicStatusBadge from '@/components/ui/TopicStatusBadge.vue'
 import ConfirmDialog from '@/components/popups/ConfirmDialog.vue'
 import { useToast } from '@/lib/toast'
@@ -52,7 +52,8 @@ interface StudentData {
   class: string | null
   current_class: string
   type: string | null
-  avatar: string | null
+  gender: string
+  color: string | null
 }
 
 interface StudentGroup {
@@ -518,15 +519,11 @@ function formatDatePayed(dateStr: string | null): string {
                         :is="studentVisibility[`${yearData.year}-${monthNum}-${studentGroup.student.id}`] ? ChevronDown : ChevronRight"
                         class="h-4 w-4 text-muted-foreground shrink-0 transition-transform duration-300"
                       />
-                      <UserAvatar
+                      <StudentAvatar
                         :name="studentGroup.student.name"
-                        :src="studentGroup.student.avatar"
-                        :class="cn(
-                          'h-8 w-8 text-xs font-semibold text-white shadow',
-                          studentGroup.student.type
-                            ? 'bg-gradient-to-br from-amber-500 to-orange-500'
-                            : 'bg-gradient-to-br from-blue-500 to-indigo-500',
-                        )"
+                        :gender="studentGroup.student.gender"
+                        :color="studentGroup.student.color"
+                        class="h-8 w-8"
                       />
                       <div class="flex-1 min-w-0 flex flex-col lg:flex-row lg:items-center gap-1.5 lg:gap-3">
                         <p class="text-sm font-medium text-foreground truncate">

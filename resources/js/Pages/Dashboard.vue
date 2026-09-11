@@ -4,7 +4,7 @@ import AppLayout from '@/Layouts/AppLayout.vue'
 import Card from '@/components/ui/Card.vue'
 import CardHeader from '@/components/ui/CardHeader.vue'
 import CardTitle from '@/components/ui/CardTitle.vue'
-import UserAvatar from '@/components/ui/UserAvatar.vue'
+import StudentAvatar from '@/components/ui/StudentAvatar.vue'
 import { cn } from '@/lib/utils'
 import {
   Clock,
@@ -66,8 +66,8 @@ const props = defineProps<{
     studentClass: string
     totalLessons: number
     paidLessons: number
-    avatar: string | null
-    avatarColor: string
+    gender: string
+    color: string | null
   }>
   chartData: Array<{
     day: string
@@ -338,13 +338,11 @@ const barChartOptions = computed(() => ({
       <div class="lg:col-span-3 grid gap-4 sm:grid-cols-2">
         <Card v-for="student in students" :key="student.id" class="p-5 hover:shadow-md transition-shadow duration-200">
           <div class="flex items-center gap-4">
-            <UserAvatar
+            <StudentAvatar
               :name="student.name"
-              :src="student.avatar"
-              :class="cn(
-                'h-11 w-11 bg-gradient-to-br text-sm font-semibold text-white shadow',
-                student.avatarColor,
-              )"
+              :gender="student.gender"
+              :color="student.color"
+              class="h-11 w-11"
             />
             <div class="flex-1 min-w-0">
               <p class="font-medium text-foreground truncate">{{ student.name }}</p>

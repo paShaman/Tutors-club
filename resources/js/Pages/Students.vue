@@ -7,7 +7,7 @@ import { ref, computed } from 'vue'
 import { cn } from '@/lib/utils'
 import StudentFormPopup from '@/components/popups/StudentFormPopup.vue'
 import type { StudentFormData } from '@/components/popups/StudentFormPopup.vue'
-import UserAvatar from '@/components/ui/UserAvatar.vue'
+import StudentAvatar from '@/components/ui/StudentAvatar.vue'
 import ConfirmDialog from '@/components/popups/ConfirmDialog.vue'
 import { useToast } from '@/lib/toast'
 import { useI18n } from '@/lib/i18n'
@@ -32,7 +32,8 @@ const page = usePage<{
     type: string | null
     description: string | null
     is_deleted: number
-    avatar: string | null
+    gender: string
+    color: string | null
   }>
   deletedFlag: boolean
   specialFlag: boolean
@@ -108,10 +109,11 @@ function openEditModal(student: any) {
   initialForm.value = {
     student_id: student.id,
     student_name: student.name,
+    student_gender: student.gender ?? 'boy',
+    student_color: student.color ?? '',
     student_class: student.class ?? '',
     student_type: student.type ?? '',
     student_description: student.description ?? '',
-    student_avatar: student.avatar ?? '',
   }
   editingStudent.value = student
   showEditModal.value = true
@@ -205,10 +207,11 @@ function deleteStudent(student: any) {
           >
             <div class="flex items-start justify-between">
               <div class="flex items-center gap-3">
-                <UserAvatar
+                <StudentAvatar
                   :name="student.name"
-                  :src="student.avatar"
-                  class="h-11 w-11 bg-gradient-to-br from-blue-500 to-indigo-500 text-sm font-semibold text-white shadow"
+                  :gender="student.gender"
+                  :color="student.color"
+                  class="h-11 w-11"
                 />
                 <div>
                   <h3 class="font-medium text-foreground">{{ student.name }}</h3>
@@ -267,10 +270,11 @@ function deleteStudent(student: any) {
           >
             <div class="flex items-start justify-between">
               <div class="flex items-center gap-3">
-                <UserAvatar
+                <StudentAvatar
                   :name="student.name"
-                  :src="student.avatar"
-                  class="h-11 w-11 bg-gradient-to-br from-amber-500 to-orange-500 text-sm font-semibold text-white shadow"
+                  :gender="student.gender"
+                  :color="student.color"
+                  class="h-11 w-11"
                 />
                 <div>
                   <div class="flex items-center gap-2">

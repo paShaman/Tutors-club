@@ -6,11 +6,33 @@ use Illuminate\Database\Eloquent\Model;
 
 class Student extends Model
 {
+    /**
+     * Допустимые значения пола ученика. «none» — пол не выбран (актуально для особых групп).
+     */
+    public const GENDERS = ['boy', 'girl', 'none'];
+
+    /**
+     * Палитра цветов аватарки (ключи должны совпадать с resources/js/lib/studentColors.ts).
+     */
+    public const COLORS = [
+        'red', 'orange', 'amber', 'yellow', 'lime', 'green', 'emerald', 'teal',
+        'cyan', 'sky', 'blue', 'indigo', 'violet', 'purple', 'fuchsia', 'pink',
+        'rose', 'slate', 'gray', 'zinc', 'neutral', 'stone',
+    ];
+
     protected $fillable = [
-        'name', 'description', 'is_deleted', 'class', 'type', 'avatar'
+        'name', 'gender', 'color', 'description', 'is_deleted', 'class', 'type'
     ];
 
     protected $appends = ['current_class'];
+
+    /**
+     * Случайный цвет аватарки из палитры.
+     */
+    public static function randomColor(): string
+    {
+        return self::COLORS[array_rand(self::COLORS)];
+    }
 
     /**
      * Динамический расчёт текущего класса ученика.
