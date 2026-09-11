@@ -9,6 +9,7 @@ import ReviewFormPopup from '@/components/popups/ReviewFormPopup.vue'
 import type { ReviewFormData } from '@/components/popups/ReviewFormPopup.vue'
 import StudentFormPopup from '@/components/popups/StudentFormPopup.vue'
 import type { StudentFormData } from '@/components/popups/StudentFormPopup.vue'
+import ConfirmDialog from '@/components/popups/ConfirmDialog.vue'
 import { useToast } from '@/lib/toast'
 import { computed, onMounted, ref } from 'vue'
 import { cn } from '@/lib/utils'
@@ -33,6 +34,7 @@ import {
   Star,
   StickyNote,
   Timer,
+  Trash2,
   TrendingUp,
   UserPlus,
   Wallet,
@@ -151,6 +153,21 @@ function submitStudent(formData: StudentFormData): void {
   router.post('/students/edit', formData, {
     preserveScroll: true,
     onSuccess: () => { showEditModal.value = false },
+    onError: (errors) => toast.error(Object.values(errors).join('\n')),
+  })
+}
+
+// ─── Delete / restore student ───────────────────────────────
+const showDeleteConfirm = ref(false)
+
+function confirmDeleteStudent(): void {
+  showDeleteConfirm.value = false
+
+  router.post('/students/delete', {
+    student_id: student.value.id,
+    is_deleted: student.value.is_deleted ? 0 : 1,
+  }, {
+    preserveScroll: true,
     onError: (errors) => toast.error(Object.values(errors).join('\n')),
   })
 }
@@ -429,6 +446,15 @@ function formatTopicDate(dateStr: string | null): string {
                 {{ t('ui.student.all_lessons') }}
               </Button>
             </Link>
+            <Button
+              :variant="student.is_deleted ? 'outline' : 'destructive'"
+              size="sm"
+              @click="showDeleteConfirm = true"
+            >
+              <RotateCcw v-if="student.is_deleted" class="h-4 w-4" />
+              <Trash2 v-else class="h-4 w-4" />
+              {{ student.is_deleted ? t('ui.common.restore') : t('ui.common.delete') }}
+            </Button>
           </div>
         </div>
       </div>
@@ -936,6 +962,14 @@ function formatTopicDate(dateStr: string | null): string {
       :initial-form="editForm"
       @close="showEditModal = false"
       @submit="submitStudent"
+    />
+
+    <ConfirmDialog
+      :show="showDeleteConfirm"
+      :title="student.is_deleted ? t('ui.students.restore_confirm') : t('ui.students.delete_confirm')"
+      variant="danger"
+      @confirm="confirmDeleteStudent"
+      @cancel="showDeleteConfirm = false"
     />
   </div>
 </template>
