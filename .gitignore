@@ -9,3 +9,4 @@ composer.phar
 /bootstrap/cache
 /composer.lock
 /package-lock.json
+/public_html/files

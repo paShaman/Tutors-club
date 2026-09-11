@@ -19,6 +19,7 @@ import {
 import Button from '@/components/ui/Button.vue'
 import UserAvatar from '@/components/ui/UserAvatar.vue'
 import ChangelogModal from '@/components/popups/ChangelogModal.vue'
+import RequisitesModal from '@/components/popups/RequisitesModal.vue'
 import { cn } from '@/lib/utils'
 import { useI18n } from '@/lib/i18n'
 
@@ -30,6 +31,7 @@ const sidebarOpen = ref(false)
 const userMenuOpen = ref(false)
 const userMenuRef = ref<HTMLElement | null>(null)
 const changelogOpen = ref(false)
+const requisitesOpen = ref(false)
 
 // Compact sidebar (1024px – 1199px)
 const sidebarCompact = ref(false)
@@ -86,6 +88,8 @@ function isActive(route: string): boolean {
 
 const user = computed(() => page.props.auth?.user ?? null)
 const tariff = computed(() => page.props.tariff ?? null)
+const agreements = computed(() => page.props.agreements ?? [])
+const requisites = computed(() => page.props.requisites ?? {})
 
 // Уведомление об истёкшем тарифе: закрытие запоминаем в localStorage,
 // чтобы не показывать его снова, пока тариф не обновится (меняется expired_at).
@@ -246,7 +250,7 @@ onUnmounted(() => {
         </nav>
 
         <!-- Changelog button -->
-        <div class="mt-auto pt-3 px-2 space-y-1.5">
+        <div class="mt-auto pt-3 px-2 space-y-2">
           <button
             v-if="!sidebarCompact || sidebarOpen"
             class="flex items-center gap-2 rounded-xl px-2.5 py-2 text-xs font-medium text-muted-foreground hover:bg-accent hover:text-foreground transition-colors cursor-pointer w-full"
@@ -255,6 +259,29 @@ onUnmounted(() => {
             <GitCommit class="h-3.5 w-3.5" />
             <span class="whitespace-nowrap">{{ t('ui.changelog.title') }}</span>
           </button>
+          <div
+            v-if="(!sidebarCompact || sidebarOpen) && (agreements.length || requisites.name)"
+            class="space-y-1"
+          >
+            <a
+              v-for="(doc, index) in agreements"
+              :key="index"
+              :href="doc.url"
+              target="_blank"
+              rel="noopener"
+              class="block text-xs leading-snug text-muted-foreground/60 hover:text-primary hover:underline transition-colors"
+            >
+              {{ t(doc.label) }}
+            </a>
+            <button
+              v-if="requisites.name"
+              type="button"
+              class="block text-left text-xs leading-snug text-muted-foreground/60 hover:text-primary hover:underline transition-colors cursor-pointer"
+              @click="requisitesOpen = true"
+            >
+              {{ t('ui.requisites.title') }}
+            </button>
+          </div>
           <p
             :class="cn(
               'text-xs text-muted-foreground/60 whitespace-nowrap transition-opacity duration-200',
@@ -377,5 +404,8 @@ onUnmounted(() => {
 
     <!-- Changelog Modal -->
     <ChangelogModal :show="changelogOpen" @close="changelogOpen = false" />
+
+    <!-- Requisites Modal -->
+    <RequisitesModal :show="requisitesOpen" @close="requisitesOpen = false" />
   </div>
 </template>

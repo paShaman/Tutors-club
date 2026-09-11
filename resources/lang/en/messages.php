@@ -451,6 +451,28 @@ return [
             'empty'         => 'The changelog is empty',
             'load_error'    => 'Could not load the changelog',
         ],
+        'requisites' => [
+            'title'  => 'Legal details',
+            'fields' => [
+                'inn'          => 'INN',
+                'ogrnip'       => 'OGRNIP',
+                'address'      => 'Address',
+                'account'      => 'Account',
+                'corr_account' => 'Corr. account',
+                'bik'          => 'BIC',
+                'email'        => 'E-mail',
+            ],
+        ],
+        'documents' => [
+            'privacy_policy' => [
+                'label'    => 'Personal data processing policy',
+                'genitive' => 'of the personal data processing policy',
+            ],
+            'terms' => [
+                'label'    => 'User agreement',
+                'genitive' => 'of the user agreement',
+            ],
+        ],
         'avatar' => [
             'crop_title'   => 'Photo area',
             'crop_hint'    => 'Drag the photo to choose the area. You can align the face within the circle and zoom.',

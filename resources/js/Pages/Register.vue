@@ -195,8 +195,8 @@ function submit(): void {
                   target="_blank"
                   rel="noopener"
                   class="font-medium text-primary hover:underline transition-colors"
-                >{{ doc.label }}</a>
-                <span v-else class="font-medium text-primary">{{ doc.label }}</span>
+                >{{ t(doc.genitive ?? doc.label) }}</a>
+                <span v-else class="font-medium text-primary">{{ t(doc.genitive ?? doc.label) }}</span>
               </template>
               <span class="text-destructive">*</span>
             </span>

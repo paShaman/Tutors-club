@@ -46,6 +46,7 @@ final class HandleInertiaRequests extends Middleware
                 'error'   => fn (): ?string => $request->session()->get('error'),
             ],
             'agreements' => config('agreements.documents', []),
+            'requisites' => config('company.requisites', []),
             'tariff' => fn (): ?array => $request->user()
                 ? app(\App\Services\TariffService::class)->payload($request->user())
                 : null,

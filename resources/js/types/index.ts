@@ -18,7 +18,19 @@ export interface SocialProviderConfig {
 
 export interface AgreementDocument {
   label: string
+  genitive?: string
   url: string
+}
+
+export interface CompanyRequisites {
+  name?: string
+  inn?: string
+  ogrnip?: string
+  address?: string
+  account?: string
+  corr_account?: string
+  bik?: string
+  email?: string
 }
 
 export interface LocaleOption {
@@ -54,6 +66,7 @@ export interface SharedProps {
   }
   social: SocialProviderConfig[]
   agreements: AgreementDocument[]
+  requisites: CompanyRequisites
   tariff: TariffInfo | null
   locale: string
   locales: LocaleOption[]
