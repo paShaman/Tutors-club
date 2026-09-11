@@ -19,6 +19,7 @@ import {
   Trash2,
   RefreshCcw,
   Star,
+  Users,
 } from 'lucide-vue-next'
 
 defineOptions({ layout: AppLayout })
@@ -35,7 +36,6 @@ const page = usePage<{
     gender: string
     color: string | null
   }>
-  deletedFlag: boolean
   specialFlag: boolean
   tariff: TariffInfo | null
 }>()
@@ -44,7 +44,6 @@ const toast = useToast()
 const { t, tp } = useI18n()
 
 const students = computed(() => page.props.students ?? [])
-const deletedFlag = computed(() => page.props.deletedFlag ?? false)
 const specialFlag = computed(() => page.props.specialFlag ?? false)
 const canAddStudent = computed(() => page.props.tariff?.can.students ?? true)
 
@@ -171,12 +170,9 @@ function deleteStudent(student: any) {
       </div>
 
       <div class="flex items-center gap-3">
-        <Button
-          v-if="deletedFlag"
-          @click="showDeleted = !showDeleted"
-          :variant="showDeleted ? 'destructive' : 'outline'"
-        >
-          <Trash2 class="h-4 w-4" />
+        <Button variant="outline" @click="showDeleted = !showDeleted">
+          <Users v-if="showDeleted" class="h-4 w-4" />
+          <Trash2 v-else class="h-4 w-4" />
           {{ showDeleted ? t('ui.students.active') : t('ui.students.deleted') }}
         </Button>
         <Button @click="requestAddModal">

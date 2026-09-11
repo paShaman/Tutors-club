@@ -30,13 +30,9 @@ final class StudentController extends Controller
             ->orderBy('type')
             ->get();
 
-        $deletedFlag = false;
         $specialFlag = false;
 
         foreach ($students as $student) {
-            if (!empty($student->is_deleted)) {
-                $deletedFlag = true;
-            }
             if (!empty($student->type)) {
                 $specialFlag = true;
             }
@@ -44,7 +40,6 @@ final class StudentController extends Controller
 
         return Inertia::render('Students', [
             'students'        => $students->toArray(),
-            'deletedFlag'     => $deletedFlag,
             'specialFlag'     => $specialFlag,
         ]);
     }
