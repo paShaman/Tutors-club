@@ -391,7 +391,7 @@ const barChartOptions = computed(() => ({
           <div v-if="hasWorkloadData" class="h-[200px] 2xl:h-[240px]">
             <Line :data="chartJsData" :options="chartJsOptions" />
           </div>
-          <div v-else class="flex h-[88px] items-center justify-center gap-3 px-2 text-center">
+          <div v-else class="flex flex-col items-center justify-center gap-2 px-2 py-5 text-center sm:h-[88px] sm:flex-row sm:gap-3 sm:py-0">
             <LineChart class="h-6 w-6 shrink-0 text-muted-foreground/40" />
             <p class="text-sm text-muted-foreground">{{ t('ui.dashboard.empty_workload') }}</p>
             <Link href="/lessons" class="shrink-0 text-sm font-medium text-primary hover:underline transition-colors">
@@ -411,7 +411,7 @@ const barChartOptions = computed(() => ({
           <div v-if="hasEarningsData" class="h-[200px] 2xl:h-[240px]">
             <Bar :data="barChartData" :options="barChartOptions" />
           </div>
-          <div v-else class="flex h-[88px] items-center justify-center gap-3 px-2 text-center">
+          <div v-else class="flex flex-col items-center justify-center gap-2 px-2 py-5 text-center sm:h-[88px] sm:flex-row sm:gap-3 sm:py-0">
             <BarChart3 class="h-6 w-6 shrink-0 text-muted-foreground/40" />
             <p class="text-sm text-muted-foreground">{{ t('ui.dashboard.empty_earnings') }}</p>
             <Link href="/lessons" class="shrink-0 text-sm font-medium text-primary hover:underline transition-colors">
