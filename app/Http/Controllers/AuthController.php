@@ -100,58 +100,30 @@ class AuthController extends Controller
         return redirect(route('home'));
     }
 
-    public function vk(Request $request): RedirectResponse
+    public function vkontakte(Request $request): RedirectResponse
     {
-        return $this->beginVkFlow($request, $request->boolean('register') ? 'register' : 'login');
-    }
-
-    public function vkLink(): RedirectResponse
-    {
-        return $this->beginVkFlow(request(), 'link');
-    }
-
-    public function vkCallback(Request $request): RedirectResponse
-    {
-        $service = app(VkIdService::class);
-        $provider = VkIdService::SOCIAL_VKONTAKTE;
         $socials = app(SocialAccountService::class);
+        $provider = VkIdService::SOCIAL_VKONTAKTE;
         $label = $socials->label($provider);
 
-        $flow = $request->session()->pull(self::OAUTH_SESSION_KEY);
+        $accessToken = (string) $request->input('access_token');
 
-        if (!is_array($flow) || ($flow['provider'] ?? null) !== $provider) {
-            return redirect()->route('login');
+        if ($accessToken === '') {
+            return $this->socialFail(null, lng('error.social_login', ['provider' => $label]));
         }
 
-        $mode = in_array($flow['mode'], ['login', 'register', 'link'], true) ? $flow['mode'] : 'login';
-        $failRoute = $this->oauthModeRoute($mode);
-
-        if ($request->filled('error') || !hash_equals((string) $flow['state'], (string) $request->query('state'))) {
-            return $this->socialFail($failRoute, $mode === 'link' ? lng('error.social_link') : lng('error.social_login', ['provider' => $label]));
-        }
-
-        $code = (string) $request->query('code');
-        $deviceId = (string) $request->query('device_id');
-        $tokens = $code !== '' && $deviceId !== ''
-            ? $service->exchangeCode($code, $deviceId, (string) $flow['code_verifier'], (string) $flow['state'])
-            : null;
-        $profile = $tokens !== null ? $service->fetchUserInfo((string) $tokens['access_token']) : null;
+        $profile = app(VkIdService::class)->fetchUserInfo($accessToken);
 
         if ($profile === null || empty($profile['user_id'])) {
-            return $this->socialFail($failRoute, $mode === 'link' ? lng('error.social_link') : lng('error.social_login', ['provider' => $label]));
-        }
-
-        if ($mode === 'link') {
-            return $this->linkSocialAccount($provider, $profile);
+            return $this->socialFail(null, lng('error.social_login', ['provider' => $label]));
         }
 
         return $this->socialLogin(
             $request,
             $provider,
             $profile,
-            $mode === 'register',
-            (bool) $flow['agreement'],
-            $failRoute
+            $request->boolean('register'),
+            $request->boolean('agreement')
         );
     }
 
@@ -254,42 +226,6 @@ class AuthController extends Controller
             'state'     => $state,
             'mode'      => $mode,
             'agreement' => $agreement,
-        ]);
-
-        return redirect()->away($url);
-    }
-
-    private function beginVkFlow(Request $request, string $mode): RedirectResponse
-    {
-        $service = app(VkIdService::class);
-        $socials = app(SocialAccountService::class);
-        $label = $socials->label(VkIdService::SOCIAL_VKONTAKTE);
-        $failRoute = $this->oauthModeRoute($mode);
-
-        if (!$service->configured()) {
-            return $this->socialFail($failRoute, $mode === 'link' ? lng('error.social_link') : lng('error.social_login', ['provider' => $label]));
-        }
-
-        $agreement = $request->boolean('agreement');
-
-        if ($mode === 'register' && !$agreement) {
-            return $this->socialFail($this->oauthModeRoute('register'), lng('error.agreement'));
-        }
-
-        $state = Str::random(40);
-        $codeVerifier = Str::random(64);
-        $url = $service->authorizeUrl($state, $service->codeChallenge($codeVerifier));
-
-        if ($url === null) {
-            return $this->socialFail($failRoute, $mode === 'link' ? lng('error.social_link') : lng('error.social_login', ['provider' => $label]));
-        }
-
-        $request->session()->put(self::OAUTH_SESSION_KEY, [
-            'provider'      => VkIdService::SOCIAL_VKONTAKTE,
-            'state'         => $state,
-            'mode'          => $mode,
-            'agreement'     => $agreement,
-            'code_verifier' => $codeVerifier,
         ]);
 
         return redirect()->away($url);

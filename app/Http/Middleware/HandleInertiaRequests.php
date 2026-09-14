@@ -68,8 +68,10 @@ final class HandleInertiaRequests extends Middleware
                 ->all(),
             'social' => [
                 [
-                    'key'        => VkIdService::SOCIAL_VKONTAKTE,
-                    'configured' => $vkConfigured,
+                    'key'         => VkIdService::SOCIAL_VKONTAKTE,
+                    'configured'  => $vkConfigured,
+                    'app'         => $vkConfigured ? (int) config('services.vkid.app_id') : null,
+                    'redirectUrl' => $vkConfigured ? (string) config('services.vkid.redirect_url') : null,
                 ],
                 [
                     'key'        => YandexIdService::SOCIAL_YANDEX,

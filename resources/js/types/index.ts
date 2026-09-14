@@ -20,6 +20,8 @@ export interface User {
 export interface SocialProviderConfig {
   key: string
   configured: boolean
+  app?: number | null
+  redirectUrl?: string | null
 }
 
 export interface AgreementDocument {

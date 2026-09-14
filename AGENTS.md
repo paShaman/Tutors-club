@@ -42,7 +42,7 @@ Monetization: there are two **tariff plans** — free "Free" (full functionality
 | Styling | Tailwind CSS v4 with `@theme` design tokens defined in `resources/css/app.css` (shadcn-like tokens, glass utilities); fonts Geist/Inter |
 | UI kit | Local `resources/js/components/ui/*` built on radix-vue, `class-variance-authority`, `clsx`, `tailwind-merge`, `cn()` from `@/lib/utils`; icons from `lucide-vue-next` |
 | Widgets | `@fullcalendar/*` (calendar), `chart.js` + `vue-chartjs` (dashboard charts) |
-| Auth | Email/password, **VK ID** OAuth redirect-flow (config `services.vkid`), **Yandex ID** OAuth (`services.yandex`), Yandex SmartCaptcha on registration, signed auto-login URL |
+| Auth | Email/password, **VK ID** (`@vkid/sdk`, config `services.vkid`), **Yandex ID** OAuth (`services.yandex`), Yandex SmartCaptcha on registration, signed auto-login URL |
 | Routing on client | Ziggy `@routes` is present in the Blade template, but frontend code uses **literal URL strings** (e.g. `/students/edit`), not `route()` |
 | Tests | none |
 | Lint/format | none configured (no ESLint/Prettier/Pint/PHPStan) |
@@ -146,7 +146,8 @@ public_html/                   # web root (Laravel public dir via usePublicPath)
 
 **Social/auth flows.**
 - Registration: agreement consent (props `agreements` from `config/agreements.php`) + Yandex SmartCaptcha.
-- VK ID: OAuth redirect-flow (like Yandex) via `AuthController::vk*` — `/auth/vk` (login/register) and `/user/socials/link/vk` (link) redirect away to VK ID, which returns to `/auth/vk/callback` (`route('auth.vk.callback')`, the value `VK_ID_REDIRECT_URL` must point to). Code→token exchange is server-side with PKCE in `VkIdService`; do not re-introduce the OneTap iframe (it depends on third-party cookies and re-asks for consent). Yandex: OAuth redirect via `AuthController::yandex*` routes; linking via `/user/socials/link/yandex`.
+- VK ID: `components/social/VkIdAuth.vue` posts to `/auth/vk` (register/login) or `/user/socials/link` (link) with the VK token; `router.post` is the correct mechanism.
+- Yandex: OAuth redirect via `AuthController::yandex*` routes; linking via `/user/socials/link/yandex`.
 - Unlink: `Pages/Settings.vue` already calls `router.post('/user/socials/unlink', { provider })` (Inertia, no raw fetch, no page reload).
 - Auto-login from the main club flow uses a signed URL (`User::generateUrlForForceLogin()` → `route('auth')`).
 - Avatar upload: `uploadAvatar()` (`lib/upload.ts`) → `POST /avatar/upload`, returns `data.avatar` URL.

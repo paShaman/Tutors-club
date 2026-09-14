@@ -1,10 +1,14 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import { usePage } from '@inertiajs/vue3'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { router, usePage } from '@inertiajs/vue3'
+import * as VKID from '@vkid/sdk'
 import type { SharedProps } from '@/types'
 import { useI18n } from '@/lib/i18n'
 
-const { t } = useI18n()
+interface VkLoginPayload {
+  code: string
+  device_id: string
+}
 
 const props = withDefaults(defineProps<{
   mode?: 'login' | 'link'
@@ -19,64 +23,96 @@ const props = withDefaults(defineProps<{
 })
 
 const page = usePage<SharedProps>()
+const { t } = useI18n()
 
+const container = ref<HTMLElement | null>(null)
 const error = ref('')
+const processing = ref(false)
 
 const vk = computed(() => page.props.social?.find((p) => p.key === 'vkontakte') ?? null)
-const enabled = computed(() => Boolean(vk.value?.configured))
+const enabled = computed(() => Boolean(vk.value?.configured && vk.value?.app && vk.value?.redirectUrl))
 
-const label = computed(() => {
-  if (props.mode === 'link') {
-    return t('ui.social.link_vk')
+let oneTap: VKID.OneTap | null = null
+let destroyed = false
+
+async function handleLoginSuccess(payload: VkLoginPayload): Promise<void> {
+  if (processing.value || destroyed) {
+    return
   }
 
-  return props.register ? t('ui.social.register_vk') : t('ui.social.login_vk')
-})
-
-function buildStartUrl(): string {
-  const base = props.mode === 'link' ? '/user/socials/link/vk' : '/auth/vk'
-
-  if (!props.register && !(props.agreementRequired && props.agreement === true)) {
-    return base
-  }
-
-  const params = new URLSearchParams()
-
-  if (props.register) {
-    params.set('register', '1')
-  }
-
-  if (props.agreementRequired && props.agreement === true) {
-    params.set('agreement', '1')
-  }
-
-  return `${base}?${params.toString()}`
-}
-
-function start(): void {
   if (props.agreementRequired && props.agreement !== true) {
     error.value = t('ui.social.agreement_required')
     return
   }
 
+  processing.value = true
   error.value = ''
 
-  window.location.assign(buildStartUrl())
+  try {
+    const tokens = await VKID.Auth.exchangeCode(payload.code, payload.device_id)
+
+    router.post(props.mode === 'link' ? '/user/socials/link' : '/auth/vk', {
+      access_token: tokens.access_token,
+      ...(props.register ? { register: true } : {}),
+      ...(props.agreementRequired ? { agreement: props.agreement === true } : {}),
+    }, {
+      preserveScroll: true,
+      onError: () => {
+        error.value = props.mode === 'link' ? t('ui.social.vk_link_error') : t('ui.social.vk_login_error')
+      },
+      onFinish: () => {
+        processing.value = false
+      },
+    })
+  } catch (e) {
+    processing.value = false
+    error.value = props.mode === 'link' ? t('ui.social.vk_link_error') : t('ui.social.vk_login_error')
+  }
 }
+
+function handleError(): void {
+  error.value = t('ui.social.vk_widget_error')
+}
+
+onMounted(() => {
+  if (!enabled.value || !container.value || destroyed) {
+    return
+  }
+
+  VKID.Config.init({
+    app: vk.value!.app!,
+    redirectUrl: vk.value!.redirectUrl!,
+    responseMode: VKID.ConfigResponseMode.Callback,
+    source: VKID.ConfigSource.LOWCODE,
+    scope: 'vkid.personal_info email',
+  })
+
+  oneTap = new VKID.OneTap()
+
+  oneTap
+    .on(VKID.WidgetEvents.ERROR, handleError)
+    .on(VKID.OneTapInternalEvents.LOGIN_SUCCESS, handleLoginSuccess)
+    .render({
+      container: container.value,
+      showAlternativeLogin: true,
+    })
+})
+
+onBeforeUnmount(() => {
+  destroyed = true
+
+  if (oneTap) {
+    oneTap
+      .off(VKID.WidgetEvents.ERROR, handleError)
+      .off(VKID.OneTapInternalEvents.LOGIN_SUCCESS, handleLoginSuccess)
+    oneTap.close()
+  }
+})
 </script>
 
 <template>
   <div v-if="enabled" class="w-full">
-    <button
-      type="button"
-      class="flex w-full cursor-pointer items-center justify-center gap-3 rounded-xl border border-border bg-white px-4 py-3 text-sm font-medium text-foreground shadow-sm transition-all duration-200 hover:border-[#0077FF]/40 hover:shadow-md active:scale-[0.98]"
-      @click="start"
-    >
-      <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#0077FF] text-xs font-bold text-white">
-        VK
-      </span>
-      <span>{{ label }}</span>
-    </button>
+    <div ref="container" class="w-full min-h-11"></div>
     <p v-if="error" class="field-error">{{ error }}</p>
   </div>
 </template>
