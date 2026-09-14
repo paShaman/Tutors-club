@@ -593,9 +593,9 @@ return [
         ],
         'social' => [
             'agreement_required' => 'Необходимо согласие на обработку персональных данных',
-            'vk_link_error'      => 'Не удалось привязать VK ID',
-            'vk_login_error'     => 'Не удалось войти через VK ID',
-            'vk_widget_error'    => 'Не удалось загрузить виджет VK ID',
+            'link_vk'            => 'Привязать VK ID',
+            'register_vk'        => 'Регистрация через VK ID',
+            'login_vk'           => 'Войти через VK ID',
             'link_yandex'        => 'Привязать Яндекс ID',
             'register_yandex'    => 'Регистрация через Яндекс ID',
             'login_yandex'       => 'Войти через Яндекс ID',

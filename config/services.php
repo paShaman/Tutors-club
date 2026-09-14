@@ -54,6 +54,10 @@ return [
         'redirect_uri'  => env('YANDEX_REDIRECT_URI'),
     ],
 
+    'yandex_metrika' => [
+        'id' => env('YANDEX_METRIKA_ID'),
+    ],
+
     'telegram' => [
         'bot_token'      => env('TELEGRAM_BOT_TOKEN'),
         'chat_id'        => env('TELEGRAM_CHAT_ID'),

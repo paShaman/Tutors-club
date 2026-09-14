@@ -1,3 +1,10 @@
+declare global {
+  interface Window {
+    ym?: (id: number, action: string, ...args: unknown[]) => void
+    yandexMetrikaId?: number
+  }
+}
+
 export interface User {
   id: number
   name: string
@@ -13,8 +20,6 @@ export interface User {
 export interface SocialProviderConfig {
   key: string
   configured: boolean
-  app?: number | null
-  redirectUrl?: string | null
 }
 
 export interface AgreementDocument {

@@ -44,7 +44,11 @@ Route::get('/calendar/events', [CalendarController::class, 'getEvents'])
 // ─── Auth ───────────────────────────────────────────────────
 Route::post('/register', [AuthController::class, 'register'])->middleware('guest');
 Route::post('/login', [AuthController::class, 'login'])->middleware('guest');
-Route::post('/auth/vk', [AuthController::class, 'vkontakte'])->middleware('guest');
+Route::get('/auth/vk', [AuthController::class, 'vk'])
+    ->name('auth.vk')
+    ->middleware('guest');
+Route::get('/auth/vk/callback', [AuthController::class, 'vkCallback'])
+    ->name('auth.vk.callback');
 Route::get('/auth/yandex', [AuthController::class, 'yandex'])
     ->name('auth.yandex')
     ->middleware('guest');
@@ -60,6 +64,9 @@ Route::post('/user/locale', [UserController::class, 'locale'])->middleware('auth
 Route::post('/user/socials/link', [UserController::class, 'socialLink'])->middleware('auth');
 Route::get('/user/socials/link/yandex', [AuthController::class, 'yandexLink'])
     ->name('auth.yandex.link')
+    ->middleware('auth');
+Route::get('/user/socials/link/vk', [AuthController::class, 'vkLink'])
+    ->name('auth.vk.link')
     ->middleware('auth');
 Route::post('/user/socials/unlink', [UserController::class, 'socialUnlink'])->middleware('auth');
 

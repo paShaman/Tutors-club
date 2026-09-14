@@ -585,9 +585,9 @@ return [
         ],
         'social' => [
             'agreement_required' => 'Consent to personal data processing is required',
-            'vk_link_error'      => 'Could not link VK ID',
-            'vk_login_error'     => 'Could not sign in with VK ID',
-            'vk_widget_error'    => 'Could not load the VK ID widget',
+            'link_vk'            => 'Link VK ID',
+            'register_vk'        => 'Sign up with VK ID',
+            'login_vk'           => 'Sign in with VK ID',
             'link_yandex'        => 'Link Yandex ID',
             'register_yandex'    => 'Sign up with Yandex ID',
             'login_yandex'       => 'Sign in with Yandex ID',
