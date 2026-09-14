@@ -7,6 +7,7 @@ export interface User {
   last_name?: string
   middle_name?: string
   has_password?: boolean
+  is_admin?: boolean
 }
 
 export interface SocialProviderConfig {

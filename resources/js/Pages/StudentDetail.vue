@@ -3,6 +3,8 @@ import { Head, Link, router, usePage } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import Card from '@/components/ui/Card.vue'
 import Button from '@/components/ui/Button.vue'
+import Tabs from '@/components/ui/Tabs.vue'
+import type { TabItem } from '@/components/ui/Tabs.vue'
 import StudentAvatar from '@/components/ui/StudentAvatar.vue'
 import TopicStatusBadge from '@/components/ui/TopicStatusBadge.vue'
 import ReviewFormPopup from '@/components/popups/ReviewFormPopup.vue'
@@ -244,7 +246,12 @@ function formatDatePayed(dateStr: string | null): string {
 }
 
 // ─── Planning / topics ──────────────────────────────────────
-const activeTab = ref<'stats' | 'topics'>('stats')
+const activeTab = ref('stats')
+
+const tabItems = computed<TabItem[]>(() => [
+  { value: 'stats', label: t('ui.planning.tabs.stats') },
+  { value: 'topics', label: t('ui.planning.tabs.topics') },
+])
 
 const subjects = computed<string[]>(() => page.props.subjects ?? [])
 
@@ -268,6 +275,10 @@ const statusFilter = ref<'all' | 'not_started' | 'in_progress' | 'mastered'>('al
 function subjectLabel(key: string): string {
   return page.props.subjectNames?.[key] ?? t(key)
 }
+
+const subjectTabItems = computed<TabItem[]>(() =>
+  subjects.value.map((subject) => ({ value: subject, label: subjectLabel(subject) })),
+)
 
 function statusOf(topicId: number): string {
   return stateMap.value[topicId]?.status ?? 'not_started'
@@ -461,26 +472,7 @@ function formatTopicDate(dateStr: string | null): string {
     </Card>
 
     <!-- Tabs -->
-    <div class="inline-flex rounded-xl border border-border bg-white/60 p-1">
-      <button
-        :class="cn(
-          'rounded-lg px-4 py-2 text-sm font-medium transition-colors cursor-pointer',
-          activeTab === 'stats' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground',
-        )"
-        @click="activeTab = 'stats'"
-      >
-        {{ t('ui.planning.tabs.stats') }}
-      </button>
-      <button
-        :class="cn(
-          'rounded-lg px-4 py-2 text-sm font-medium transition-colors cursor-pointer',
-          activeTab === 'topics' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground',
-        )"
-        @click="activeTab = 'topics'"
-      >
-        {{ t('ui.planning.tabs.topics') }}
-      </button>
-    </div>
+    <Tabs v-model="activeTab" :items="tabItems" />
 
     <template v-if="activeTab === 'stats'">
     <!-- Summary -->
@@ -798,21 +790,11 @@ function formatTopicDate(dateStr: string | null): string {
     <!-- Topics -->
     <template v-else>
       <div class="flex flex-wrap items-center justify-between gap-3">
-        <div class="flex flex-wrap gap-2">
-          <button
-            v-for="subject in subjects"
-            :key="subject"
-            :class="cn(
-              'rounded-xl border px-4 py-2 text-sm font-medium transition-colors cursor-pointer',
-              subject === topicsSubject
-                ? 'border-primary bg-primary text-primary-foreground shadow-sm'
-                : 'border-border bg-white/60 text-muted-foreground hover:bg-accent hover:text-foreground',
-            )"
-            @click="topicsSubject = subject"
-          >
-            {{ subjectLabel(subject) }}
-          </button>
-        </div>
+        <Tabs
+          :model-value="topicsSubject"
+          :items="subjectTabItems"
+          @update:model-value="topicsSubject = $event"
+        />
         <p v-if="topicsProgress.total" class="text-sm text-muted-foreground">
           {{ t('ui.planning.progress', { done: topicsProgress.done, total: topicsProgress.total }) }}
         </p>

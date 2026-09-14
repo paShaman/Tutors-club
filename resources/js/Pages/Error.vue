@@ -1,12 +1,15 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { Head, router } from '@inertiajs/vue3'
-import { ArrowLeft, Home, SearchX } from 'lucide-vue-next'
+import { ArrowLeft, Home, SearchX, ShieldAlert } from 'lucide-vue-next'
 import Button from '@/components/ui/Button.vue'
 import { useI18n } from '@/lib/i18n'
 
 const { t } = useI18n()
 
-withDefaults(defineProps<{ status?: number }>(), { status: 404 })
+const props = withDefaults(defineProps<{ status?: number }>(), { status: 404 })
+
+const isForbidden = computed(() => props.status === 403)
 
 function goBack(): void {
   if (window.history.length > 1) {
@@ -18,12 +21,13 @@ function goBack(): void {
 </script>
 
 <template>
-  <Head :title="t('ui.error.title')" />
+  <Head :title="isForbidden ? t('ui.error.forbidden_title') : t('ui.error.title')" />
 
   <div class="flex min-h-screen items-center justify-center px-4 py-10">
     <div class="glass animate-fade-up w-full max-w-md rounded-2xl border border-white/20 p-8 text-center">
       <div class="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary shadow-lg shadow-primary/25">
-        <SearchX class="h-8 w-8 text-primary-foreground" />
+        <ShieldAlert v-if="isForbidden" class="h-8 w-8 text-primary-foreground" />
+        <SearchX v-else class="h-8 w-8 text-primary-foreground" />
       </div>
 
       <div class="bg-gradient-to-r from-primary to-purple-500 bg-clip-text text-6xl font-bold tracking-tight text-transparent">
@@ -31,10 +35,10 @@ function goBack(): void {
       </div>
 
       <h1 class="mt-3 text-xl font-bold tracking-tight text-foreground">
-        {{ t('ui.error.title') }}
+        {{ isForbidden ? t('ui.error.forbidden_title') : t('ui.error.title') }}
       </h1>
       <p class="mt-2 text-sm text-muted-foreground">
-        {{ t('ui.error.description') }}
+        {{ isForbidden ? t('ui.error.forbidden_description') : t('ui.error.description') }}
       </p>
 
       <div class="mt-7 flex flex-col gap-3 sm:flex-row">

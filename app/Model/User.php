@@ -65,9 +65,38 @@ class User extends Authenticatable
         return $this->hasMany('App\Model\UserSubscription', 'user_id');
     }
 
+    /**
+     * роли пользователя
+     */
+    public function roles()
+    {
+        return $this->belongsToMany('App\Model\Role', 'roles_to_users')->withTimestamps();
+    }
+
     /*
      * FUNCTIONS ---------------------------------
      */
+
+    /**
+     * есть ли у пользователя роль с указанным кодом
+     *
+     * @param string $role
+     * @return bool
+     */
+    public function hasRole($role)
+    {
+        return $this->roles()->where('title', $role)->exists();
+    }
+
+    /**
+     * является ли пользователь администратором
+     *
+     * @return bool
+     */
+    public function isAdmin()
+    {
+        return $this->hasRole(\App\Model\Role::ADMIN);
+    }
 
     /**
      * get protected param

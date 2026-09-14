@@ -26,7 +26,8 @@ Monetization: there are two **tariff plans** — free "Free" (full functionality
 - **Never run `php artisan migrate` / `db:seed` / config or cache commands** — even locally — without an explicit user request. Propose the migration/change and let the user apply it.
 - **Do not install new Composer or npm packages** without asking first. Note: `axios` is **not** declared in `package.json`; it only exists transitively (via `@inertiajs/core`). Do not add new code that imports it directly (ChangelogModal currently does) unless you first add it as a real dependency.
 - **Do not write tests.** There is no `tests/` directory, no test script, and tests are intentionally not part of the workflow yet. Do not scaffold PHPUnit/Pest/component-test infrastructure.
-- **Do not refactor legacy code** (`app/Model`, `App\Common`, `App\Access`, `App\Notification`, `App\Form`, `App\Image`, old controllers/models) unless the task explicitly requires it. Match the surrounding file's style when you do edit one.
+- **The UI-kit is the source of truth for styling.** Before writing any CSS/markup, creating a component, or restyling a page, consult the admin-only reference page at `/admin/uikit` (controller `UiKitController`, source `resources/js/Pages/UiKit.vue`, helpers in `resources/js/components/uikit/*`). It documents every `components/ui/*` + `components/popups/*` component, the `@theme` tokens, form-field classes, toasts and popups. Reuse them instead of inventing new styles; when you add or change a UI primitive, extend the UI-kit page in the same change.
+- **Do not refactor legacy code** (`app/Model`, `App\Common`, `App\Notification`, `App\Form`, `App\Image`, old controllers/models) unless the task explicitly requires it. Match the surrounding file's style when you do edit one.
 - **Do not update the changelog** (hardcoded in `ChangelogController`) unless explicitly asked.
 - **Billing/tariffs are not self-service.** Do not implement payment flows or plan switching. Limits come from `config/tariffs.php` only; the effective plan is the latest active row in `user_subscriptions` (or `free`). Do not use the legacy `users.account` column or the empty `users_payments` table.
 - **Do not add new `window.location.reload()` calls** and prefer migrating touched flows away from full reloads (see §7).
@@ -52,7 +53,6 @@ Path alias: `@/*` → `resources/js/*` (configured in both `vite.config.ts` and 
 
 ```
 app/
-├── Access.php                 # legacy role ID constants (unused)
 ├── Common.php                 # legacy helpers (pagination etc.)
 ├── Form.php                   # builds modal/form definitions passed as Inertia props
 ├── Image.php                  # avatar storage/cropping/cleanup helpers
@@ -60,9 +60,10 @@ app/
 ├── helpers.php                # lng() localization helper
 ├── Http/
 │   ├── Controllers/           # Auth, Avatar, Calendar, Changelog, Dashboard, Lesson,
-│   │                          # Page, Planning, Student, User, ControllerHelper
-│   └── Middleware/            # Authenticate, HandleInertiaRequests, ...
-├── Model/                     # LEGACY Eloquent namespace: User, Student, Lesson,
+│   │                          # Page, Planning, Student, UiKit, User, ControllerHelper
+│   └── Middleware/            # Authenticate, EnsureUserIsAdmin (alias 'admin'),
+│                              # HandleInertiaRequests, SetLocale
+├── Model/                     # LEGACY Eloquent namespace: User, Role, Student, Lesson,
 │                              # Topic, StudentTopic, TopicReview, UserSubscription, Page  (NOT App\Models)
 ├── Services/                  # SocialAccountService, SocialOAuthProvider,
 │                              # VkIdService, YandexIdService, TariffService
@@ -84,12 +85,15 @@ resources/
     │                          # mounts <Toaster/> globally next to <App>
     ├── Pages/                 # one .vue per route component: Dashboard, Students,
     │                          # Lessons, Calendar, Planning, Settings, Login, Register
+    │                          # (+ UiKit — admin-only reference page at /admin/uikit)
     ├── Layouts/AppLayout.vue  # sidebar + layout; pages opt in via defineOptions
     ├── components/
-    │   ├── ui/                # Button, Card, CardHeader, CardTitle, UserAvatar,
-    │   │                      # AvatarPicker, ImageCropper, TopicStatusBadge, Toaster + ToastItem
+    │   ├── ui/                # Button, Tabs, Card, CardHeader, CardTitle, Table + Table* parts,
+    │   │                      # UserAvatar, AvatarPicker, ImageCropper, TopicStatusBadge,
+    │   │                      # Toaster + ToastItem
     │   ├── popups/            # ConfirmDialog, ChangelogModal, StudentFormPopup,
     │   │                      # LessonFormPopup, TopicFormPopup, ReviewFormPopup
+    │   ├── uikit/             # UiKitSection + CodeBlock (helpers for the /admin/uikit page)
     │   └── social/            # SocialAuth, VkIdAuth, YandexAuth
     ├── lib/                   # utils.ts (cn), upload.ts (avatar upload), social.ts,
     │                          # toast.ts (useToast — global toasts)
@@ -103,7 +107,7 @@ public_html/                   # web root (Laravel public dir via usePublicPath)
 - **Controllers** live in `App\Http\Controllers`. Page methods return `Inertia::render('PageName', props)`. Student/lesson/planning mutation methods return `Illuminate\Http\RedirectResponse` via `back()->with('success'|'error', lng(...))`, or `back()->withErrors($validator)->withInput()` on validation failure. `ControllerHelper::resultSuccess()` / `resultError()` (`{ success, data }`) remain only for the intentional JSON endpoints (`/avatar/upload`, `/changelog`).
 - **Models** use the legacy namespace `App\Model` (singular). Keep using it for new models. Relations: `User` ↔ `Student` (many-to-many via `students_to_users`), `User` has many `Topic` and `UserSubscription`; `Student` has many `Lesson`, `StudentTopic` (per-student topic status) and `TopicReview` (review log); `Topic` belongs to `Subject` via `subject_id` (while `Lesson.subject` still stores the subject `code`).
 - **Localization**: user-facing backend strings MUST go through the `lng('...')` helper (dot key under `messages.php`), e.g. `lng('success.add_student')`. **Every new key must be added to BOTH `resources/lang/ru/messages.php` and `resources/lang/en/messages.php`.** Group keys under `success.*`, `error.*`, `title`, etc. See existing usage in controllers. Validation texts and field names (`attributes`) live in `resources/lang/<locale>/validation.php` — keep a file for **every** locale listed in `config/locales.php`, not just the primary one.
-- **Roles**: `roles`/`roles_to_users` tables and `Access` constants are an unused rudiment from an old version and are not part of the current product. Do not introduce new role logic; if roles return later, this is where it goes.
+- **Roles (admin)**: `roles`/`roles_to_users` power a minimal role system: `App\Model\Role` (with `Role::ADMIN = 'admin'`), `User::roles()` / `User::hasRole($code)` / `User::isAdmin()`. **Admin-only pages live under `/admin/*`** and use the `admin` middleware alias (`App\Http\Middleware\EnsureUserIsAdmin`, registered in `bootstrap/app.php`), which renders the Inertia `Error` page with status **403** for non-admins. Roles are assigned **manually in the DB** (`roles` + `roles_to_users`) — do not build a role-management UI or self-service role changes. The shared prop `auth.user.is_admin` drives admin-only sidebar links (`AppLayout`). The old `App\Access` constants no longer exist.
 - **Tariffs (планы)**: limits live only in `config/tariffs.php` (`plans.<plan>.limits.<feature>`). Feature registry: `students`, `lessons`, `topics` — quotas (`null` = unlimited); `subjects` (предметы) now live in the `subjects` table (`App\Model\Subject`), not in code — read codes via `Subject::codes()` and display names via `Subject::nameMap()` (name is a per-locale JSON map). The effective plan = latest active row in `user_subscriptions` (not expired) or `free`; an expired paid plan auto-falls back to `free` and surfaces a notice (`TariffService::expired()`). Enforce quotas only on **creation** via `TariffService::canUse()` (edit/delete/restore don't consume quota); a new creatable entity must add its counter to `TariffService::used()` and a guard at its creation point. The single student-creation path is `StudentController::editStudent()` (plus the `User::addStudent()` safety net).
 - **PHP style for NEW files**: add `declare(strict_types=1);`, typed signatures/return types, `final class` where sensible, aligned multi-line arrays, no noisy PHPDoc — write short Russian comments only where they explain "why". Do not retro-edit old files to this style.
 - Middleware: `auth`, `guest`, `signed` (auto-login link). Shared Inertia props are assembled in `app/Http/Middleware/HandleInertiaRequests.php` (`auth.user`, `flash`, `social`, `agreements`, `tariff`) — when you add globally shared data, extend this class AND `resources/js/types/index.ts` (`SharedProps`).
@@ -113,7 +117,7 @@ public_html/                   # web root (Laravel public dir via usePublicPath)
 - A **page** = `resources/js/Pages/<Name>.vue`, referenced by the controller's `Inertia::render('<Name>', ...)`. Layout opt-in: `defineOptions({ layout: AppLayout })`. Set page title with `<Head :title="t('ui....')"/>`.
 - Use `<script setup lang="ts">`. Type props with `defineProps<{...}>()`; typing is **pragmatic** — an occasional local `any` is acceptable, but keep shared/global types in `types/index.ts`.
 - Import with the `@/` alias for `Layouts/`, `components/`, `lib/`; use relative paths within a directory.
-- **Reuse existing UI**, don't restyle components: `components/ui/*` (Button with variants, Card/CardHeader/CardTitle, UserAvatar, Toaster), `components/popups/*` (ConfirmDialog, form popups). Buttons are `Button`; forms live in popups bound to local refs.
+- **Reuse existing UI**, don't restyle components: `components/ui/*` (Button with variants, Card/CardHeader/CardTitle, UserAvatar, Toaster), `components/popups/*` (ConfirmDialog, form popups). Buttons are `Button`; forms live in popups bound to local refs. **Check the UI-kit reference page `/admin/uikit` (`Pages/UiKit.vue` + `components/uikit/*`) before styling anything** and keep it up to date when a component/token changes.
 - **Nested popups** (a popup opening another popup on top): the inner popup must not add a second dark `bg-black/40 backdrop-blur` layer, otherwise the background is dimmed twice. Add a `nested` flag to the reused popup so its own overlay uses `z-80` and its modal `z-90`, and hide the parent's backdrop while the child is open (`v-if="show && !childOpen"`). This keeps a single dimming layer with the parent window pushed back — see `TopicFormPopup` opened from `LessonFormPopup`.
 - **User feedback = toasts.** Use `useToast()` from `lib/toast.ts` (`toast.success/error/warning/info`) instead of inline flash banners or a blocking alert modal. The global `<Toaster/>` (mounted in `app.ts`, so it also works on auth pages without `AppLayout`) renders the stack bottom-right and auto-surfaces Inertia `flash.success`/`flash.error` — do not re-add per-page flash markup. Success/info auto-dismiss after 4 s, warning after 6 s, **error stays until closed manually** (never auto-hide errors). Form **field** validation errors stay inline next to the input (`form.errors.*`); the `onError` toast is a fallback channel.
 - **Tariff prop**: the shared `tariff` prop (`TariffInfo` in `types/index.ts`) carries `plan`, `limits`, `usage` and `can.<feature>` flags. Gate "add" buttons on `tariff.can.*` and explain the block with `toast.warning(t('ui.tariff.limit.<feature>'))`; the server stays the source of truth. When `tariff.expired` is true, `AppLayout` shows a notice.
@@ -195,7 +199,7 @@ Only include changes that make sense to describe to a user of the system (new fu
 - Match the existing style of the file you edit; keep new PHP modern but consistent with its neighbors.
 - Submit mutations with Inertia (`router.post`/`useForm`); controllers reply `back()->with('success'|'error', ...)` or `back()->withErrors($validator)`, and the redirect visit refreshes props with no browser reload (§7).
 - Add every new backend string to both `ru` and `en` `messages.php` and expose it via `lng()`.
-- Reuse the local UI kit, Tailwind theme tokens, existing pages/popups/helpers.
+- Reuse the local UI kit, Tailwind theme tokens, existing pages/popups/helpers. Consult the UI-kit page (`/admin/uikit`) before styling and update it when primitives change.
 - Keep tariff limits/prices in `config/tariffs.php`; enforce quotas on creation and gate the matching UI "add" buttons via the shared `tariff` prop.
 - Give success/error feedback through `useToast()` (`lib/toast.ts`) — success/info auto-dismiss, errors persist until closed; keep field validation inline.
 - Run the §9 checks and fix all reported errors before reporting completion.
@@ -205,7 +209,7 @@ Only include changes that make sense to describe to a user of the system (new fu
 - Touch git in any way (§2).
 - Read or modify `.env`, or output secrets/credentials.
 - Run migrations, seeds, or `artisan config:cache`/`optimize` without explicit permission.
-- Add packages, refactor `App\Model`/`App\Common`/`App\Access`/legacy controllers, or add tests unless asked (the changelog is the exception — it updates automatically at the end of a session, see §10).
+- Add packages, refactor `App\Model`/`App\Common`/legacy controllers, or add tests unless asked (the changelog is the exception — it updates automatically at the end of a session, see §10).
 - Add new `fetch` JSON endpoints or `window.location.reload()` patterns; prefer Inertia-native flows.
 - Re-add inline flash banners or blocking alert modals for user messages — the global `Toaster` handles them (§6/§7).
 - Hardcode plan limits/prices or Russian plan strings; add payment flows or self-service plan switching (§2).

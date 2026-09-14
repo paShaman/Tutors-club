@@ -41,6 +41,7 @@ final class HandleInertiaRequests extends Middleware
                     'middle_name' => $request->user()->middle_name,
                     'name'        => $request->user()->name,
                     'has_password' => $request->user()->password !== '',
+                    'is_admin'    => $request->user()->isAdmin(),
                 ] : null,
             ],
             'flash' => [

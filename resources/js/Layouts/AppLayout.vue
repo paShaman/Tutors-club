@@ -16,6 +16,7 @@ import {
   GitCommit,
   AlertTriangle,
   MessageCircle,
+  Palette,
 } from 'lucide-vue-next'
 import Button from '@/components/ui/Button.vue'
 import UserAvatar from '@/components/ui/UserAvatar.vue'
@@ -90,6 +91,20 @@ function isActive(route: string): boolean {
 }
 
 const user = computed(() => page.props.auth?.user ?? null)
+
+// Служебный пункт «UI-кит» виден только администратору (сервер всё равно проверяет роль)
+const menuItems = computed<NavItem[]>(() => {
+  if (!user.value?.is_admin) return navItems
+  return [
+    ...navItems,
+    {
+      labelKey: 'ui.nav.uikit',
+      href: '/admin/uikit',
+      icon: Palette,
+      activeRoute: 'admin/uikit',
+    },
+  ]
+})
 const tariff = computed(() => page.props.tariff ?? null)
 const agreements = computed(() => page.props.agreements ?? [])
 const requisites = computed(() => page.props.requisites ?? {})
@@ -227,7 +242,7 @@ onUnmounted(() => {
         <!-- Main nav -->
         <nav class="flex-1 space-y-0.5">
           <Link
-            v-for="item in navItems"
+            v-for="item in menuItems"
             :key="item.href"
             :href="item.href"
             :class="cn(

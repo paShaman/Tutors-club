@@ -4,6 +4,8 @@ import { Head, router, usePage } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import Card from '@/components/ui/Card.vue'
 import Button from '@/components/ui/Button.vue'
+import Tabs from '@/components/ui/Tabs.vue'
+import type { TabItem } from '@/components/ui/Tabs.vue'
 import TopicFormPopup from '@/components/popups/TopicFormPopup.vue'
 import type { TopicFormData } from '@/components/popups/TopicFormPopup.vue'
 import ConfirmDialog from '@/components/popups/ConfirmDialog.vue'
@@ -60,6 +62,10 @@ const totalCount = computed(() =>
 function subjectLabel(key: string): string {
   return page.props.subjectNames?.[key] ?? t(key)
 }
+
+const subjectTabItems = computed<TabItem[]>(() =>
+  subjects.value.map((subject) => ({ value: subject, label: subjectLabel(subject) })),
+)
 
 function goSubject(subject: string): void {
   if (subject === selectedSubject.value) return
@@ -285,21 +291,7 @@ function onCancel(): void {
     </div>
 
     <!-- Subject tabs -->
-    <div class="flex flex-wrap gap-2">
-      <button
-        v-for="subject in subjects"
-        :key="subject"
-        :class="cn(
-          'rounded-xl border px-4 py-2 text-sm font-medium transition-colors cursor-pointer',
-          subject === selectedSubject
-            ? 'border-primary bg-primary text-primary-foreground shadow-sm'
-            : 'border-border bg-white/60 text-muted-foreground hover:bg-accent hover:text-foreground',
-        )"
-        @click="goSubject(subject)"
-      >
-        {{ subjectLabel(subject) }}
-      </button>
-    </div>
+    <Tabs :model-value="selectedSubject" :items="subjectTabItems" @update:model-value="goSubject" />
 
     <p v-if="tree.length" class="text-sm text-muted-foreground">
       {{ tp('ui.planning.topics_count', totalCount) }}

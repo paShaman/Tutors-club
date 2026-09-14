@@ -13,6 +13,7 @@ use App\Http\Controllers\PlanningController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ChangelogController;
 use App\Http\Controllers\FeedbackController;
+use App\Http\Controllers\UiKitController;
 use Illuminate\Support\Facades\Route;
 
 // ─── Pages ──────────────────────────────────────────────────
@@ -79,6 +80,11 @@ Route::get('/changelog', [ChangelogController::class, 'getChangelog'])
 // ─── Feedback ───────────────────────────────────────────────
 Route::post('/feedback', [FeedbackController::class, 'send'])->middleware('auth');
 Route::post('/telegram/webhook', [FeedbackController::class, 'webhook'])->name('telegram.webhook');
+
+// ─── Admin ──────────────────────────────────────────────────
+Route::get('/admin/uikit', [UiKitController::class, 'index'])
+    ->name('admin.uikit')
+    ->middleware(['auth', 'admin']);
 
 // ─── Lessons ────────────────────────────────────────────────
 Route::get('/lessons', [LessonController::class, 'getLessons'])->middleware('auth')->name('lessons');
