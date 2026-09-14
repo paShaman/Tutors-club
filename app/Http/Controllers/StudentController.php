@@ -59,6 +59,7 @@ final class StudentController extends Controller
 
         $lessons = Lesson::where('student_id', $student->id)
             ->where('is_deleted', 0)
+            ->with('subject')
             ->orderBy('date', 'desc')
             ->orderBy('time', 'desc')
             ->get();
@@ -132,7 +133,7 @@ final class StudentController extends Controller
 
             $sortedLessons[$year]['months'][$month]['lessons'][] = [
                 'id'            => $lesson->id,
-                'subject'       => $lesson->subject,
+                'subject'       => $lesson->subject?->code,
                 'topic_id'      => $lesson->topic_id ? (int) $lesson->topic_id : null,
                 'subtopic_id'   => $lesson->subtopic_id ? (int) $lesson->subtopic_id : null,
                 'topic_name'    => $lesson->topic_id ? ($topicNames[$lesson->topic_id] ?? null) : null,

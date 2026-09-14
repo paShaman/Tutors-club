@@ -28,9 +28,11 @@ final class LessonController extends Controller
 
         $selectedStudentId = request()->query('student_id');
         $subjectCodes = Subject::codes();
+        $subjectIds = Subject::idMap();
+        $subjectCodeById = Subject::codeMap();
         $selectedSubject = (string) request()->query('subject', '');
 
-        if ($selectedSubject !== '' && !in_array($selectedSubject, $subjectCodes, true)) {
+        if ($selectedSubject !== '' && !isset($subjectIds[$selectedSubject])) {
             $selectedSubject = '';
         }
 
@@ -42,7 +44,7 @@ final class LessonController extends Controller
         }
 
         if ($selectedSubject !== '') {
-            $lessonsQuery->where('subject', $selectedSubject);
+            $lessonsQuery->where('subject_id', $subjectIds[$selectedSubject]);
         }
 
         $lessons = $lessonsQuery->orderBy('date', 'desc')->get()->toArray();
@@ -57,6 +59,7 @@ final class LessonController extends Controller
             $lesson['date_payed'] = $lesson['date_payed']
                 ? \Carbon\Carbon::parse($lesson['date_payed'])->format('Y-m-d H:i')
                 : null;
+            $lesson['subject'] = $subjectCodeById[(int) ($lesson['subject_id'] ?? 0)] ?? '';
             $lesson['topic_name'] = $lesson['topic_id'] ? ($topicNames[$lesson['topic_id']] ?? null) : null;
             $lesson['subtopic_name'] = $lesson['subtopic_id'] ? ($topicNames[$lesson['subtopic_id']] ?? null) : null;
         }
@@ -202,8 +205,13 @@ final class LessonController extends Controller
         }
 
         $subject = (string) ($post['lesson_subject'] ?? '');
+        $subjectId = Subject::where('code', $subject)->where('is_deleted', 0)->value('id');
 
-        [$topicId, $subtopicId, $topicError] = $this->resolveLessonTopics($post, $subject);
+        if (!$subjectId) {
+            return back()->with('error', lng('error.add_lesson'))->withInput();
+        }
+
+        [$topicId, $subtopicId, $topicError] = $this->resolveLessonTopics($post, (int) $subjectId);
 
         if ($topicError) {
             return back()->with('error', lng($topicError))->withInput();
@@ -212,7 +220,7 @@ final class LessonController extends Controller
         $str = 'add_lesson';
 
         $params = [
-            'subject'       => $subject,
+            'subject_id'    => (int) $subjectId,
             'topic_id'      => $topicId,
             'subtopic_id'   => $subtopicId,
             'comment'       => $post['lesson_comment'] ?? null,
@@ -320,7 +328,7 @@ final class LessonController extends Controller
      * @param array<string, mixed> $post
      * @return array{0: int|null, 1: int|null, 2: string|null}
      */
-    private function resolveLessonTopics(array $post, string $subject): array
+    private function resolveLessonTopics(array $post, int $subjectId): array
     {
         $userId = (int) Auth::id();
 
@@ -333,7 +341,7 @@ final class LessonController extends Controller
             $topic = Topic::where('user_id', $userId)
                 ->where('is_deleted', 0)
                 ->whereNull('parent_id')
-                ->whereHas('subject', fn ($query) => $query->where('code', $subject))
+                ->where('subject_id', $subjectId)
                 ->find($topicId);
 
             if (!$topic) {
@@ -344,7 +352,7 @@ final class LessonController extends Controller
         if ($subtopicId !== null) {
             $subtopic = Topic::where('user_id', $userId)
                 ->where('is_deleted', 0)
-                ->whereHas('subject', fn ($query) => $query->where('code', $subject))
+                ->where('subject_id', $subjectId)
                 ->whereNotNull('parent_id')
                 ->find($subtopicId);
 

@@ -73,6 +73,7 @@ final class CalendarController extends Controller
         $lessons = Lesson::where('is_deleted', 0)
             ->whereIn('student_id', array_keys($students))
             ->whereBetween('date', [$start, $end])
+            ->with('subject')
             ->orderBy('date', 'desc')->get();
 
         $events = [];
@@ -91,7 +92,7 @@ final class CalendarController extends Controller
                 'extendedProps' => [
                     'student_id'       => $lesson->student_id,
                     'student_name'     => $student['name'],
-                    'subject'          => $lesson->subject,
+                    'subject'          => $lesson->subject?->code,
                     'topic_id'         => $lesson->topic_id,
                     'subtopic_id'      => $lesson->subtopic_id,
                     'comment'          => $lesson->comment,

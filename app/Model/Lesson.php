@@ -4,12 +4,18 @@ namespace App\Model;
 
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Lesson extends Model
 {
     protected $fillable = [
-        'student_id', 'subject', 'topic_id', 'subtopic_id', 'comment', 'price', 'duration', 'is_payed', 'date', 'date_payed', 'time', 'is_deleted', 'is_future'
+        'student_id', 'subject_id', 'topic_id', 'subtopic_id', 'comment', 'price', 'duration', 'is_payed', 'date', 'date_payed', 'time', 'is_deleted', 'is_future'
     ];
+
+    public function subject(): BelongsTo
+    {
+        return $this->belongsTo(Subject::class, 'subject_id');
+    }
 
     /**
      * удаление урока
@@ -78,7 +84,7 @@ class Lesson extends Model
     public function editLesson($lessonId, $params) : bool
     {
         try {
-            if (empty($lessonId) || empty($params['subject']) || /*empty($params['price']) ||*/ empty($params['date'])) {
+            if (empty($lessonId) || empty($params['subject_id']) || /*empty($params['price']) ||*/ empty($params['date'])) {
                 throw new \Exception('empty_params');
             }
 
@@ -88,7 +94,7 @@ class Lesson extends Model
                 throw new \Exception('lesson_not_found');
             }
 
-            $lesson->subject     = $params['subject'];
+            $lesson->subject_id  = $params['subject_id'];
             $lesson->topic_id    = $params['topic_id'] ?? null;
             $lesson->subtopic_id = $params['subtopic_id'] ?? null;
             $lesson->comment     = $params['comment'] ?? '';

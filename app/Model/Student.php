@@ -100,12 +100,12 @@ class Student extends Model
     public function addLesson($params)
     {
         try {
-            if (empty($params['subject']) || empty($params['price']) || empty($params['date'])) {
+            if (empty($params['subject_id']) || empty($params['price']) || empty($params['date'])) {
                 throw new \Exception('empty_params');
             }
 
             $lesson = new Lesson([
-                'subject'       => $params['subject'],
+                'subject_id'    => $params['subject_id'],
                 'topic_id'      => $params['topic_id'] ?? null,
                 'subtopic_id'   => $params['subtopic_id'] ?? null,
                 'comment'       => $params['comment'] ?? '',

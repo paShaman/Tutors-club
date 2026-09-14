@@ -34,13 +34,36 @@ final class Subject extends Model
     }
 
     /**
-     * Коды активных предметов — значения в lessons.subject / topics.subject.
+     * Коды активных предметов (topics.subject_id / lessons.subject_id ссылаются на subjects.id).
      *
      * @return array<int, string>
      */
     public static function codes(): array
     {
         return self::active()->pluck('code')->all();
+    }
+
+    /**
+     * Карта «код предмета => id» по всем предметам (для разбора входящих кодов).
+     *
+     * @return array<string, int>
+     */
+    public static function idMap(): array
+    {
+        return self::query()
+            ->pluck('id', 'code')
+            ->map(fn ($id): int => (int) $id)
+            ->all();
+    }
+
+    /**
+     * Карта «id предмета => код» по всем предметам (для отдачи кода в UI).
+     *
+     * @return array<int, string>
+     */
+    public static function codeMap(): array
+    {
+        return self::query()->pluck('code', 'id')->all();
     }
 
     /**
