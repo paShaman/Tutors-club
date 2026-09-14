@@ -8,6 +8,7 @@ import TopicFormPopup from '@/components/popups/TopicFormPopup.vue'
 import type { TopicFormData } from '@/components/popups/TopicFormPopup.vue'
 import { useToast } from '@/lib/toast'
 import { useI18n } from '@/lib/i18n'
+import { useScrollLock } from '@/lib/scrollLock'
 
 const { t } = useI18n()
 const toast = useToast()
@@ -54,6 +55,8 @@ const props = defineProps<{
   canAddTopic: boolean
   initialForm?: LessonFormData | null
 }>()
+
+useScrollLock(() => props.show)
 
 function subjectName(key: string): string {
   return props.subjectNames?.[key] ?? t(key)

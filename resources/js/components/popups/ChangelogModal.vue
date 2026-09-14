@@ -3,12 +3,15 @@ import { ref, computed, watch } from 'vue'
 import { X, GitFork, ChevronDown, Loader2 } from 'lucide-vue-next'
 import Button from '@/components/ui/Button.vue'
 import { useI18n } from '@/lib/i18n'
+import { useScrollLock } from '@/lib/scrollLock'
 
 const { t, intlLocale } = useI18n()
 
 const props = defineProps<{
   show: boolean
 }>()
+
+useScrollLock(() => props.show)
 
 const emit = defineEmits<{
   (e: 'close'): void

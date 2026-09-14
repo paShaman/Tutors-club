@@ -5,10 +5,13 @@ import { X, Landmark } from 'lucide-vue-next'
 import Button from '@/components/ui/Button.vue'
 import type { CompanyRequisites, SharedProps } from '@/types'
 import { useI18n } from '@/lib/i18n'
+import { useScrollLock } from '@/lib/scrollLock'
 
-defineProps<{
+const props = defineProps<{
   show: boolean
 }>()
+
+useScrollLock(() => props.show)
 
 const emit = defineEmits<{
   (e: 'close'): void

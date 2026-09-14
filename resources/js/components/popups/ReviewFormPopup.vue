@@ -3,6 +3,7 @@ import { ref, watch } from 'vue'
 import Card from '@/components/ui/Card.vue'
 import Button from '@/components/ui/Button.vue'
 import { useI18n } from '@/lib/i18n'
+import { useScrollLock } from '@/lib/scrollLock'
 
 export type ReviewFormData = {
   reviewed_on: string
@@ -13,6 +14,8 @@ const props = defineProps<{
   show: boolean
   topicName: string
 }>()
+
+useScrollLock(() => props.show)
 
 const emit = defineEmits<{
   close: []

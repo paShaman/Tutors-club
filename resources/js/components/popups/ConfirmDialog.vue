@@ -2,10 +2,11 @@
 import { Teleport, Transition } from 'vue'
 import Button from '@/components/ui/Button.vue'
 import { useI18n } from '@/lib/i18n'
+import { useScrollLock } from '@/lib/scrollLock'
 
 const { t } = useI18n()
 
-defineProps<{
+const props = defineProps<{
   show: boolean
   title?: string
   message?: string
@@ -13,6 +14,8 @@ defineProps<{
   cancelText?: string
   variant?: 'danger' | 'default'
 }>()
+
+useScrollLock(() => props.show)
 
 const emit = defineEmits<{
   (e: 'confirm'): void

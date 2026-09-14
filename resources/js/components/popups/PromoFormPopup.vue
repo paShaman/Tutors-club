@@ -3,6 +3,7 @@ import { ref, watch, computed } from 'vue'
 import Card from '@/components/ui/Card.vue'
 import Button from '@/components/ui/Button.vue'
 import { useI18n } from '@/lib/i18n'
+import { useScrollLock } from '@/lib/scrollLock'
 
 export type PromoFormData = {
   banner_id: number | null
@@ -20,6 +21,8 @@ const props = defineProps<{
   show: boolean
   initial?: PromoFormData | null
 }>()
+
+useScrollLock(() => props.show)
 
 const emit = defineEmits<{
   close: []

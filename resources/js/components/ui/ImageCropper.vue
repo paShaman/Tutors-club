@@ -3,12 +3,15 @@ import { onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { ZoomIn, ZoomOut, RotateCcw, X } from 'lucide-vue-next'
 import Button from '@/components/ui/Button.vue'
 import { useI18n } from '@/lib/i18n'
+import { useScrollLock } from '@/lib/scrollLock'
 
 const { t } = useI18n()
 
 const props = defineProps<{
   src: string | null
 }>()
+
+useScrollLock(() => !!props.src)
 
 const emit = defineEmits<{
   cancel: []

@@ -6,6 +6,7 @@ import StudentAvatar from '@/components/ui/StudentAvatar.vue'
 import StudentColorPicker from '@/components/ui/StudentColorPicker.vue'
 import { randomStudentColor } from '@/lib/studentColors'
 import { useI18n } from '@/lib/i18n'
+import { useScrollLock } from '@/lib/scrollLock'
 
 const { t } = useI18n()
 
@@ -24,6 +25,8 @@ const props = withDefaults(defineProps<{
   mode: 'add' | 'edit'
   initialForm?: StudentFormData | null
 }>(), {})
+
+useScrollLock(() => props.show)
 
 const emit = defineEmits<{
   close: []

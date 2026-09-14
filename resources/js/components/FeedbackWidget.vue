@@ -7,6 +7,7 @@ import Card from '@/components/ui/Card.vue'
 import type { SharedProps } from '@/types'
 import { useI18n } from '@/lib/i18n'
 import { useToast } from '@/lib/toast'
+import { useScrollLock } from '@/lib/scrollLock'
 
 type FeedbackFormData = {
   contact: string
@@ -17,6 +18,8 @@ type FeedbackFormData = {
 const props = defineProps<{
   show: boolean
 }>()
+
+useScrollLock(() => props.show)
 
 const emit = defineEmits<{
   close: []

@@ -3,6 +3,7 @@ import { ref, watch, computed } from 'vue'
 import Card from '@/components/ui/Card.vue'
 import Button from '@/components/ui/Button.vue'
 import { useI18n } from '@/lib/i18n'
+import { useScrollLock } from '@/lib/scrollLock'
 
 export type TopicFormData = {
   topic_id: number | null
@@ -19,6 +20,8 @@ const props = defineProps<{
   initial?: TopicFormData | null
   nested?: boolean
 }>()
+
+useScrollLock(() => props.show)
 
 const emit = defineEmits<{
   close: []
