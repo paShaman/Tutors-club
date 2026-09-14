@@ -450,12 +450,12 @@ function formatTopicDate(dateStr: string | null): string {
           <div class="flex shrink-0 items-center gap-2">
             <Button v-if="!student.is_deleted" variant="outline" size="sm" @click="openEditModal">
               <Pencil class="h-4 w-4" />
-              {{ t('ui.common.edit') }}
+              <span class="hidden sm:inline">{{ t('ui.common.edit') }}</span>
             </Button>
             <Link :href="`/lessons/students/${student.slug}`">
               <Button variant="outline" size="sm">
                 <BookOpen class="h-4 w-4" />
-                {{ t('ui.student.all_lessons') }}
+                <span class="hidden sm:inline">{{ t('ui.student.all_lessons') }}</span>
               </Button>
             </Link>
             <Button
@@ -465,7 +465,7 @@ function formatTopicDate(dateStr: string | null): string {
             >
               <RotateCcw v-if="student.is_deleted" class="h-4 w-4" />
               <Trash2 v-else class="h-4 w-4" />
-              {{ student.is_deleted ? t('ui.common.restore') : t('ui.common.delete') }}
+              <span class="hidden sm:inline">{{ student.is_deleted ? t('ui.common.restore') : t('ui.common.delete') }}</span>
             </Button>
           </div>
         </div>
