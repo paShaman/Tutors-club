@@ -16,6 +16,7 @@ import {
   ChevronRight,
   Timer,
   Star,
+  FilterX,
 } from 'lucide-vue-next'
 import LessonFormPopup from '@/components/popups/LessonFormPopup.vue'
 import type { LessonFormData, TopicNode } from '@/components/popups/LessonFormPopup.vue'
@@ -96,6 +97,7 @@ const page = usePage<{
   sortedLessons: Record<number, YearGroup>
   students: StudentData[]
   selectedStudentId: number | null
+  selectedSubject: string | null
   lessonsSubjects: string[]
   subjectNames: Record<string, string>
   topicTree: Record<string, TopicNode[]>
@@ -112,18 +114,31 @@ const { t, tp, intlLocale } = useI18n()
 const canAddLesson = computed(() => page.props.tariff?.can.lessons ?? true)
 
 const selectedStudentId = ref<number | null>(page.props.selectedStudentId ?? null)
+const selectedSubject = ref<string | null>(page.props.selectedSubject ?? null)
 
-watch(selectedStudentId, (newVal) => {
+function applyFilters() {
   const params: Record<string, any> = {}
-  if (newVal) {
-    params.student_id = newVal
+  if (selectedStudentId.value) {
+    params.student_id = selectedStudentId.value
   }
-  router.get('/lessons', params, { preserveState: false, preserveScroll: false })
-})
-
-function clearStudentFilter() {
-  selectedStudentId.value = null
+  if (selectedSubject.value) {
+    params.subject = selectedSubject.value
+  }
+  router.get('/lessons', params, {
+    preserveState: true,
+    preserveScroll: true,
+    only: ['sortedLessons', 'selectedStudentId', 'selectedSubject'],
+  })
 }
+
+watch([selectedStudentId, selectedSubject], applyFilters)
+
+function clearFilters() {
+  selectedStudentId.value = null
+  selectedSubject.value = null
+}
+
+const hasFilters = computed(() => selectedStudentId.value !== null || selectedSubject.value !== null)
 
 const monthNames = computed(() => {
   const formatter = new Intl.DateTimeFormat(intlLocale.value, { month: 'long' })
@@ -400,23 +415,37 @@ function formatDatePayed(dateStr: string | null): string {
         </div>
       </div>
 
-      <div class="flex items-center gap-3">
-        <label class="hidden sm:inline text-sm font-medium text-muted-foreground shrink-0">{{ t('ui.lessons.filter_label') }}</label>
+      <div class="flex items-center gap-2.5 flex-wrap justify-end">
         <select
           v-model="selectedStudentId"
-          class="field px-3.5 py-2 min-w-[160px] sm:min-w-[200px]"
+          :aria-label="t('ui.lessons.filter_label')"
+          class="field px-3.5 py-2 min-w-[170px] sm:min-w-[200px]"
         >
           <option :value="null">{{ t('ui.lessons.all_students') }}</option>
           <option v-for="student in page.props.students" :key="student.id" :value="student.id">
             {{ student.name }}<span class="hidden sm:inline">{{ student.current_class ? ` (${student.current_class})` : '' }}</span>
           </option>
         </select>
-        <button
-          v-if="selectedStudentId"
-          @click="clearStudentFilter"
-          class="hidden sm:inline text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+
+        <select
+          v-model="selectedSubject"
+          :aria-label="t('ui.lessons.subject_filter_label')"
+          class="field px-3.5 py-2 min-w-[150px] sm:min-w-[180px]"
         >
-          {{ t('ui.lessons.reset_filter') }}
+          <option :value="null">{{ t('ui.lessons.all_subjects') }}</option>
+          <option v-for="subject in page.props.lessonsSubjects" :key="subject" :value="subject">
+            {{ subjectName(subject) }}
+          </option>
+        </select>
+
+        <button
+          @click="clearFilters"
+          :disabled="!hasFilters"
+          class="field inline-flex h-[38px] w-[38px] items-center justify-center text-muted-foreground transition-colors hover:text-foreground disabled:opacity-35 disabled:cursor-default cursor-pointer"
+          :title="t('ui.lessons.reset_filter')"
+          :aria-label="t('ui.lessons.reset_filter')"
+        >
+          <FilterX class="h-4 w-4" />
         </button>
 
         <Button @click="requestAddLesson">

@@ -27,6 +27,12 @@ final class LessonController extends Controller
         $students = Auth::user()->students()->get()->keyBy('id')->toArray();
 
         $selectedStudentId = request()->query('student_id');
+        $subjectCodes = Subject::codes();
+        $selectedSubject = (string) request()->query('subject', '');
+
+        if ($selectedSubject !== '' && !in_array($selectedSubject, $subjectCodes, true)) {
+            $selectedSubject = '';
+        }
 
         $lessonsQuery = Lesson::where('is_deleted', 0)
             ->whereIn('student_id', array_keys($students));
@@ -35,9 +41,11 @@ final class LessonController extends Controller
             $lessonsQuery->where('student_id', (int) $selectedStudentId);
         }
 
-        $lessons = $lessonsQuery->orderBy('date', 'desc')->get()->toArray();
+        if ($selectedSubject !== '') {
+            $lessonsQuery->where('subject', $selectedSubject);
+        }
 
-        $subjectCodes = Subject::codes();
+        $lessons = $lessonsQuery->orderBy('date', 'desc')->get()->toArray();
 
         // Названия выбранных тем/подтем, чтобы показывать их в списке без N+1.
         $topicNames = Topic::where('user_id', Auth::id())
@@ -160,6 +168,7 @@ final class LessonController extends Controller
             'sortedLessons'     => $sortedLessons,
             'students'          => $activeStudents,
             'selectedStudentId' => $selectedStudentId ? (int) $selectedStudentId : null,
+            'selectedSubject'   => $selectedSubject !== '' ? $selectedSubject : null,
             'lessonsSubjects'   => $subjectCodes,
             'subjectNames'      => Subject::nameMap(),
             'topicTree'         => Topic::treesBySubject((int) Auth::id(), $subjectCodes),

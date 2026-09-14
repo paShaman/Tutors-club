@@ -365,6 +365,8 @@ return [
             'subtitle'          => 'История проведённых занятий',
             'filter_label'      => 'Фильтр по ученику:',
             'all_students'      => 'Все ученики',
+            'subject_filter_label' => 'Предмет:',
+            'all_subjects'      => 'Все предметы',
             'reset_filter'      => 'Сбросить',
             'add'               => 'Добавить урок',
             'count'             => [

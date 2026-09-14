@@ -359,6 +359,8 @@ return [
             'subtitle'          => 'Lesson history',
             'filter_label'      => 'Student filter:',
             'all_students'      => 'All students',
+            'subject_filter_label' => 'Subject:',
+            'all_subjects'      => 'All subjects',
             'reset_filter'      => 'Reset',
             'add'               => 'Add lesson',
             'count'             => [
