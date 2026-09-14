@@ -64,21 +64,21 @@ const title = computed(() => {
       <div
         v-if="show"
         :class="nested ? 'z-80' : 'z-60'"
-        class="fixed inset-0 bg-black/40 backdrop-blur-sm"
+        class="popup-overlay"
         @click="emit('close')"
       />
     </Transition>
     <Transition name="modal">
-      <div v-if="show" :class="nested ? 'z-90' : 'z-70'" class="fixed inset-0 overflow-y-auto">
+      <div v-if="show" :class="nested ? 'z-90' : 'z-70'" class="popup-layer">
         <div class="flex min-h-full items-center justify-center p-4" @click.self="emit('close')">
-          <Card class="relative w-full max-w-md p-6 shadow-xl">
-            <h2 class="text-2xl font-semibold text-foreground mb-5">
+          <Card class="popup-card max-w-md">
+            <h2 class="popup-title mb-5">
               {{ title }}
             </h2>
 
             <form @submit.prevent="emit('submit', form)" class="space-y-4">
               <div v-if="parent && mode === 'add'">
-                <label class="block text-sm font-medium text-foreground mb-1.5">
+                <label class="field-label">
                   {{ t('ui.planning.form.parent') }}
                 </label>
                 <div class="rounded-xl border border-border bg-muted/40 px-3.5 py-2.5 text-sm text-muted-foreground">
@@ -87,14 +87,14 @@ const title = computed(() => {
               </div>
 
               <div>
-                <label class="block text-sm font-medium text-foreground mb-1.5">
+                <label class="field-label">
                   {{ t('ui.planning.form.name') }}
                 </label>
                 <input
                   v-model="form.name"
                   required
                   autofocus
-                  class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+                  class="field w-full px-3.5 py-2.5"
                   :placeholder="t('ui.planning.form.name_placeholder')"
                 />
               </div>

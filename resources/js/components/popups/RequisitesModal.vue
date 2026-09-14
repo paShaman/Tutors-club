@@ -38,13 +38,13 @@ const rows = computed(() => {
     <Transition name="overlay">
       <div
         v-if="show"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-4"
+        class="popup-overlay-soft z-50 flex items-center justify-center p-4"
         @click.self="emit('close')"
       >
         <Transition name="modal" @after-leave="emit('close')">
           <div
             v-if="show"
-            class="relative w-full max-w-md max-h-[80vh] flex flex-col rounded-2xl bg-white shadow-2xl ring-1 ring-black/5 overflow-hidden"
+            class="popup-panel max-w-md max-h-[80vh]"
           >
             <!-- Header -->
             <div class="flex items-center justify-between px-5 py-4 border-b border-border/50">

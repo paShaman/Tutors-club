@@ -45,13 +45,13 @@ watch(() => props.show, (val) => {
 <template>
   <Teleport to="body">
     <Transition name="overlay">
-      <div v-if="show" class="fixed inset-0 z-60 bg-black/40 backdrop-blur-sm" @click="emit('close')" />
+      <div v-if="show" class="popup-overlay z-60" @click="emit('close')" />
     </Transition>
     <Transition name="modal">
-      <div v-if="show" class="fixed inset-0 z-70 overflow-y-auto">
+      <div v-if="show" class="popup-layer z-70">
         <div class="flex min-h-full items-center justify-center p-4" @click.self="emit('close')">
-          <Card class="relative w-full max-w-md p-6 shadow-xl">
-            <h2 class="text-2xl font-semibold text-foreground mb-1">
+          <Card class="popup-card max-w-md">
+            <h2 class="popup-title mb-1">
               {{ t('ui.planning.review_form.title') }}
             </h2>
             <p class="mb-5 text-sm text-muted-foreground">{{ topicName }}</p>
@@ -65,7 +65,7 @@ watch(() => props.show, (val) => {
                   v-model="form.reviewed_on"
                   type="date"
                   required
-                  class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+                  class="field w-full px-3.5 py-2.5"
                 />
               </div>
 
@@ -76,7 +76,7 @@ watch(() => props.show, (val) => {
                 <textarea
                   v-model="form.comment"
                   rows="3"
-                  class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors resize-none"
+                  class="field w-full px-3.5 py-2.5 resize-none"
                   :placeholder="t('ui.planning.review_form.comment_placeholder')"
                 />
               </div>

@@ -226,14 +226,25 @@ const snippets = {
   badge: "<TopicStatusBadge status=\"mastered\" />",
 
   form: [
-    '<label class="block text-sm font-medium text-foreground mb-1.5">Label</label>',
+    '<label class="field-label">Label</label>',
     '<input',
     '  v-model="value"',
-    '  class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm',
-    '    text-foreground placeholder:text-muted-foreground focus:outline-none',
-    '    focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"',
+    '  class="field w-full px-3.5 py-2.5"',
     '  :placeholder="t(\'ui.uikit.forms.input_placeholder\')"',
     '/>',
+  ].join('\n'),
+
+  helpers: [
+    '<!-- Попап: задник + слой прокрутки + поверхность -->',
+    '<div class="popup-overlay z-60" @click="close" />',
+    '<div class="popup-layer z-70">',
+    '  <Card class="popup-card max-w-md">',
+    '    <h2 class="popup-title mb-5">Заголовок</h2>',
+    '    <label class="field-label">Имя</label>',
+    '    <input class="field w-full px-3.5 py-2.5" />',
+    '    <p class="field-error">Ошибка</p>',
+    '  </Card>',
+    '</div>',
   ].join('\n'),
 
   toast: [
@@ -261,9 +272,8 @@ const snippets = {
 <template>
   <Head :title="t('ui.uikit.title')" />
 
-  <div class="animate-fade-up space-y-8">
-    <div>
-      <h1 class="text-2xl font-bold tracking-tight text-foreground">{{ t('ui.uikit.title') }}</h1>
+  <div class="animate-fade-up space-y-8">    <div>
+      <h1 class="page-title text-2xl">{{ t('ui.uikit.title') }}</h1>
       <p class="mt-1 max-w-3xl text-sm text-muted-foreground">{{ t('ui.uikit.subtitle') }}</p>
     </div>
 
@@ -459,25 +469,25 @@ const snippets = {
     <UiKitSection :title="t('ui.uikit.sections.forms')" :hint="t('ui.uikit.hints.forms')" :code="snippets.form">
       <div class="grid max-w-2xl gap-5">
         <div>
-          <label class="mb-1.5 block text-sm font-medium text-foreground">{{ t('ui.uikit.forms.input') }}</label>
+          <label class="field-label">{{ t('ui.uikit.forms.input') }}</label>
           <input
-            class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors"
+            class="field w-full px-3.5 py-2.5"
             :placeholder="t('ui.uikit.forms.input_placeholder')"
           />
         </div>
 
         <div>
-          <label class="mb-1.5 block text-sm font-medium text-foreground">{{ t('ui.uikit.forms.textarea') }}</label>
+          <label class="field-label">{{ t('ui.uikit.forms.textarea') }}</label>
           <textarea
             rows="3"
-            class="w-full resize-none rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors"
+            class="field w-full resize-none px-3.5 py-2.5"
             :placeholder="t('ui.uikit.forms.textarea_placeholder')"
           />
         </div>
 
         <div>
-          <label class="mb-1.5 block text-sm font-medium text-foreground">{{ t('ui.uikit.forms.select') }}</label>
-          <select class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors">
+          <label class="field-label">{{ t('ui.uikit.forms.select') }}</label>
+          <select class="field w-full px-3.5 py-2.5">
             <option value="" disabled selected>{{ t('ui.uikit.forms.select_placeholder') }}</option>
             <option value="1">{{ t('ui.uikit.forms.optional') }}</option>
           </select>
@@ -535,6 +545,40 @@ const snippets = {
         <Button variant="outline" @click="openCropper">
           {{ t('ui.uikit.popups.cropper') }}
         </Button>
+      </div>
+    </UiKitSection>
+
+    <!-- Общие классы -->
+    <UiKitSection :title="t('ui.uikit.sections.helpers')" :hint="t('ui.uikit.hints.helpers')" :code="snippets.helpers">
+      <div class="space-y-6">
+        <div>
+          <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            {{ t('ui.uikit.helpers.popups') }}
+          </p>
+          <p class="text-sm text-muted-foreground">{{ t('ui.uikit.helpers.popups_items') }}</p>
+        </div>
+
+        <div>
+          <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            {{ t('ui.uikit.helpers.forms') }}
+          </p>
+          <div class="grid max-w-2xl gap-3">
+            <input class="field w-full px-3.5 py-2.5" :placeholder="t('ui.uikit.helpers.forms_items')" />
+            <p class="field-error">{{ t('ui.uikit.helpers.forms_items') }}</p>
+          </div>
+        </div>
+
+        <div>
+          <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            {{ t('ui.uikit.helpers.misc') }}
+          </p>
+          <div class="flex flex-wrap items-center gap-3">
+            <span class="page-title text-2xl">{{ t('ui.uikit.helpers.misc') }}</span>
+            <span class="pill bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
+              {{ t('ui.uikit.helpers.misc_items') }}
+            </span>
+          </div>
+        </div>
       </div>
     </UiKitSection>
   </div>

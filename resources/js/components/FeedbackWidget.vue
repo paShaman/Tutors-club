@@ -131,13 +131,13 @@ function submit(): void {
 <template>
   <Teleport to="body">
     <Transition name="overlay">
-      <div v-if="show" class="fixed inset-0 z-60 bg-black/40 backdrop-blur-sm" @click="emit('close')" />
+      <div v-if="show" class="popup-overlay z-60" @click="emit('close')" />
     </Transition>
     <Transition name="modal">
-      <div v-if="show" class="fixed inset-0 z-70 overflow-y-auto">
+      <div v-if="show" class="popup-layer z-70">
         <div class="flex min-h-full items-center justify-center p-4" @click.self="emit('close')">
-          <Card class="relative w-full max-w-md p-6 shadow-xl">
-            <h2 class="text-2xl font-semibold text-foreground mb-1">
+          <Card class="popup-card max-w-md">
+            <h2 class="popup-title mb-1">
               {{ t('ui.feedback.title') }}
             </h2>
             <p class="mb-5 text-sm text-muted-foreground">{{ t('ui.feedback.hint') }}</p>
@@ -167,10 +167,10 @@ function submit(): void {
                   v-model="form.contact"
                   type="text"
                   maxlength="255"
-                  class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+                  class="field w-full px-3.5 py-2.5"
                   :placeholder="t('ui.feedback.contact_placeholder')"
                 />
-                <p v-if="form.errors.contact" class="mt-1 text-xs text-destructive">{{ form.errors.contact }}</p>
+                <p v-if="form.errors.contact" class="field-error">{{ form.errors.contact }}</p>
               </div>
 
               <div>
@@ -181,11 +181,11 @@ function submit(): void {
                   v-model="form.message"
                   rows="4"
                   maxlength="5000"
-                  class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors resize-none"
+                  class="field w-full px-3.5 py-2.5 resize-none"
                   :placeholder="t('ui.feedback.message_placeholder')"
                   @paste="onPaste"
                 />
-                <p v-if="form.errors.message" class="mt-1 text-xs text-destructive">{{ form.errors.message }}</p>
+                <p v-if="form.errors.message" class="field-error">{{ form.errors.message }}</p>
               </div>
 
               <div>
@@ -218,7 +218,7 @@ function submit(): void {
                   </div>
                 </div>
 
-                <p v-if="photoError" class="mt-1 text-xs text-destructive">{{ photoError }}</p>
+                <p v-if="photoError" class="field-error">{{ photoError }}</p>
 
                 <input
                   ref="photoInput"

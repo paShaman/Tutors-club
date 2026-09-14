@@ -565,6 +565,7 @@ return [
                 'forms'   => 'Forms and fields',
                 'toasts'  => 'Toasts',
                 'popups'  => 'Modals and popups',
+                'helpers' => 'Shared classes',
             ],
             'hints' => [
                 'tokens'  => 'Colors, radius and fonts come only from @theme in resources/css/app.css. Do not add arbitrary hex colors.',
@@ -577,6 +578,7 @@ return [
                 'forms'   => 'There are no field components: use these classes for input, textarea and select.',
                 'toasts'  => 'User feedback goes only through useToast(). Errors do not auto-hide.',
                 'popups'  => 'Forms and confirmations open as popups from components/popups. A nested popup gets the nested flag.',
+                'helpers' => 'Repeated class sets live in resources/css/app.css. Change an entity\'s look there, not across pages.',
             ],
             'token' => [
                 'colors' => 'Colors',
@@ -587,6 +589,14 @@ return [
                 'font_mono' => 'Geist Mono — code and numbers',
                 'glass'  => 'Glass',
                 'glass_hint' => '.glass and .glass-card utilities for translucent panels.',
+            ],
+            'helpers' => [
+                'popups' => 'Popups',
+                'popups_items' => 'popup-overlay (plus -soft / -strong) — the backdrop, popup-layer — the scroll layer, popup-card / popup-panel — the surface.',
+                'forms' => 'Forms',
+                'forms_items' => 'field — an input (input / textarea / select), field-label — its label, field-error — the error text.',
+                'misc' => 'Headings and badges',
+                'misc_items' => 'page-title — a page heading, pill — a rounded status badge.',
             ],
             'buttons' => [
                 'variants' => 'Variants',

@@ -32,7 +32,7 @@ function submit(): void {
         <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary shadow-lg shadow-primary/25">
           <LogIn class="h-7 w-7 text-primary-foreground" />
         </div>
-        <h1 class="text-2xl font-bold tracking-tight text-foreground">
+        <h1 class="page-title text-2xl">
           {{ t('ui.auth.login_title') }}
         </h1>
         <p class="mt-2 text-sm text-muted-foreground">
@@ -50,7 +50,7 @@ function submit(): void {
 
         <!-- Email -->
         <div>
-          <label for="email" class="block text-sm font-medium text-foreground mb-1.5">
+          <label for="email" class="field-label">
             Email *
           </label>
           <input
@@ -59,15 +59,15 @@ function submit(): void {
             type="email"
             required
             autocomplete="email"
-            class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+            class="field w-full px-3.5 py-2.5"
             placeholder="you@example.com"
           />
-          <p v-if="form.errors.email" class="mt-1 text-xs text-destructive">{{ form.errors.email }}</p>
+          <p v-if="form.errors.email" class="field-error">{{ form.errors.email }}</p>
         </div>
 
         <!-- Password -->
         <div>
-          <label for="password" class="block text-sm font-medium text-foreground mb-1.5">
+          <label for="password" class="field-label">
             {{ t('ui.auth.password') }}
           </label>
           <div class="relative">
@@ -77,7 +77,7 @@ function submit(): void {
               :type="showPassword ? 'text' : 'password'"
               required
               autocomplete="current-password"
-              class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 pr-10 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+              class="field w-full px-3.5 py-2.5 pr-10"
               placeholder="••••••••"
             />
             <button
@@ -88,7 +88,7 @@ function submit(): void {
               <span class="text-xs">{{ showPassword ? t('ui.common.hide') : t('ui.common.show') }}</span>
             </button>
           </div>
-          <p v-if="form.errors.password" class="mt-1 text-xs text-destructive">{{ form.errors.password }}</p>
+          <p v-if="form.errors.password" class="field-error">{{ form.errors.password }}</p>
         </div>
 
         <!-- Actions -->

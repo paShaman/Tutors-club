@@ -33,7 +33,7 @@ function onCancel() {
     <Transition name="overlay">
       <div
         v-if="show"
-        class="fixed inset-0 z-[80] overflow-y-auto bg-black/50"
+        class="popup-overlay-strong z-[80] overflow-y-auto"
       >
         <div class="flex min-h-full items-center justify-center p-4" @click.self="onCancel">
           <Transition name="modal">

@@ -24,6 +24,12 @@
   --color-input: hsl(214.3 31.8% 91.4%);
   --color-ring: hsl(252 87% 67%);
   --radius: 0.75rem;
+
+  /* Затемнение задника попапов — меняется в одном месте для всех попапов */
+  --overlay-tint: hsl(0 0% 0% / 0.4);
+  --overlay-tint-soft: hsl(0 0% 0% / 0.3);
+  --overlay-tint-strong: hsl(0 0% 0% / 0.5);
+  --overlay-blur: 4px;
 }
 
 /* --- Base --- */
@@ -55,6 +61,89 @@ body {
   border: 1px solid hsl(0 0% 100% / 0.3);
   box-shadow: 0 1px 2px 0 hsl(0 0% 0% / 0.03);
   border-radius: 1rem;
+}
+
+/* ==========================================================================
+   Общие классы сущностей.
+   Повторяющиеся наборы классов вынесены сюда, чтобы внешний вид сущности
+   (попап, поле формы и т.д.) менялся в одном месте, а не по всему проекту.
+   ========================================================================== */
+
+/* --- Попапы --- */
+
+/* Задник попапа. Z-слой и центрирование остаются на месте использования. */
+@utility popup-overlay {
+  @apply fixed inset-0;
+  background-color: var(--overlay-tint);
+  backdrop-filter: blur(var(--overlay-blur));
+  -webkit-backdrop-filter: blur(var(--overlay-blur));
+}
+
+/* Задник «длинных» модалок (changelog, реквизиты). */
+@utility popup-overlay-soft {
+  @apply fixed inset-0;
+  background-color: var(--overlay-tint-soft);
+  backdrop-filter: blur(var(--overlay-blur));
+  -webkit-backdrop-filter: blur(var(--overlay-blur));
+}
+
+/* Задник диалога подтверждения — плотнее и без размытия. */
+@utility popup-overlay-strong {
+  @apply fixed inset-0;
+  background-color: var(--overlay-tint-strong);
+}
+
+/* Слой прокрутки/центрирования содержимого попапа. */
+@utility popup-layer {
+  @apply fixed inset-0 overflow-y-auto;
+}
+
+/* Поверхность попапа на базе Card (форма внутри попапа). */
+@utility popup-card {
+  @apply relative w-full p-6 shadow-xl;
+}
+
+/* Самостоятельная поверхность попапа (без Card). */
+@utility popup-panel {
+  @apply relative flex w-full flex-col overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-black/5;
+}
+
+/* Заголовок попапа. Отступ снизу задаётся на месте. */
+@utility popup-title {
+  @apply text-2xl font-semibold text-foreground;
+}
+
+/* --- Формы --- */
+
+/* Поле ввода: input, textarea, select. Ширина и отступы задаются на месте — они различаются. */
+@utility field {
+  @apply rounded-xl border border-border bg-white/50 text-sm text-foreground transition-colors;
+  @apply placeholder:text-muted-foreground;
+  @apply focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30;
+}
+
+/* Подпись поля. */
+@utility field-label {
+  @apply mb-1.5 block text-sm font-medium text-foreground;
+}
+
+/* Текст ошибки валидации под полем. */
+@utility field-error {
+  @apply mt-1 text-xs text-destructive;
+}
+
+/* --- Страницы --- */
+
+/* Заголовок страницы. Размер (text-2xl / text-3xl) задаётся на месте. */
+@utility page-title {
+  @apply font-bold tracking-tight text-foreground;
+}
+
+/* --- Значки --- */
+
+/* Круглая «таблетка» статуса/счётчика. Цвет и отступы задаются на месте. */
+@utility pill {
+  @apply inline-flex items-center gap-1 rounded-full;
 }
 
 /* --- Shadcn-inspired animations --- */

@@ -60,12 +60,12 @@ const title = computed(() => props.mode === 'edit' ? t('ui.students.form.edit_ti
 <template>
   <Teleport to="body">
     <Transition name="overlay">
-      <div v-if="show" class="fixed inset-0 z-60 bg-black/40 backdrop-blur-sm" @click="emit('close')" />
+      <div v-if="show" class="popup-overlay z-60" @click="emit('close')" />
     </Transition>
     <Transition name="modal">
-      <div v-if="show" class="fixed inset-0 z-70 overflow-y-auto">
+      <div v-if="show" class="popup-layer z-70">
         <div class="flex min-h-full items-center justify-center p-4" @click.self="emit('close')">
-          <Card class="relative w-full max-w-md p-6 shadow-xl">
+          <Card class="popup-card max-w-md">
             <h2 class="text-2xl font-semibold text-foreground mb-5">
               {{ title }}
             </h2>
@@ -85,7 +85,7 @@ const title = computed(() => props.mode === 'edit' ? t('ui.students.form.edit_ti
               </div>
 
               <div>
-                <label class="block text-sm font-medium text-foreground mb-1.5">{{ t('ui.students.form.gender') }}</label>
+                <label class="field-label">{{ t('ui.students.form.gender') }}</label>
                 <div class="flex gap-2">
                   <Button
                     type="button"
@@ -115,40 +115,40 @@ const title = computed(() => props.mode === 'edit' ? t('ui.students.form.edit_ti
               </div>
 
               <div>
-                <label class="block text-sm font-medium text-foreground mb-1.5">{{ t('ui.students.form.name') }}</label>
+                <label class="field-label">{{ t('ui.students.form.name') }}</label>
                 <input
                   v-model="form.student_name"
                   required
-                  class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+                  class="field w-full px-3.5 py-2.5"
                   :placeholder="t('ui.students.form.name_placeholder')"
                 />
               </div>
 
               <div>
-                <label class="block text-sm font-medium text-foreground mb-1.5">{{ t('ui.students.form.class') }}</label>
+                <label class="field-label">{{ t('ui.students.form.class') }}</label>
                 <input
                   v-model="form.student_class"
                   required
-                  class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+                  class="field w-full px-3.5 py-2.5"
                   :placeholder="t('ui.students.form.class_placeholder')"
                 />
               </div>
 
               <div>
-                <label class="block text-sm font-medium text-foreground mb-1.5">{{ t('ui.students.form.type') }}</label>
+                <label class="field-label">{{ t('ui.students.form.type') }}</label>
                 <input
                   v-model="form.student_type"
-                  class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+                  class="field w-full px-3.5 py-2.5"
                   :placeholder="t('ui.students.form.type_placeholder')"
                 />
               </div>
 
               <div>
-                <label class="block text-sm font-medium text-foreground mb-1.5">{{ t('ui.students.form.description') }}</label>
+                <label class="field-label">{{ t('ui.students.form.description') }}</label>
                 <textarea
                   v-model="form.student_description"
                   rows="3"
-                  class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors resize-none"
+                  class="field w-full px-3.5 py-2.5 resize-none"
                   :placeholder="t('ui.students.form.description_placeholder')"
                 />
               </div>

@@ -162,10 +162,10 @@ const zoomPercent = () => Math.round(zoom.value * 100)
 <template>
   <Teleport to="body">
     <Transition name="overlay">
-      <div class="fixed inset-0 z-80 bg-black/40 backdrop-blur-sm" @click="emit('cancel')" />
+      <div class="popup-overlay z-80" @click="emit('cancel')" />
     </Transition>
     <Transition name="modal">
-      <div class="fixed inset-0 z-90 overflow-y-auto">
+      <div class="popup-layer z-90">
         <div class="flex min-h-full items-center justify-center p-4" @click.self="emit('cancel')">
           <div class="w-full max-w-sm rounded-2xl border border-border bg-white p-5 shadow-xl">
             <div class="flex items-center justify-between mb-4">

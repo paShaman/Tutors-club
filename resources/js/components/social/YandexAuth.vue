@@ -77,6 +77,6 @@ function start(): void {
       </span>
       <span>{{ label }}</span>
     </button>
-    <p v-if="error" class="mt-1 text-xs text-destructive">{{ error }}</p>
+    <p v-if="error" class="field-error">{{ error }}</p>
   </div>
 </template>

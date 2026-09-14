@@ -573,6 +573,7 @@ return [
                 'forms'   => 'Формы и поля',
                 'toasts'  => 'Тосты',
                 'popups'  => 'Модальные окна и попапы',
+                'helpers' => 'Общие классы',
             ],
             'hints' => [
                 'tokens'  => 'Цвета, радиус и шрифты берутся только из @theme в resources/css/app.css. Не добавляйте произвольные hex-цвета.',
@@ -585,6 +586,7 @@ return [
                 'forms'   => 'Отдельных компонентов полей нет: используйте эти классы для input, textarea и select.',
                 'toasts'  => 'Обратная связь пользователю — только через useToast(). Ошибка не скрывается автоматически.',
                 'popups'  => 'Формы и подтверждения открываются попапами из components/popups. Вложенный попап получает флаг nested.',
+                'helpers' => 'Повторяющиеся наборы классов вынесены в resources/css/app.css. Внешний вид сущности меняется там, а не по страницам.',
             ],
             'token' => [
                 'colors' => 'Цвета',
@@ -595,6 +597,14 @@ return [
                 'font_mono' => 'Geist Mono — код и числа',
                 'glass'  => 'Стекло',
                 'glass_hint' => 'Утилиты .glass и .glass-card для полупрозрачных панелей.',
+            ],
+            'helpers' => [
+                'popups' => 'Попапы',
+                'popups_items' => 'popup-overlay (и -soft / -strong) — задник, popup-layer — слой прокрутки, popup-card / popup-panel — поверхность.',
+                'forms' => 'Формы',
+                'forms_items' => 'field — поле ввода (input / textarea / select), field-label — подпись, field-error — ошибка.',
+                'misc' => 'Заголовки и значки',
+                'misc_items' => 'page-title — заголовок страницы, pill — круглая «таблетка» статуса.',
             ],
             'buttons' => [
                 'variants' => 'Варианты',

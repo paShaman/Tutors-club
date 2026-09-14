@@ -281,7 +281,7 @@ function onCancel(): void {
   <div class="space-y-6 animate-fade-up">
     <div class="flex flex-wrap items-start justify-between gap-4">
       <div>
-        <h1 class="text-2xl font-bold tracking-tight text-foreground">{{ t('ui.planning.title') }}</h1>
+        <h1 class="page-title text-2xl">{{ t('ui.planning.title') }}</h1>
         <p class="mt-1 text-sm text-muted-foreground">{{ t('ui.planning.subtitle') }}</p>
       </div>
       <Button @click="requestAddRoot">

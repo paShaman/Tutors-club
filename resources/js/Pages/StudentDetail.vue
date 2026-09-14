@@ -416,7 +416,7 @@ function formatTopicDate(dateStr: string | null): string {
 
           <div class="flex-1 min-w-[220px]">
             <div class="flex items-center gap-2 flex-wrap">
-              <h1 class="text-2xl font-bold tracking-tight text-foreground">{{ student.name }}</h1>
+              <h1 class="page-title text-2xl">{{ student.name }}</h1>
               <span
                 v-if="student.type"
                 class="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-700"
@@ -548,7 +548,7 @@ function formatTopicDate(dateStr: string | null): string {
               </p>
             </div>
             <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-red-500/10">
-              <TrendingUp class="h-5 w-5 text-red-500" />
+              <TrendingUp class="h-5 w-5 text-red-600" />
             </div>
           </div>
         </Card>
@@ -734,7 +734,7 @@ function formatTopicDate(dateStr: string | null): string {
                                 'inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-sm font-bold',
                                 lesson.is_payed
                                   ? 'bg-emerald-100 text-emerald-700'
-                                  : !lesson.is_future
+                                  : lesson.is_future
                                     ? 'bg-red-50 text-red-600'
                                     : 'bg-foreground/5 text-foreground',
                               )"
@@ -807,7 +807,7 @@ function formatTopicDate(dateStr: string | null): string {
           </label>
           <select
             v-model="statusFilter"
-            class="rounded-xl border border-border bg-white/50 px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+            class="field px-3 py-2"
           >
             <option value="all">{{ t('ui.planning.filters.all') }}</option>
             <option value="not_started">{{ t('ui.planning.status.not_started') }}</option>
@@ -816,7 +816,7 @@ function formatTopicDate(dateStr: string | null): string {
           </select>
         </div>
         <button
-          class="inline-flex items-center gap-1.5 rounded-xl border border-border bg-white/50 px-3 py-2 text-sm text-muted-foreground transition-colors hover:text-foreground cursor-pointer"
+          class="inline-flex items-center gap-1.5 rounded-xl border border-border bg-background px-3 py-2 text-sm text-muted-foreground transition-colors hover:text-foreground cursor-pointer"
           @click="showNotStarted = !showNotStarted"
         >
           <component :is="showNotStarted ? EyeOff : Eye" class="h-4 w-4" />
@@ -859,7 +859,7 @@ function formatTopicDate(dateStr: string | null): string {
             <div class="flex flex-wrap items-center gap-2">
               <select
                 :value="statusOf(root.id)"
-                class="rounded-xl border border-border bg-white/50 px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                class="field px-3 py-2"
                 @change="onStatusChange(root.id, $event)"
               >
                 <option value="not_started">{{ t('ui.planning.status.not_started') }}</option>
@@ -870,7 +870,7 @@ function formatTopicDate(dateStr: string | null): string {
                 v-if="statusOf(root.id) === 'mastered'"
                 type="date"
                 :value="stateMap[root.id]?.mastered_at ?? ''"
-                class="rounded-xl border border-border bg-white/50 px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                class="field px-3 py-2"
                 @change="onMasteredAtChange(root.id, $event)"
               />
               <Button variant="outline" size="sm" @click="openReview({ id: root.id, name: root.name })">
@@ -906,7 +906,7 @@ function formatTopicDate(dateStr: string | null): string {
               <div class="flex flex-wrap items-center gap-2">
                 <select
                   :value="statusOf(child.id)"
-                  class="rounded-xl border border-border bg-white/50 px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                  class="field px-3 py-2"
                   @change="onStatusChange(child.id, $event)"
                 >
                   <option value="not_started">{{ t('ui.planning.status.not_started') }}</option>
@@ -917,7 +917,7 @@ function formatTopicDate(dateStr: string | null): string {
                   v-if="statusOf(child.id) === 'mastered'"
                   type="date"
                   :value="stateMap[child.id]?.mastered_at ?? ''"
-                  class="rounded-xl border border-border bg-white/50 px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                  class="field px-3 py-2"
                   @change="onMasteredAtChange(child.id, $event)"
                 />
                 <Button variant="outline" size="sm" @click="openReview({ id: child.id, name: child.name })">

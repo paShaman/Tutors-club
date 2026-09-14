@@ -177,7 +177,7 @@ function cancelUnlink(): void {
   <div class="max-w-2xl space-y-6 animate-fade-up">
     <!-- Page header -->
     <div>
-      <h1 class="text-3xl font-bold tracking-tight text-foreground">
+      <h1 class="page-title text-3xl">
         {{ t('ui.settings.title') }}
       </h1>
       <p class="mt-1 text-muted-foreground">
@@ -214,7 +214,7 @@ function cancelUnlink(): void {
 
         <!-- Фамилия -->
         <div>
-          <label for="last_name" class="block text-sm font-medium text-foreground mb-1.5">
+          <label for="last_name" class="field-label">
             {{ t('ui.settings.last_name') }}
           </label>
           <input
@@ -222,15 +222,15 @@ function cancelUnlink(): void {
             v-model="form.last_name"
             type="text"
             autocomplete="family-name"
-            class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+            class="field w-full px-3.5 py-2.5"
             :placeholder="t('ui.placeholder.last_name')"
           />
-          <p v-if="form.errors.last_name" class="mt-1 text-xs text-destructive">{{ form.errors.last_name }}</p>
+          <p v-if="form.errors.last_name" class="field-error">{{ form.errors.last_name }}</p>
         </div>
 
         <!-- Имя -->
         <div>
-          <label for="first_name" class="block text-sm font-medium text-foreground mb-1.5">
+          <label for="first_name" class="field-label">
             {{ t('ui.settings.first_name') }}
           </label>
           <input
@@ -238,15 +238,15 @@ function cancelUnlink(): void {
             v-model="form.first_name"
             type="text"
             autocomplete="given-name"
-            class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+            class="field w-full px-3.5 py-2.5"
             :placeholder="t('ui.placeholder.first_name')"
           />
-          <p v-if="form.errors.first_name" class="mt-1 text-xs text-destructive">{{ form.errors.first_name }}</p>
+          <p v-if="form.errors.first_name" class="field-error">{{ form.errors.first_name }}</p>
         </div>
 
         <!-- Отчество -->
         <div>
-          <label for="middle_name" class="block text-sm font-medium text-foreground mb-1.5">
+          <label for="middle_name" class="field-label">
             {{ t('ui.settings.middle_name') }}
           </label>
           <input
@@ -254,10 +254,10 @@ function cancelUnlink(): void {
             v-model="form.middle_name"
             type="text"
             autocomplete="additional-name"
-            class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+            class="field w-full px-3.5 py-2.5"
             :placeholder="t('ui.placeholder.middle_name')"
           />
-          <p v-if="form.errors.middle_name" class="mt-1 text-xs text-destructive">{{ form.errors.middle_name }}</p>
+          <p v-if="form.errors.middle_name" class="field-error">{{ form.errors.middle_name }}</p>
         </div>
 
         <!-- Email (readonly) -->
@@ -293,21 +293,21 @@ function cancelUnlink(): void {
       </CardHeader>
 
       <div class="px-6 pb-6">
-        <label for="locale" class="block text-sm font-medium text-foreground mb-1.5">
+        <label for="locale" class="field-label">
           {{ t('ui.settings.language_label') }}
         </label>
         <select
           id="locale"
           v-model="localeForm.locale"
           :disabled="localeForm.processing"
-          class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors disabled:opacity-60"
+          class="field w-full px-3.5 py-2.5 disabled:opacity-60"
           @change="changeLocale"
         >
           <option v-for="item in locales" :key="item.code" :value="item.code">
             {{ item.label }}
           </option>
         </select>
-        <p v-if="localeForm.errors.locale" class="mt-1 text-xs text-destructive">{{ localeForm.errors.locale }}</p>
+        <p v-if="localeForm.errors.locale" class="field-error">{{ localeForm.errors.locale }}</p>
       </div>
     </Card>
 
@@ -450,7 +450,7 @@ function cancelUnlink(): void {
 
           <form class="space-y-3" @submit.prevent="submitPassword">
             <div v-if="user?.has_password">
-              <label for="current_password" class="block text-sm font-medium text-foreground mb-1.5">
+              <label for="current_password" class="field-label">
                 {{ t('ui.settings.current_password') }}
               </label>
               <input
@@ -459,13 +459,13 @@ function cancelUnlink(): void {
                 type="password"
                 required
                 autocomplete="current-password"
-                class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+                class="field w-full px-3.5 py-2.5"
               />
-              <p v-if="passwordForm.errors.current_password" class="mt-1 text-xs text-destructive">{{ passwordForm.errors.current_password }}</p>
+              <p v-if="passwordForm.errors.current_password" class="field-error">{{ passwordForm.errors.current_password }}</p>
             </div>
 
             <div>
-              <label for="new_password" class="block text-sm font-medium text-foreground mb-1.5">
+              <label for="new_password" class="field-label">
                 {{ t('ui.settings.new_password') }}
               </label>
               <input
@@ -474,13 +474,13 @@ function cancelUnlink(): void {
                 type="password"
                 required
                 autocomplete="new-password"
-                class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+                class="field w-full px-3.5 py-2.5"
               />
-              <p v-if="passwordForm.errors.password" class="mt-1 text-xs text-destructive">{{ passwordForm.errors.password }}</p>
+              <p v-if="passwordForm.errors.password" class="field-error">{{ passwordForm.errors.password }}</p>
             </div>
 
             <div>
-              <label for="password_confirmation" class="block text-sm font-medium text-foreground mb-1.5">
+              <label for="password_confirmation" class="field-label">
                 {{ t('ui.settings.repeat_password') }}
               </label>
               <input
@@ -489,9 +489,9 @@ function cancelUnlink(): void {
                 type="password"
                 required
                 autocomplete="new-password"
-                class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+                class="field w-full px-3.5 py-2.5"
               />
-              <p v-if="passwordForm.errors.password_confirmation" class="mt-1 text-xs text-destructive">{{ passwordForm.errors.password_confirmation }}</p>
+              <p v-if="passwordForm.errors.password_confirmation" class="field-error">{{ passwordForm.errors.password_confirmation }}</p>
             </div>
 
             <Button type="submit" :disabled="passwordForm.processing">

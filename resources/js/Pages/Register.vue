@@ -156,7 +156,7 @@ function submit(): void {
         <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-500 shadow-lg shadow-emerald-500/25">
           <UserPlus class="h-7 w-7 text-white" />
         </div>
-        <h1 class="text-2xl font-bold tracking-tight text-foreground">
+        <h1 class="page-title text-2xl">
           {{ t('ui.auth.register_title') }}
         </h1>
         <p class="mt-2 text-sm text-muted-foreground">
@@ -201,12 +201,12 @@ function submit(): void {
               <span class="text-destructive">*</span>
             </span>
           </label>
-          <p v-if="form.errors.agreement" class="mt-1 text-xs text-destructive">{{ form.errors.agreement }}</p>
+          <p v-if="form.errors.agreement" class="field-error">{{ form.errors.agreement }}</p>
         </div>
 
         <!-- Last Name -->
         <div>
-          <label for="last_name" class="block text-sm font-medium text-foreground mb-1.5">
+          <label for="last_name" class="field-label">
             {{ t('ui.auth.last_name') }}
           </label>
           <input
@@ -214,15 +214,15 @@ function submit(): void {
             v-model="form.last_name"
             type="text"
             autocomplete="family-name"
-            class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+            class="field w-full px-3.5 py-2.5"
             :placeholder="t('ui.placeholder.last_name')"
           />
-          <p v-if="form.errors.last_name" class="mt-1 text-xs text-destructive">{{ form.errors.last_name }}</p>
+          <p v-if="form.errors.last_name" class="field-error">{{ form.errors.last_name }}</p>
         </div>
 
         <!-- First Name -->
         <div>
-          <label for="first_name" class="block text-sm font-medium text-foreground mb-1.5">
+          <label for="first_name" class="field-label">
             {{ t('ui.auth.first_name') }}
           </label>
           <input
@@ -230,15 +230,15 @@ function submit(): void {
             v-model="form.first_name"
             type="text"
             autocomplete="given-name"
-            class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+            class="field w-full px-3.5 py-2.5"
             :placeholder="t('ui.placeholder.first_name')"
           />
-          <p v-if="form.errors.first_name" class="mt-1 text-xs text-destructive">{{ form.errors.first_name }}</p>
+          <p v-if="form.errors.first_name" class="field-error">{{ form.errors.first_name }}</p>
         </div>
 
         <!-- Email -->
         <div>
-          <label for="email" class="block text-sm font-medium text-foreground mb-1.5">
+          <label for="email" class="field-label">
             Email *
           </label>
           <input
@@ -247,15 +247,15 @@ function submit(): void {
             type="email"
             required
             autocomplete="email"
-            class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+            class="field w-full px-3.5 py-2.5"
             placeholder="you@example.com"
           />
-          <p v-if="form.errors.email" class="mt-1 text-xs text-destructive">{{ form.errors.email }}</p>
+          <p v-if="form.errors.email" class="field-error">{{ form.errors.email }}</p>
         </div>
 
         <!-- Password -->
         <div>
-          <label for="password" class="block text-sm font-medium text-foreground mb-1.5">
+          <label for="password" class="field-label">
             {{ t('ui.auth.password') }}
           </label>
           <div class="relative">
@@ -265,7 +265,7 @@ function submit(): void {
               :type="showPassword ? 'text' : 'password'"
               required
               autocomplete="new-password"
-              class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 pr-10 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+              class="field w-full px-3.5 py-2.5 pr-10"
               placeholder="••••••••"
             />
             <button
@@ -276,12 +276,12 @@ function submit(): void {
               <span class="text-xs">{{ showPassword ? t('ui.common.hide') : t('ui.common.show') }}</span>
             </button>
           </div>
-          <p v-if="form.errors.password" class="mt-1 text-xs text-destructive">{{ form.errors.password }}</p>
+          <p v-if="form.errors.password" class="field-error">{{ form.errors.password }}</p>
         </div>
 
         <!-- Confirm password -->
         <div>
-          <label for="password_confirmation" class="block text-sm font-medium text-foreground mb-1.5">
+          <label for="password_confirmation" class="field-label">
             {{ t('ui.auth.password_confirmation') }}
           </label>
           <input
@@ -290,15 +290,15 @@ function submit(): void {
             :type="showPassword ? 'text' : 'password'"
             required
             autocomplete="new-password"
-            class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+            class="field w-full px-3.5 py-2.5"
             placeholder="••••••••"
           />
-          <p v-if="form.errors.password_confirmation" class="mt-1 text-xs text-destructive">{{ form.errors.password_confirmation }}</p>
+          <p v-if="form.errors.password_confirmation" class="field-error">{{ form.errors.password_confirmation }}</p>
         </div>
 
         <!-- Captcha -->
         <div>
-          <p class="block text-sm font-medium text-foreground mb-1.5">
+          <p class="field-label">
             {{ t('ui.auth.captcha_label') }}
           </p>
           <div
@@ -306,8 +306,8 @@ function submit(): void {
             class="w-full rounded-xl bg-white/50"
             style="height: 100px"
           ></div>
-          <p v-if="captchaError" class="mt-1 text-xs text-destructive">{{ captchaError }}</p>
-          <p v-else-if="form.errors['smart-token']" class="mt-1 text-xs text-destructive">{{ form.errors['smart-token'] }}</p>
+          <p v-if="captchaError" class="field-error">{{ captchaError }}</p>
+          <p v-else-if="form.errors['smart-token']" class="field-error">{{ form.errors['smart-token'] }}</p>
         </div>
 
         <!-- Actions -->

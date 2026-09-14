@@ -212,7 +212,7 @@ const barChartOptions = computed(() => ({
   <div class="space-y-8 animate-fade-up">
     <!-- Page header -->
     <div>
-      <h1 class="text-3xl font-bold tracking-tight text-foreground">
+      <h1 class="page-title text-3xl">
         {{ t('ui.dashboard.greeting', { name: userName ?? t('ui.dashboard.greeting_fallback') }) }}
       </h1>
       <p class="mt-1 text-muted-foreground">

@@ -391,7 +391,7 @@ function formatDatePayed(dateStr: string | null): string {
           <BookOpen class="h-6 w-6 text-violet-600" />
         </div>
         <div>
-          <h1 class="text-2xl font-bold tracking-tight text-foreground">
+          <h1 class="page-title text-2xl">
             {{ t('ui.lessons.title') }}
           </h1>
           <p class="text-sm text-muted-foreground mt-0.5">
@@ -404,7 +404,7 @@ function formatDatePayed(dateStr: string | null): string {
         <label class="hidden sm:inline text-sm font-medium text-muted-foreground shrink-0">{{ t('ui.lessons.filter_label') }}</label>
         <select
           v-model="selectedStudentId"
-          class="rounded-xl border border-border bg-white/50 px-3.5 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors min-w-[160px] sm:min-w-[200px]"
+          class="field px-3.5 py-2 min-w-[160px] sm:min-w-[200px]"
         >
           <option :value="null">{{ t('ui.lessons.all_students') }}</option>
           <option v-for="student in page.props.students" :key="student.id" :value="student.id">
@@ -622,7 +622,7 @@ function formatDatePayed(dateStr: string | null): string {
                                   )"
                                 >
                                   <Coins v-if="lesson.is_payed" class="h-3.5 w-3.5" />
-                                  <Coins v-else class="h-3.5 w-3.5 text-red-500" />
+                                  <Coins v-else class="h-3.5 w-3.5 text-destructive" />
                                   <template v-if="lesson.is_payed">
                                     <span class="hidden sm:inline">{{ t('ui.lessons.paid') }} </span>{{ lesson.date_payed ? formatDatePayed(lesson.date_payed) : '' }}
                                   </template>

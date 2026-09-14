@@ -160,7 +160,7 @@ function deleteStudent(student: any) {
           <GraduationCap class="h-6 w-6 text-emerald-600" />
         </div>
         <div>
-          <h1 class="text-2xl font-bold tracking-tight text-foreground">
+          <h1 class="page-title text-2xl">
             {{ t('ui.students.title') }}
           </h1>
           <p class="text-sm text-muted-foreground mt-0.5">

@@ -214,24 +214,24 @@ const title = computed(() => props.mode === 'edit' ? t('ui.lessons.form.edit_tit
 <template>
   <Teleport to="body">
     <Transition name="overlay">
-      <div v-if="show && !showTopicForm" class="fixed inset-0 z-60 bg-black/40 backdrop-blur-sm" @click="emit('close')" />
+      <div v-if="show && !showTopicForm" class="popup-overlay z-60" @click="emit('close')" />
     </Transition>
     <Transition name="modal">
-      <div v-if="show" class="fixed inset-0 z-70 overflow-y-auto">
+      <div v-if="show" class="popup-layer z-70">
         <div class="flex min-h-full items-center justify-center p-4" @click.self="emit('close')">
-          <Card class="relative w-full max-w-lg p-6 shadow-xl">
-          <h2 class="text-2xl font-semibold text-foreground mb-5">
+          <Card class="popup-card max-w-lg">
+            <h2 class="popup-title mb-5">
             {{ title }}
           </h2>
 
           <form @submit.prevent="emit('submit', form)" class="space-y-4">
             <!-- Student -->
             <div>
-              <label class="block text-sm font-medium text-foreground mb-1.5">{{ t('ui.lessons.form.student') }}</label>
+              <label class="field-label">{{ t('ui.lessons.form.student') }}</label>
               <select
                 v-model="form.lesson_student_id"
                 required
-                class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+                class="field w-full px-3.5 py-2.5"
               >
                 <option value="" disabled>{{ t('ui.lessons.form.student_placeholder') }}</option>
                 <option v-for="student in students" :key="student.id" :value="student.id">
@@ -242,11 +242,11 @@ const title = computed(() => props.mode === 'edit' ? t('ui.lessons.form.edit_tit
 
             <!-- Subject -->
             <div>
-              <label class="block text-sm font-medium text-foreground mb-1.5">{{ t('ui.lessons.form.subject') }}</label>
+              <label class="field-label">{{ t('ui.lessons.form.subject') }}</label>
               <select
                 v-model="form.lesson_subject"
                 required
-                class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+                class="field w-full px-3.5 py-2.5"
               >
                 <option value="" disabled>{{ t('ui.lessons.form.subject_placeholder') }}</option>
                 <option v-for="subj in subjects" :key="subj" :value="subj">
@@ -273,7 +273,7 @@ const title = computed(() => props.mode === 'edit' ? t('ui.lessons.form.edit_tit
                 <select
                   v-model="form.lesson_topic_id"
                   :disabled="!form.lesson_subject"
-                  class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors disabled:opacity-50"
+                  class="field w-full px-3.5 py-2.5 disabled:opacity-50"
                 >
                   <option :value="null">{{ t('ui.lessons.form.topic_none') }}</option>
                   <option v-for="topic in subjectTopics" :key="topic.id" :value="topic.id">
@@ -295,7 +295,7 @@ const title = computed(() => props.mode === 'edit' ? t('ui.lessons.form.edit_tit
                 </div>
                 <select
                   v-model="form.lesson_subtopic_id"
-                  class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+                  class="field w-full px-3.5 py-2.5"
                 >
                   <option :value="null">{{ t('ui.lessons.form.subtopic_none') }}</option>
                   <option v-for="sub in subtopics" :key="sub.id" :value="sub.id">
@@ -307,10 +307,10 @@ const title = computed(() => props.mode === 'edit' ? t('ui.lessons.form.edit_tit
 
             <!-- Topic status -->
             <div v-if="hasTopic">
-              <label class="block text-sm font-medium text-foreground mb-1.5">{{ t('ui.lessons.form.topic_status') }}</label>
+              <label class="field-label">{{ t('ui.lessons.form.topic_status') }}</label>
               <select
                 v-model="form.lesson_topic_status"
-                class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+                class="field w-full px-3.5 py-2.5"
               >
                 <option value="in_progress">{{ t('ui.lessons.form.topic_status_in_progress') }}</option>
                 <option value="mastered">{{ t('ui.lessons.form.topic_status_mastered') }}</option>
@@ -320,11 +320,11 @@ const title = computed(() => props.mode === 'edit' ? t('ui.lessons.form.edit_tit
 
             <!-- Comment -->
             <div>
-              <label class="block text-sm font-medium text-foreground mb-1.5">{{ t('ui.lessons.form.comment') }}</label>
+              <label class="field-label">{{ t('ui.lessons.form.comment') }}</label>
               <input
                 v-model="form.lesson_comment"
                 maxlength="255"
-                class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+                class="field w-full px-3.5 py-2.5"
                 :placeholder="t('ui.lessons.form.comment_placeholder')"
               />
             </div>
@@ -332,20 +332,20 @@ const title = computed(() => props.mode === 'edit' ? t('ui.lessons.form.edit_tit
             <!-- Date & Time row -->
             <div class="grid grid-cols-2 gap-4">
               <div>
-                <label class="block text-sm font-medium text-foreground mb-1.5">{{ t('ui.lessons.form.date') }}</label>
+                <label class="field-label">{{ t('ui.lessons.form.date') }}</label>
                 <input
                   v-model="form.lesson_date"
                   type="date"
                   required
-                  class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+                  class="field w-full px-3.5 py-2.5"
                 />
               </div>
               <div>
-                <label class="block text-sm font-medium text-foreground mb-1.5">{{ t('ui.lessons.form.time') }}</label>
+                <label class="field-label">{{ t('ui.lessons.form.time') }}</label>
                 <input
                   v-model="form.lesson_time"
                   type="time"
-                  class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+                  class="field w-full px-3.5 py-2.5"
                 />
               </div>
             </div>
@@ -353,22 +353,22 @@ const title = computed(() => props.mode === 'edit' ? t('ui.lessons.form.edit_tit
             <!-- Price & Duration row -->
             <div class="grid grid-cols-2 gap-4">
               <div>
-                <label class="block text-sm font-medium text-foreground mb-1.5">{{ t('ui.lessons.form.price') }}</label>
+                <label class="field-label">{{ t('ui.lessons.form.price') }}</label>
                 <input
                   v-model.number="form.lesson_price"
                   type="number"
                   min="0"
-                  class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+                  class="field w-full px-3.5 py-2.5"
                 />
               </div>
               <div>
-                <label class="block text-sm font-medium text-foreground mb-1.5">{{ t('ui.lessons.form.duration') }}</label>
+                <label class="field-label">{{ t('ui.lessons.form.duration') }}</label>
                 <input
                   v-model.number="form.lesson_duration"
                   type="number"
                   min="0"
                   step="5"
-                  class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+                  class="field w-full px-3.5 py-2.5"
                 />
               </div>
             </div>
@@ -395,11 +395,11 @@ const title = computed(() => props.mode === 'edit' ? t('ui.lessons.form.edit_tit
 
             <!-- Date payed (when is_payed checked) -->
             <div v-if="form.lesson_is_payed">
-              <label class="block text-sm font-medium text-foreground mb-1.5">{{ t('ui.lessons.form.date_paid') }}</label>
+              <label class="field-label">{{ t('ui.lessons.form.date_paid') }}</label>
               <input
                 v-model="form.lesson_date_payed"
                 type="date"
-                class="w-full rounded-xl border border-border bg-white/50 px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+                class="field w-full px-3.5 py-2.5"
               />
             </div>
 

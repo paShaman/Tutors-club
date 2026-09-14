@@ -113,6 +113,6 @@ onBeforeUnmount(() => {
 <template>
   <div v-if="enabled" class="w-full">
     <div ref="container" class="w-full min-h-11"></div>
-    <p v-if="error" class="mt-1 text-xs text-destructive">{{ error }}</p>
+    <p v-if="error" class="field-error">{{ error }}</p>
   </div>
 </template>
