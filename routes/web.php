@@ -13,6 +13,7 @@ use App\Http\Controllers\PlanningController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ChangelogController;
 use App\Http\Controllers\FeedbackController;
+use App\Http\Controllers\PromoController;
 use App\Http\Controllers\UiKitController;
 use Illuminate\Support\Facades\Route;
 
@@ -84,6 +85,19 @@ Route::post('/telegram/webhook', [FeedbackController::class, 'webhook'])->name('
 // ─── Admin ──────────────────────────────────────────────────
 Route::get('/admin/uikit', [UiKitController::class, 'index'])
     ->name('admin.uikit')
+    ->middleware(['auth', 'admin']);
+
+Route::get('/admin/promo', [PromoController::class, 'index'])
+    ->name('admin.promo')
+    ->middleware(['auth', 'admin']);
+
+Route::post('/admin/promo/edit', [PromoController::class, 'edit'])
+    ->middleware(['auth', 'admin']);
+
+Route::post('/admin/promo/delete', [PromoController::class, 'delete'])
+    ->middleware(['auth', 'admin']);
+
+Route::post('/admin/promo/toggle', [PromoController::class, 'toggle'])
     ->middleware(['auth', 'admin']);
 
 // ─── Lessons ────────────────────────────────────────────────

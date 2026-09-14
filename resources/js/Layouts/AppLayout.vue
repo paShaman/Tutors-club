@@ -17,12 +17,14 @@ import {
   AlertTriangle,
   MessageCircle,
   Palette,
+  Megaphone,
 } from 'lucide-vue-next'
 import Button from '@/components/ui/Button.vue'
 import UserAvatar from '@/components/ui/UserAvatar.vue'
 import ChangelogModal from '@/components/popups/ChangelogModal.vue'
 import RequisitesModal from '@/components/popups/RequisitesModal.vue'
 import FeedbackWidget from '@/components/FeedbackWidget.vue'
+import PromoBanners from '@/components/PromoBanners.vue'
 import { cn } from '@/lib/utils'
 import { useI18n } from '@/lib/i18n'
 
@@ -92,20 +94,40 @@ function isActive(route: string): boolean {
 
 const user = computed(() => page.props.auth?.user ?? null)
 
-// Служебный пункт «UI-кит» виден только администратору (сервер всё равно проверяет роль)
-const menuItems = computed<NavItem[]>(() => {
-  if (!user.value?.is_admin) return navItems
-  return [
-    ...navItems,
-    {
-      labelKey: 'ui.nav.uikit',
-      href: '/admin/uikit',
-      icon: Palette,
-      activeRoute: 'admin/uikit',
-    },
-  ]
+// Служебные разделы (/admin/*) видны только администратору (сервер всё равно проверяет роль)
+const adminNavItems: NavItem[] = [
+  {
+    labelKey: 'ui.nav.promo',
+    href: '/admin/promo',
+    icon: Megaphone,
+    activeRoute: 'admin/promo',
+  },
+  {
+    labelKey: 'ui.nav.uikit',
+    href: '/admin/uikit',
+    icon: Palette,
+    activeRoute: 'admin/uikit',
+  },
+]
+
+interface NavGroup {
+  key: string
+  labelKey?: string
+  items: NavItem[]
+}
+
+// Админские пункты выносим в отдельную группу с подписью, чтобы не сливались с основными.
+const navGroups = computed<NavGroup[]>(() => {
+  const groups: NavGroup[] = [{ key: 'main', items: navItems }]
+
+  if (user.value?.is_admin) {
+    groups.push({ key: 'admin', labelKey: 'ui.nav.admin_section', items: adminNavItems })
+  }
+
+  return groups
 })
 const tariff = computed(() => page.props.tariff ?? null)
+const promoBanners = computed(() => page.props.promoBanners ?? [])
 const agreements = computed(() => page.props.agreements ?? [])
 const requisites = computed(() => page.props.requisites ?? {})
 
@@ -241,35 +263,49 @@ onUnmounted(() => {
 
         <!-- Main nav -->
         <nav class="flex-1 space-y-0.5">
-          <Link
-            v-for="item in menuItems"
-            :key="item.href"
-            :href="item.href"
-            :class="cn(
-              'group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200',
-              sidebarCompact && !sidebarOpen && 'justify-center px-2',
-              isActive(item.activeRoute)
-                ? 'bg-primary/10 text-primary'
-                : 'text-muted-foreground hover:bg-accent hover:text-foreground cursor-pointer',
-            )"
-          >
-            <component :is="item.icon" class="h-5 w-5 shrink-0" />
-            <span
+          <div v-for="group in navGroups" :key="group.key" :class="group.labelKey && 'pt-4'">
+            <!-- Подпись группы админских разделов (в компактном режиме — разделитель) -->
+            <p
+              v-if="group.labelKey && (!sidebarCompact || sidebarOpen)"
+              class="px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60"
+            >
+              {{ t(group.labelKey) }}
+            </p>
+            <div
+              v-else-if="group.labelKey"
+              class="mx-3 mb-2 border-t border-border/60"
+            />
+
+            <Link
+              v-for="item in group.items"
+              :key="item.href"
+              :href="item.href"
               :class="cn(
-                'whitespace-nowrap transition-opacity duration-200',
-                (sidebarCompact && !sidebarOpen) ? 'hidden' : 'opacity-100',
+                'group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200',
+                sidebarCompact && !sidebarOpen && 'justify-center px-2',
+                isActive(item.activeRoute)
+                  ? 'bg-primary/10 text-primary'
+                  : 'text-muted-foreground hover:bg-accent hover:text-foreground cursor-pointer',
               )"
             >
-              {{ t(item.labelKey) }}
-            </span>
-            <!-- Tooltip в компактном режиме -->
-            <span
-              v-if="sidebarCompact && !sidebarOpen"
-              class="pointer-events-none absolute left-full ml-3 z-100 rounded-lg bg-gray-900 px-2.5 py-1.5 text-xs font-medium text-white whitespace-nowrap opacity-0 transition-opacity duration-150 group-hover:opacity-100 shadow-lg"
-            >
-              {{ t(item.labelKey) }}
-            </span>
-          </Link>
+              <component :is="item.icon" class="h-5 w-5 shrink-0" />
+              <span
+                :class="cn(
+                  'whitespace-nowrap transition-opacity duration-200',
+                  (sidebarCompact && !sidebarOpen) ? 'hidden' : 'opacity-100',
+                )"
+              >
+                {{ t(item.labelKey) }}
+              </span>
+              <!-- Tooltip в компактном режиме -->
+              <span
+                v-if="sidebarCompact && !sidebarOpen"
+                class="pointer-events-none absolute left-full ml-3 z-100 rounded-lg bg-gray-900 px-2.5 py-1.5 text-xs font-medium text-white whitespace-nowrap opacity-0 transition-opacity duration-150 group-hover:opacity-100 shadow-lg"
+              >
+                {{ t(item.labelKey) }}
+              </span>
+            </Link>
+          </div>
         </nav>
 
         <!-- Changelog / feedback buttons -->
@@ -411,6 +447,7 @@ onUnmounted(() => {
 
       <!-- Page content -->
       <main class="p-6">
+        <PromoBanners :banners="promoBanners" />
         <div
           v-if="showTariffNotice"
           class="mb-4 flex items-start gap-3 rounded-xl border border-amber-200/60 bg-amber-50/60 px-4 py-3 text-sm text-amber-700"

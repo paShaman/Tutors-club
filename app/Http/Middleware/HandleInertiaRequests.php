@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
+use App\Model\PromoBanner;
 use App\Services\VkIdService;
 use App\Services\YandexIdService;
 use Illuminate\Http\Request;
@@ -56,6 +57,9 @@ final class HandleInertiaRequests extends Middleware
             'tariff' => fn (): ?array => $request->user()
                 ? app(\App\Services\TariffService::class)->payload($request->user())
                 : null,
+            'promoBanners' => fn (): array => $request->user()
+                ? PromoBanner::activePayloads()
+                : [],
             'locale'       => app()->getLocale(),
             'translations' => fn (): array => trans('messages'),
             'locales'      => collect(config('locales.available', []))

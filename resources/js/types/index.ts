@@ -60,6 +60,16 @@ export interface TariffInfo {
   price_year: number
 }
 
+export interface PromoBannerInfo {
+  id: number
+  title: string | null
+  message: string
+  button_text: string | null
+  button_url: string | null
+  dismiss_days: number
+  updated_at: string | null
+}
+
 export interface SharedProps {
   [key: string]: unknown
   auth: {
@@ -74,6 +84,7 @@ export interface SharedProps {
   requisites: CompanyRequisites
   telegram: TelegramInfo
   tariff: TariffInfo | null
+  promoBanners: PromoBannerInfo[]
   locale: string
   locales: LocaleOption[]
   translations: Record<string, unknown>
