@@ -78,6 +78,7 @@ Route::get('/changelog', [ChangelogController::class, 'getChangelog'])
 
 // ─── Feedback ───────────────────────────────────────────────
 Route::post('/feedback', [FeedbackController::class, 'send'])->middleware('auth');
+Route::post('/telegram/webhook', [FeedbackController::class, 'webhook'])->name('telegram.webhook');
 
 // ─── Lessons ────────────────────────────────────────────────
 Route::get('/lessons', [LessonController::class, 'getLessons'])->middleware('auth')->name('lessons');

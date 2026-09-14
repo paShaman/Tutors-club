@@ -38,6 +38,10 @@ export interface LocaleOption {
   label: string
 }
 
+export interface TelegramInfo {
+  bot_url: string | null
+}
+
 export type TariffFeature = 'students' | 'lessons' | 'topics'
 
 export interface TariffInfo {
@@ -67,6 +71,7 @@ export interface SharedProps {
   social: SocialProviderConfig[]
   agreements: AgreementDocument[]
   requisites: CompanyRequisites
+  telegram: TelegramInfo
   tariff: TariffInfo | null
   locale: string
   locales: LocaleOption[]

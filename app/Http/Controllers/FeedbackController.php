@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
@@ -65,6 +66,106 @@ final class FeedbackController extends Controller
         }
 
         return back()->with('success', lng('success.feedback_sent'));
+    }
+
+    /**
+     * Принимает апдейты Telegram и пересылает сообщения, написанные боту, владельцу.
+     *
+     * Endpoint: POST /telegram/webhook (без auth и CSRF, см. bootstrap/app.php).
+     * Защита — секрет в заголовке X-Telegram-Bot-Api-Secret-Token.
+     *
+     * Настройка (выполняется вручную, один раз — доступа к проду нет):
+     *   1. В .env задать TELEGRAM_BOT_USERNAME=@имя_бота и TELEGRAM_WEBHOOK_SECRET=<случайная_строка>
+     *      (при пустом webhook_secret endpoint открыт для любого POST).
+     *   2. Зарегистрировать вебхук боевым токеном и доменом:
+     *      https://api.telegram.org/bot<TOKEN>/setWebhook?url=https://<домен>/telegram/webhook&secret_token=<SECRET>&allowed_updates=["message","edited_message"]
+     *   3. Пользователь должен сам начать диалог с ботом (/start) — бот не может написать первым.
+     */
+    public function webhook(Request $request): JsonResponse
+    {
+        $secret = (string) config('services.telegram.webhook_secret');
+
+        if ($secret !== '' && $request->header('X-Telegram-Bot-Api-Secret-Token') !== $secret) {
+            return response()->json(['ok' => false], 403);
+        }
+
+        $token  = (string) config('services.telegram.bot_token');
+        $chatId = (string) config('services.telegram.chat_id');
+
+        // Отвечаем 200, чтобы Telegram не зацикливал доставку при сбое конфигурации.
+        if ($token === '' || $chatId === '') {
+            return response()->json(['ok' => true]);
+        }
+
+        $message = $request->input('message') ?? $request->input('edited_message');
+
+        if (! is_array($message)) {
+            return response()->json(['ok' => true]);
+        }
+
+        try {
+            $this->forwardToOwner($token, $chatId, $message);
+        } catch (Throwable) {
+            // Игнорируем: повторная доставка от Telegram создаст дубли.
+        }
+
+        return response()->json(['ok' => true]);
+    }
+
+    /**
+     * @param  array<string, mixed>  $message
+     */
+    private function forwardToOwner(string $token, string $chatId, array $message): void
+    {
+        $senderChatId = (string) (is_array($message['chat'] ?? null) ? ($message['chat']['id'] ?? '') : '');
+
+        // Сообщение из чата самого владельца пересылать не нужно.
+        if ($senderChatId === $chatId) {
+            return;
+        }
+
+        $from     = is_array($message['from'] ?? null) ? $message['from'] : [];
+        $name     = trim(($from['first_name'] ?? '') . ' ' . ($from['last_name'] ?? ''));
+        $username = isset($from['username']) ? '@' . $from['username'] : '—';
+        $text     = trim((string) ($message['text'] ?? $message['caption'] ?? ''));
+
+        $lines = [
+            '💬 Новое сообщение в боте',
+            '',
+            '👤 Имя: ' . ($name !== '' ? $name : '—'),
+            '🔗 Username: ' . $username,
+            '🆔 ID: ' . ($from['id'] ?? '—'),
+            '',
+            '📝 Сообщение:',
+            $text !== '' ? $text : '—',
+            '',
+            '🕒 ' . now()->format('Y-m-d H:i'),
+        ];
+
+        $photos = $message['photo'] ?? null;
+        $fileId = is_array($photos) && count($photos) > 0
+            ? ($photos[array_key_last($photos)]['file_id'] ?? null)
+            : null;
+
+        if ($fileId !== null) {
+            Http::asJson()
+                ->timeout(15)
+                ->post("https://api.telegram.org/bot{$token}/sendPhoto", [
+                    'chat_id' => $chatId,
+                    'photo'   => $fileId,
+                    'caption' => mb_substr(implode("\n", $lines), 0, 1024),
+                ]);
+
+            return;
+        }
+
+        Http::asJson()
+            ->timeout(15)
+            ->post("https://api.telegram.org/bot{$token}/sendMessage", [
+                'chat_id'                  => $chatId,
+                'text'                     => mb_substr(implode("\n", $lines), 0, 4096),
+                'disable_web_page_preview' => true,
+            ]);
     }
 
     /**

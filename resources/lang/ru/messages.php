@@ -501,6 +501,8 @@ return [
             'photo_too_large'      => 'Фото больше 10 МБ',
             'remove_photo'         => 'Удалить фото',
             'submit'               => 'Отправить',
+            'telegram_hint'        => 'Можно написать нам прямо в Telegram',
+            'telegram_open'        => 'Открыть бота',
         ],
         'documents' => [
             'privacy_policy' => [

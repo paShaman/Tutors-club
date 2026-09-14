@@ -27,6 +27,8 @@ final class HandleInertiaRequests extends Middleware
         $vkConfigured = (int) config('services.vkid.app_id') > 0
             && (string) config('services.vkid.redirect_url') !== '';
 
+        $botUsername = ltrim((string) config('services.telegram.bot_username'), '@');
+
         return [
             ...parent::share($request),
             'auth' => [
@@ -47,6 +49,9 @@ final class HandleInertiaRequests extends Middleware
             ],
             'agreements' => config('agreements.documents', []),
             'requisites' => config('company.requisites', []),
+            'telegram'   => [
+                'bot_url' => $botUsername !== '' ? 'https://t.me/' . $botUsername : null,
+            ],
             'tariff' => fn (): ?array => $request->user()
                 ? app(\App\Services\TariffService::class)->payload($request->user())
                 : null,

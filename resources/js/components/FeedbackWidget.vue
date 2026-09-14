@@ -26,6 +26,8 @@ const page = usePage<SharedProps>()
 const { t } = useI18n()
 const toast = useToast()
 
+const botUrl = computed<string | null>(() => page.props.telegram?.bot_url ?? null)
+
 const MAX_PHOTOS = 3
 const MAX_PHOTO_SIZE = 10 * 1024 * 1024
 
@@ -139,6 +141,22 @@ function submit(): void {
               {{ t('ui.feedback.title') }}
             </h2>
             <p class="mb-5 text-sm text-muted-foreground">{{ t('ui.feedback.hint') }}</p>
+
+            <div
+              v-if="botUrl"
+              class="mb-5 flex items-center justify-between gap-3 rounded-xl border border-border bg-primary/5 px-3.5 py-2.5"
+            >
+              <span class="text-xs text-muted-foreground">{{ t('ui.feedback.telegram_hint') }}</span>
+              <a
+                :href="botUrl"
+                target="_blank"
+                rel="noopener"
+                class="inline-flex shrink-0 items-center gap-1.5 text-xs font-medium text-primary hover:underline"
+              >
+                <Send class="h-3.5 w-3.5" />
+                {{ t('ui.feedback.telegram_open') }}
+              </a>
+            </div>
 
             <form class="space-y-4" @submit.prevent="submit">
               <div>
