@@ -100,6 +100,8 @@ const page = usePage<{
   selectedSubject: string | null
   lessonsSubjects: string[]
   subjectNames: Record<string, string>
+  subjectSlugs: Record<string, string>
+  studentSlugs: Record<number, string>
   topicTree: Record<string, TopicNode[]>
   topicStatuses: Record<number, Record<number, string>>
   defaultPrice: number
@@ -117,14 +119,23 @@ const selectedStudentId = ref<number | null>(page.props.selectedStudentId ?? nul
 const selectedSubject = ref<string | null>(page.props.selectedSubject ?? null)
 
 function applyFilters() {
-  const params: Record<string, any> = {}
-  if (selectedStudentId.value) {
-    params.student_id = selectedStudentId.value
+  const studentSlug = selectedStudentId.value
+    ? page.props.studentSlugs?.[selectedStudentId.value]
+    : null
+  const subjectSlug = selectedSubject.value
+    ? page.props.subjectSlugs?.[selectedSubject.value]
+    : null
+
+  let url = '/lessons'
+  if (studentSlug && subjectSlug) {
+    url = `/lessons/students/${studentSlug}/subjects/${subjectSlug}`
+  } else if (studentSlug) {
+    url = `/lessons/students/${studentSlug}`
+  } else if (subjectSlug) {
+    url = `/lessons/subjects/${subjectSlug}`
   }
-  if (selectedSubject.value) {
-    params.subject = selectedSubject.value
-  }
-  router.get('/lessons', params, {
+
+  router.get(url, {}, {
     preserveState: true,
     preserveScroll: true,
     only: ['sortedLessons', 'selectedStudentId', 'selectedSubject'],

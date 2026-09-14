@@ -27,6 +27,7 @@ defineOptions({ layout: AppLayout })
 const page = usePage<{
   students: Array<{
     id: number
+    slug: string
     name: string
     class: string | null
     current_class: string
@@ -101,7 +102,7 @@ function openAddModal() {
 }
 
 function openStudent(student: any) {
-  router.get(`/students/${student.id}`)
+  router.get(`/students/${student.slug}`)
 }
 
 function openEditModal(student: any) {

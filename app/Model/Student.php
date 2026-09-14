@@ -3,6 +3,7 @@
 namespace App\Model;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class Student extends Model
 {
@@ -21,10 +22,44 @@ class Student extends Model
     ];
 
     protected $fillable = [
-        'name', 'gender', 'color', 'description', 'is_deleted', 'class', 'type'
+        'name', 'slug', 'gender', 'color', 'description', 'is_deleted', 'class', 'type'
     ];
 
     protected $appends = ['current_class'];
+
+    /**
+     * Slug для URL генерируется из имени и обновляется при переименовании.
+     */
+    protected static function booted(): void
+    {
+        static::saving(function (self $student): void {
+            if ($student->isDirty('name') || empty($student->slug)) {
+                $student->slug = self::makeSlug((string) $student->name, $student->id ? (int) $student->id : null);
+            }
+        });
+    }
+
+    /**
+     * Уникальный slug из имени (числовой суффикс при совпадении).
+     */
+    public static function makeSlug(string $name, ?int $ignoreId = null): string
+    {
+        $base = Str::slug($name) ?: 'student';
+
+        $slug = $base;
+        $i = 2;
+
+        while (self::query()
+            ->where('slug', $slug)
+            ->when($ignoreId !== null, fn ($query) => $query->where('id', '!=', $ignoreId))
+            ->exists()
+        ) {
+            $slug = $base . '-' . $i;
+            $i++;
+        }
+
+        return $slug;
+    }
 
     /**
      * Случайный цвет аватарки из палитры.

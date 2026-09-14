@@ -65,6 +65,7 @@ const props = defineProps<{
   } | null
   students: Array<{
     id: number
+    slug: string
     name: string
     studentClass: string
     totalLessons: number
@@ -358,7 +359,7 @@ const barChartOptions = computed(() => ({
               <p class="font-medium text-foreground truncate">{{ student.name }}</p>
               <p class="text-xs text-muted-foreground">{{ student.studentClass }}</p>
             </div>
-              <Link :href="`/students/${student.id}`" class="inline-flex items-center justify-center rounded-lg h-9 w-9 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors shrink-0">
+              <Link :href="`/students/${student.slug}`" class="inline-flex items-center justify-center rounded-lg h-9 w-9 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors shrink-0">
                 <ChevronRight class="h-4 w-4" />
               </Link>
           </div>

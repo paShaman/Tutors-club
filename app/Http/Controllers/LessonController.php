@@ -22,25 +22,25 @@ final class LessonController extends Controller
     /**
      * Lessons list page.
      */
-    public function getLessons(): Response
+    public function getLessons(?Student $student = null, ?Subject $subject = null): Response
     {
         $students = Auth::user()->students()->get()->keyBy('id')->toArray();
 
-        $selectedStudentId = request()->query('student_id');
+        // Фильтр по ученику применяем только если это ученик текущего пользователя.
+        $selectedStudentId = $student !== null && isset($students[$student->id]) ? (int) $student->id : null;
+
         $subjectCodes = Subject::codes();
         $subjectIds = Subject::idMap();
         $subjectCodeById = Subject::codeMap();
-        $selectedSubject = (string) request()->query('subject', '');
-
-        if ($selectedSubject !== '' && !isset($subjectIds[$selectedSubject])) {
-            $selectedSubject = '';
-        }
+        $selectedSubject = $subject !== null && in_array($subject->code, $subjectCodes, true)
+            ? (string) $subject->code
+            : '';
 
         $lessonsQuery = Lesson::where('is_deleted', 0)
             ->whereIn('student_id', array_keys($students));
 
-        if ($selectedStudentId && isset($students[(int) $selectedStudentId])) {
-            $lessonsQuery->where('student_id', (int) $selectedStudentId);
+        if ($selectedStudentId !== null) {
+            $lessonsQuery->where('student_id', $selectedStudentId);
         }
 
         if ($selectedSubject !== '') {
@@ -170,10 +170,12 @@ final class LessonController extends Controller
         return Inertia::render('Lessons', [
             'sortedLessons'     => $sortedLessons,
             'students'          => $activeStudents,
-            'selectedStudentId' => $selectedStudentId ? (int) $selectedStudentId : null,
+            'selectedStudentId' => $selectedStudentId,
             'selectedSubject'   => $selectedSubject !== '' ? $selectedSubject : null,
             'lessonsSubjects'   => $subjectCodes,
             'subjectNames'      => Subject::nameMap(),
+            'subjectSlugs'      => Subject::slugMap(),
+            'studentSlugs'      => array_column($activeStudents, 'slug', 'id'),
             'topicTree'         => Topic::treesBySubject((int) Auth::id(), $subjectCodes),
             'topicStatuses'     => StudentTopic::statusMapForStudents(array_keys($students)),
             'defaultPrice'      => config('lesson.default_price'),

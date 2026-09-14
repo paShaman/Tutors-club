@@ -21,18 +21,17 @@ final class PlanningController extends Controller
     /**
      * Planning page — topic/subtopic tree by subject.
      */
-    public function index(): Response
+    public function index(?Subject $subject = null): Response
     {
         $subjects = Subject::codes();
-        $selectedSubject = (string) request()->query('subject', $subjects[0] ?? '');
-
-        if (!in_array($selectedSubject, $subjects, true)) {
-            $selectedSubject = $subjects[0] ?? '';
-        }
+        $selectedSubject = $subject !== null && in_array($subject->code, $subjects, true)
+            ? (string) $subject->code
+            : ($subjects[0] ?? '');
 
         return Inertia::render('Planning', [
             'subjects'        => $subjects,
             'subjectNames'    => Subject::nameMap(),
+            'subjectSlugs'    => Subject::slugMap(),
             'selectedSubject' => $selectedSubject,
             'topicTree'       => Topic::treeForSubject((int) Auth::id(), $selectedSubject),
         ]);

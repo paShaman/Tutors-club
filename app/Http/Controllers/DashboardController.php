@@ -78,6 +78,7 @@ final class DashboardController
 
             $students[] = [
                 'id'           => $student->id,
+                'slug'         => $student->slug,
                 'name'         => $student->name,
                 'studentClass' => $student->current_class,
                 'totalLessons' => $totalLessons,

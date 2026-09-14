@@ -75,9 +75,7 @@ Route::post('/avatar/upload', [AvatarController::class, 'upload'])->middleware('
 
 // ─── Students ───────────────────────────────────────────────
 Route::get('/students', [StudentController::class, 'getStudents'])->middleware('auth');
-Route::get('/students/{student}', [StudentController::class, 'show'])
-    ->whereNumber('student')
-    ->middleware('auth');
+Route::get('/students/{student:slug}', [StudentController::class, 'show'])->middleware('auth');
 Route::post('/students/edit', [StudentController::class, 'editStudent'])->middleware('auth');
 Route::post('/students/delete', [StudentController::class, 'deleteStudent'])->middleware('auth');
 
@@ -109,12 +107,16 @@ Route::post('/admin/promo/toggle', [PromoController::class, 'toggle'])
 
 // ─── Lessons ────────────────────────────────────────────────
 Route::get('/lessons', [LessonController::class, 'getLessons'])->middleware('auth')->name('lessons');
+Route::get('/lessons/students/{student:slug}', [LessonController::class, 'getLessons'])->middleware('auth');
+Route::get('/lessons/subjects/{subject:slug}', [LessonController::class, 'getLessons'])->middleware('auth');
+Route::get('/lessons/students/{student:slug}/subjects/{subject:slug}', [LessonController::class, 'getLessons'])->middleware('auth')->withoutScopedBindings();
 Route::post('/lessons/edit', [LessonController::class, 'editLesson'])->middleware('auth');
 Route::post('/lessons/delete', [LessonController::class, 'deleteLesson'])->middleware('auth');
 Route::post('/lessons/pay', [LessonController::class, 'payLesson'])->middleware('auth');
 
 // ─── Planning ───────────────────────────────────────────────
 Route::get('/planning', [PlanningController::class, 'index'])->middleware('auth')->name('planning');
+Route::get('/planning/{subject:slug}', [PlanningController::class, 'index'])->middleware('auth');
 Route::post('/topics/edit', [PlanningController::class, 'edit'])->middleware('auth');
 Route::post('/topics/delete', [PlanningController::class, 'delete'])->middleware('auth');
 Route::post('/topics/reorder', [PlanningController::class, 'reorder'])->middleware('auth');

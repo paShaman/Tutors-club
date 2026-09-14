@@ -33,6 +33,7 @@ interface TopicNode {
 const page = usePage<{
   subjects: string[]
   subjectNames: Record<string, string>
+  subjectSlugs: Record<string, string>
   selectedSubject: string
   topicTree: TopicNode[]
   tariff: TariffInfo | null
@@ -69,7 +70,8 @@ const subjectTabItems = computed<TabItem[]>(() =>
 
 function goSubject(subject: string): void {
   if (subject === selectedSubject.value) return
-  router.get('/planning', { subject }, { preserveScroll: true, preserveState: true })
+  const slug = page.props.subjectSlugs?.[subject]
+  router.get(slug ? `/planning/${slug}` : '/planning', {}, { preserveScroll: true, preserveState: true })
 }
 
 // ─── Form state ─────────────────────────────────────────────

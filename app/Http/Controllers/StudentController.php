@@ -181,6 +181,7 @@ final class StudentController extends Controller
         return Inertia::render('StudentDetail', [
             'student' => [
                 'id'            => $student->id,
+                'slug'          => $student->slug,
                 'name'          => $student->name,
                 'gender'        => $student->gender,
                 'color'         => $student->color,

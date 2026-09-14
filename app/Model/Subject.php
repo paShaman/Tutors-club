@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 final class Subject extends Model
 {
     protected $fillable = [
-        'code', 'name', 'position', 'is_deleted',
+        'code', 'slug', 'name', 'position', 'is_deleted',
     ];
 
     protected $casts = [
@@ -64,6 +64,16 @@ final class Subject extends Model
     public static function codeMap(): array
     {
         return self::query()->pluck('code', 'id')->all();
+    }
+
+    /**
+     * Карта «код предмета => slug» для построения красивых URL.
+     *
+     * @return array<string, string>
+     */
+    public static function slugMap(): array
+    {
+        return self::query()->pluck('slug', 'code')->all();
     }
 
     /**

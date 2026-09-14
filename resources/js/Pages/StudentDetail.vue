@@ -79,6 +79,7 @@ interface YearGroup {
 
 interface StudentDetailData {
   id: number
+  slug: string
   name: string
   class: string | null
   current_class: string
@@ -451,7 +452,7 @@ function formatTopicDate(dateStr: string | null): string {
               <Pencil class="h-4 w-4" />
               {{ t('ui.common.edit') }}
             </Button>
-            <Link :href="`/lessons?student_id=${student.id}`">
+            <Link :href="`/lessons/students/${student.slug}`">
               <Button variant="outline" size="sm">
                 <BookOpen class="h-4 w-4" />
                 {{ t('ui.student.all_lessons') }}
@@ -777,7 +778,7 @@ function formatTopicDate(dateStr: string | null): string {
       <Card v-else class="p-12 text-center">
         <BookOpen class="mx-auto h-12 w-12 text-muted-foreground/30" />
         <p class="mt-4 text-muted-foreground">{{ t('ui.student.empty_lessons') }}</p>
-        <Link :href="`/lessons?student_id=${student.id}`" class="mt-4 inline-block">
+        <Link :href="`/lessons/students/${student.slug}`" class="mt-4 inline-block">
           <Button variant="outline">
             <Plus class="h-4 w-4" />
             {{ t('ui.student.add_lesson') }}
