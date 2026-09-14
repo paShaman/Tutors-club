@@ -458,6 +458,7 @@ return [
             'plans' => [
                 'free' => 'Бесплатный',
                 'paid' => 'Платный',
+                'promo' => 'Промо',
             ],
             'active_until' => 'Активен до :date',
             'expired' => [

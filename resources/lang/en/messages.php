@@ -450,6 +450,7 @@ return [
             'plans' => [
                 'free' => 'Free',
                 'paid' => 'Paid',
+                'promo' => 'Promo',
             ],
             'active_until' => 'Active until :date',
             'expired' => [

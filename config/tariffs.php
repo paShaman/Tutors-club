@@ -17,6 +17,15 @@ return [
             'price_month' => 0,
             'price_year'  => 0,
         ],
+        'promo' => [
+            'limits' => [
+                'students' => 10,
+                'lessons'  => null,
+                'topics'   => null,
+            ],
+            'price_month' => 0,
+            'price_year'  => 0,
+        ],
         'paid' => [
             'limits' => [
                 'students' => null,
