@@ -27,6 +27,7 @@ Monetization: there are two **tariff plans** — free "Free" (full functionality
 - **Do not install new Composer or npm packages** without asking first. Note: `axios` is **not** declared in `package.json`; it only exists transitively (via `@inertiajs/core`). Do not add new code that imports it directly (ChangelogModal currently does) unless you first add it as a real dependency.
 - **Do not write tests.** There is no `tests/` directory, no test script, and tests are intentionally not part of the workflow yet. Do not scaffold PHPUnit/Pest/component-test infrastructure.
 - **The UI-kit is the source of truth for styling.** Before writing any CSS/markup, creating a component, or restyling a page, consult the admin-only reference page at `/admin/uikit` (controller `UiKitController`, source `resources/js/Pages/UiKit.vue`, helpers in `resources/js/components/uikit/*`). It documents every `components/ui/*` + `components/popups/*` component, the `@theme` tokens, form-field classes, toasts and popups. Reuse them instead of inventing new styles; when you add or change a UI primitive, extend the UI-kit page in the same change.
+- **Form controls and icon actions are mandatory components — do not use native ones.** Use `components/ui/Select.vue` (never a raw `<select>`), `Checkbox.vue` (never `<input type="checkbox">`), `Radio.vue` (never `<input type="radio">`) and `IconButton.vue` for compact icon actions (edit/delete/restore/show). Only `field`-styled `input`/`textarea` (text, number, date, time, search) stay native.
 - **Do not refactor legacy code** (`app/Model`, `App\Common`, `App\Notification`, `App\Form`, `App\Image`, old controllers/models) unless the task explicitly requires it. Match the surrounding file's style when you do edit one.
 - **Do not update the changelog** (hardcoded in `ChangelogController`) unless explicitly asked.
 - **Billing/tariffs are not self-service.** Do not implement payment flows or plan switching. Limits come from `config/tariffs.php` only; the effective plan is the latest active row in `user_subscriptions` (or `free`). Do not use the legacy `users.account` column or the empty `users_payments` table.
@@ -88,9 +89,9 @@ resources/
     │                          # (+ UiKit — admin-only reference page at /admin/uikit)
     ├── Layouts/AppLayout.vue  # sidebar + layout; pages opt in via defineOptions
     ├── components/
-    │   ├── ui/                # Button, Tabs, Card, CardHeader, CardTitle, Table + Table* parts,
-    │   │                      # UserAvatar, AvatarPicker, ImageCropper, TopicStatusBadge,
-    │   │                      # Toaster + ToastItem
+    │   ├── ui/                # Button + IconButton, Checkbox, Radio, Select, Tabs, Card,
+    │   │                      # CardHeader, CardTitle, Table + Table* parts, UserAvatar,
+    │   │                      # AvatarPicker, ImageCropper, TopicStatusBadge, Toaster + ToastItem
     │   ├── popups/            # ConfirmDialog, ChangelogModal, StudentFormPopup,
     │   │                      # LessonFormPopup, TopicFormPopup, ReviewFormPopup
     │   ├── uikit/             # UiKitSection + CodeBlock (helpers for the /admin/uikit page)
@@ -117,7 +118,8 @@ public_html/                   # web root (Laravel public dir via usePublicPath)
 - A **page** = `resources/js/Pages/<Name>.vue`, referenced by the controller's `Inertia::render('<Name>', ...)`. Layout opt-in: `defineOptions({ layout: AppLayout })`. Set page title with `<Head :title="t('ui....')"/>`.
 - Use `<script setup lang="ts">`. Type props with `defineProps<{...}>()`; typing is **pragmatic** — an occasional local `any` is acceptable, but keep shared/global types in `types/index.ts`.
 - Import with the `@/` alias for `Layouts/`, `components/`, `lib/`; use relative paths within a directory.
-- **Reuse existing UI**, don't restyle components: `components/ui/*` (Button with variants, Card/CardHeader/CardTitle, UserAvatar, Toaster), `components/popups/*` (ConfirmDialog, form popups). Buttons are `Button`; forms live in popups bound to local refs. **Check the UI-kit reference page `/admin/uikit` (`Pages/UiKit.vue` + `components/uikit/*`) before styling anything** and keep it up to date when a component/token changes.
+- **Reuse existing UI**, don't restyle components: `components/ui/*` (Button + `IconButton`, Checkbox, Radio, Select, Card/CardHeader/CardTitle, UserAvatar, Toaster), `components/popups/*` (ConfirmDialog, form popups). Buttons are `Button` (compact icon actions — `IconButton`); forms live in popups bound to local refs. **Check the UI-kit reference page `/admin/uikit` (`Pages/UiKit.vue` + `components/uikit/*`) before styling anything** and keep it up to date when a component/token changes.
+- **Never use native form controls.** `Select.vue`, `Checkbox.vue` and `Radio.vue` are the only allowed choice/toggle controls; native `input`/`textarea` keep the `field` class. `Select` is generic over its value (`generic="T extends SelectValue"`, options typed as `SelectOption<T>[]`), renders a custom listbox on desktop (`min-width: 1024px`, keyboard + click-outside) and the system `<select>` on mobile; it accepts `required` (browser validation on both breakpoints), `id`, `name`, `ariaLabel`, `disabled` and `placeholder`.
 - **Nested popups** (a popup opening another popup on top): the inner popup must not add a second dark `bg-black/40 backdrop-blur` layer, otherwise the background is dimmed twice. Add a `nested` flag to the reused popup so its own overlay uses `z-80` and its modal `z-90`, and hide the parent's backdrop while the child is open (`v-if="show && !childOpen"`). This keeps a single dimming layer with the parent window pushed back — see `TopicFormPopup` opened from `LessonFormPopup`.
 - **User feedback = toasts.** Use `useToast()` from `lib/toast.ts` (`toast.success/error/warning/info`) instead of inline flash banners or a blocking alert modal. The global `<Toaster/>` (mounted in `app.ts`, so it also works on auth pages without `AppLayout`) renders the stack bottom-right and auto-surfaces Inertia `flash.success`/`flash.error` — do not re-add per-page flash markup. Success/info auto-dismiss after 4 s, warning after 6 s, **error stays until closed manually** (never auto-hide errors). Form **field** validation errors stay inline next to the input (`form.errors.*`); the `onError` toast is a fallback channel.
 - **Tariff prop**: the shared `tariff` prop (`TariffInfo` in `types/index.ts`) carries `plan`, `limits`, `usage` and `can.<feature>` flags. Gate "add" buttons on `tariff.can.*` and explain the block with `toast.warning(t('ui.tariff.limit.<feature>'))`; the server stays the source of truth. When `tariff.expired` is true, `AppLayout` shows a notice.
@@ -200,6 +202,7 @@ Only include changes that make sense to describe to a user of the system (new fu
 - Submit mutations with Inertia (`router.post`/`useForm`); controllers reply `back()->with('success'|'error', ...)` or `back()->withErrors($validator)`, and the redirect visit refreshes props with no browser reload (§7).
 - Add every new backend string to both `ru` and `en` `messages.php` and expose it via `lng()`.
 - Reuse the local UI kit, Tailwind theme tokens, existing pages/popups/helpers. Consult the UI-kit page (`/admin/uikit`) before styling and update it when primitives change.
+- Use `Checkbox`/`Radio`/`Select` for every choice/toggle and `IconButton` for icon actions (edit/delete/restore/show) instead of native controls; feed `Select` a typed `SelectOption<T>[]`.
 - Keep tariff limits/prices in `config/tariffs.php`; enforce quotas on creation and gate the matching UI "add" buttons via the shared `tariff` prop.
 - Give success/error feedback through `useToast()` (`lib/toast.ts`) — success/info auto-dismiss, errors persist until closed; keep field validation inline.
 - Run the §9 checks and fix all reported errors before reporting completion.
@@ -211,6 +214,7 @@ Only include changes that make sense to describe to a user of the system (new fu
 - Run migrations, seeds, or `artisan config:cache`/`optimize` without explicit permission.
 - Add packages, refactor `App\Model`/`App\Common`/legacy controllers, or add tests unless asked (the changelog is the exception — it updates automatically at the end of a session, see §10).
 - Add new `fetch` JSON endpoints or `window.location.reload()` patterns; prefer Inertia-native flows.
+- Write native `<select>`, `<input type="checkbox">` or `<input type="radio">` in pages/components — use `Select`/`Checkbox`/`Radio` (§2/§6).
 - Re-add inline flash banners or blocking alert modals for user messages — the global `Toaster` handles them (§6/§7).
 - Hardcode plan limits/prices or Russian plan strings; add payment flows or self-service plan switching (§2).
 - Write English or heavy PHPDoc comments in Russian-oriented code — keep comments minimal and in Russian.

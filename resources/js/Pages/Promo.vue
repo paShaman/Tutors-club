@@ -5,6 +5,7 @@ import { Plus, Pencil, Trash2, Megaphone, Eye, EyeOff, CalendarDays, Clock } fro
 import AppLayout from '@/Layouts/AppLayout.vue'
 import Card from '@/components/ui/Card.vue'
 import Button from '@/components/ui/Button.vue'
+import IconButton from '@/components/ui/IconButton.vue'
 import PromoFormPopup from '@/components/popups/PromoFormPopup.vue'
 import type { PromoFormData } from '@/components/popups/PromoFormPopup.vue'
 import ConfirmDialog from '@/components/popups/ConfirmDialog.vue'
@@ -194,27 +195,23 @@ function periodLabel(banner: PromoBannerRow): string {
           </div>
 
           <div class="flex shrink-0 items-center gap-1">
-            <Button
-              variant="ghost"
-              size="icon"
+            <IconButton
               :title="banner.is_active ? t('ui.promo.actions.hide') : t('ui.promo.actions.show')"
               @click="toggleActive(banner)"
             >
               <EyeOff v-if="banner.is_active" />
               <Eye v-else />
-            </Button>
-            <Button variant="ghost" size="icon" :title="t('ui.common.edit')" @click="openEdit(banner)">
+            </IconButton>
+            <IconButton :title="t('ui.common.edit')" @click="openEdit(banner)">
               <Pencil />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              class="text-destructive hover:bg-destructive/10 hover:text-destructive"
+            </IconButton>
+            <IconButton
+              variant="destructive"
               :title="t('ui.common.delete')"
               @click="askDelete(banner)"
             >
               <Trash2 />
-            </Button>
+            </IconButton>
           </div>
         </div>
       </Card>

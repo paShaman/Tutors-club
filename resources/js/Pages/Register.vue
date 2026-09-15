@@ -2,6 +2,7 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3'
 import { UserPlus } from 'lucide-vue-next'
 import Button from '@/components/ui/Button.vue'
+import Checkbox from '@/components/ui/Checkbox.vue'
 import SocialAuth from '@/components/social/SocialAuth.vue'
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import type { SharedProps } from '@/types'
@@ -179,13 +180,8 @@ function submit(): void {
 
         <!-- Consent -->
         <div>
-          <label class="flex cursor-pointer items-start gap-2.5 text-xs leading-relaxed text-muted-foreground">
-            <input
-              v-model="form.agreement"
-              type="checkbox"
-              class="mt-0.5 h-4 w-4 shrink-0 cursor-pointer rounded border-border accent-primary"
-            />
-            <span>
+          <Checkbox v-model="form.agreement" class="items-start">
+            <span class="text-xs leading-relaxed text-muted-foreground">
               {{ t('ui.auth.agreement_prefix') }}
               <template v-for="(doc, index) in agreements" :key="index">
                 <span v-if="index > 0"> {{ t('ui.auth.and') }} </span>
@@ -200,7 +196,7 @@ function submit(): void {
               </template>
               <span class="text-destructive">*</span>
             </span>
-          </label>
+          </Checkbox>
           <p v-if="form.errors.agreement" class="field-error">{{ form.errors.agreement }}</p>
         </div>
 

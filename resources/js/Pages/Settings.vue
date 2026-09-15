@@ -5,6 +5,8 @@ import Button from '@/components/ui/Button.vue'
 import Card from '@/components/ui/Card.vue'
 import CardHeader from '@/components/ui/CardHeader.vue'
 import CardTitle from '@/components/ui/CardTitle.vue'
+import Select from '@/components/ui/Select.vue'
+import type { SelectOption } from '@/components/ui/Select.vue'
 import { computed, ref, watch } from 'vue'
 import type { SharedProps } from '@/types'
 import AppLayout from '@/Layouts/AppLayout.vue'
@@ -35,6 +37,9 @@ const { t, intlLocale } = useI18n()
 const user = computed(() => page.props.auth?.user ?? null)
 const socials = computed(() => page.props.socials ?? [])
 const locales = computed(() => page.props.locales ?? [])
+const localeOptions = computed<SelectOption<string>[]>(() =>
+  locales.value.map((item) => ({ value: item.code, label: item.label })),
+)
 const configuredProviders = computed(() => (page.props.social ?? []).filter((p) => p.configured))
 
 const tariff = computed(() => page.props.tariff ?? null)
@@ -138,6 +143,11 @@ function submitPassword(): void {
 
 function changeLocale(): void {
   localeForm.post('/user/locale', { preserveScroll: true })
+}
+
+function updateLocale(value: string): void {
+  localeForm.locale = value
+  changeLocale()
 }
 
 function logout(): void {
@@ -298,17 +308,13 @@ function cancelUnlink(): void {
         <label for="locale" class="field-label">
           {{ t('ui.settings.language_label') }}
         </label>
-        <select
+        <Select
           id="locale"
-          v-model="localeForm.locale"
+          :model-value="localeForm.locale"
+          :options="localeOptions"
           :disabled="localeForm.processing"
-          class="field w-full px-3.5 py-2.5 disabled:opacity-60"
-          @change="changeLocale"
-        >
-          <option v-for="item in locales" :key="item.code" :value="item.code">
-            {{ item.label }}
-          </option>
-        </select>
+          @update:model-value="updateLocale"
+        />
         <p v-if="localeForm.errors.locale" class="field-error">{{ localeForm.errors.locale }}</p>
       </div>
     </Card>

@@ -3,6 +3,9 @@ import { Head, usePage, router } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import Card from '@/components/ui/Card.vue'
 import Button from '@/components/ui/Button.vue'
+import IconButton from '@/components/ui/IconButton.vue'
+import Select from '@/components/ui/Select.vue'
+import type { SelectOption } from '@/components/ui/Select.vue'
 import { ref, computed, onMounted, watch } from 'vue'
 import { cn } from '@/lib/utils'
 import {
@@ -117,6 +120,19 @@ const canAddLesson = computed(() => page.props.tariff?.can.lessons ?? true)
 
 const selectedStudentId = ref<number | null>(page.props.selectedStudentId ?? null)
 const selectedSubject = ref<string | null>(page.props.selectedSubject ?? null)
+
+const studentFilterOptions = computed<SelectOption<number | null>[]>(() => [
+  { value: null, label: t('ui.lessons.all_students') },
+  ...page.props.students.map((student) => ({
+    value: student.id,
+    label: student.current_class ? `${student.name} (${student.current_class})` : student.name,
+  })),
+])
+
+const subjectFilterOptions = computed<SelectOption<string | null>[]>(() => [
+  { value: null, label: t('ui.lessons.all_subjects') },
+  ...page.props.lessonsSubjects.map((subject) => ({ value: subject, label: subjectName(subject) })),
+])
 
 function applyFilters() {
   const studentSlug = selectedStudentId.value
@@ -427,27 +443,19 @@ function formatDatePayed(dateStr: string | null): string {
       </div>
 
       <div class="flex items-center gap-2.5 flex-wrap justify-end">
-        <select
+        <Select
           v-model="selectedStudentId"
+          :options="studentFilterOptions"
           :aria-label="t('ui.lessons.filter_label')"
-          class="field px-3.5 py-2 min-w-[170px] sm:min-w-[200px]"
-        >
-          <option :value="null">{{ t('ui.lessons.all_students') }}</option>
-          <option v-for="student in page.props.students" :key="student.id" :value="student.id">
-            {{ student.name }}<span class="hidden sm:inline">{{ student.current_class ? ` (${student.current_class})` : '' }}</span>
-          </option>
-        </select>
+          class="w-auto py-2 min-w-[170px] sm:min-w-[200px]"
+        />
 
-        <select
+        <Select
           v-model="selectedSubject"
+          :options="subjectFilterOptions"
           :aria-label="t('ui.lessons.subject_filter_label')"
-          class="field px-3.5 py-2 min-w-[150px] sm:min-w-[180px]"
-        >
-          <option :value="null">{{ t('ui.lessons.all_subjects') }}</option>
-          <option v-for="subject in page.props.lessonsSubjects" :key="subject" :value="subject">
-            {{ subjectName(subject) }}
-          </option>
-        </select>
+          class="w-auto py-2 min-w-[150px] sm:min-w-[180px]"
+        />
 
         <button
           @click="clearFilters"
@@ -586,13 +594,14 @@ function formatDatePayed(dateStr: string | null): string {
                         </div>
                       </div>
                       <!-- Add lesson button for this student -->
-                      <button
-                        @click.stop="requestAddLessonForStudent(studentGroup)"
-                        class="inline-flex items-center justify-center rounded-lg h-8 w-8 text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors cursor-pointer shrink-0"
+                      <IconButton
+                        variant="primary"
+                        class="shrink-0"
                         :title="t('ui.lessons.add_for_student')"
+                        @click.stop="requestAddLessonForStudent(studentGroup)"
                       >
                         <Plus class="h-4 w-4" />
-                      </button>
+                      </IconButton>
                     </button>
 
                     <!-- Lessons list (visible when student expanded) -->
@@ -690,20 +699,19 @@ function formatDatePayed(dateStr: string | null): string {
                                 <Coins class="h-3.5 w-3.5" />
                                 <span class="hidden sm:inline">{{ t('ui.lessons.pay') }}</span>
                               </button>
-                              <button
-                                @click="openEditModal(lesson)"
-                                class="inline-flex items-center justify-center rounded-lg h-8 w-8 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors cursor-pointer"
+                              <IconButton
                                 :title="t('ui.common.edit')"
+                                @click="openEditModal(lesson)"
                               >
                                 <Pencil class="h-4 w-4" />
-                              </button>
-                              <button
-                                @click="deleteLesson(lesson.id)"
-                                class="inline-flex items-center justify-center rounded-lg h-8 w-8 text-muted-foreground hover:bg-red-50 hover:text-red-600 transition-colors cursor-pointer"
+                              </IconButton>
+                              <IconButton
+                                variant="destructive"
                                 :title="t('ui.common.delete')"
+                                @click="deleteLesson(lesson.id)"
                               >
                                 <Trash2 class="h-4 w-4" />
-                              </button>
+                              </IconButton>
                             </div>
                           </div>
                         </Card>

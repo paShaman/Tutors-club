@@ -2,6 +2,7 @@
 import { ref, watch, computed } from 'vue'
 import Card from '@/components/ui/Card.vue'
 import Button from '@/components/ui/Button.vue'
+import Checkbox from '@/components/ui/Checkbox.vue'
 import { useI18n } from '@/lib/i18n'
 import { useScrollLock } from '@/lib/scrollLock'
 
@@ -147,14 +148,7 @@ const title = computed(() =>
                 <p class="mt-1 text-xs text-muted-foreground">{{ t('ui.promo.form.dismiss_days_hint') }}</p>
               </div>
 
-              <label class="flex items-center gap-2 cursor-pointer">
-                <input
-                  v-model="form.is_active"
-                  type="checkbox"
-                  class="rounded border-border text-primary focus:ring-primary/30"
-                />
-                <span class="text-sm text-foreground">{{ t('ui.promo.form.is_active') }}</span>
-              </label>
+              <Checkbox v-model="form.is_active">{{ t('ui.promo.form.is_active') }}</Checkbox>
 
               <div class="flex items-center gap-3 pt-2">
                 <Button type="submit" class="flex-1">

@@ -4,6 +4,9 @@ import { router } from '@inertiajs/vue3'
 import { Plus } from 'lucide-vue-next'
 import Card from '@/components/ui/Card.vue'
 import Button from '@/components/ui/Button.vue'
+import Select from '@/components/ui/Select.vue'
+import type { SelectOption } from '@/components/ui/Select.vue'
+import Checkbox from '@/components/ui/Checkbox.vue'
 import TopicFormPopup from '@/components/popups/TopicFormPopup.vue'
 import type { TopicFormData } from '@/components/popups/TopicFormPopup.vue'
 import { useToast } from '@/lib/toast'
@@ -96,6 +99,34 @@ const selectedTopic = computed<TopicNode | null>(
 const subtopics = computed<TopicNode[]>(() => selectedTopic.value?.children ?? [])
 
 const hasTopic = computed(() => form.value.lesson_topic_id !== null)
+
+// ─── Опции для кастомных select ─────────────────────────────
+const studentOptions = computed<SelectOption<string>[]>(() =>
+  props.students.map((student) => ({
+    value: String(student.id),
+    label: student.current_class ? `${student.name} ${student.current_class}` : student.name,
+  })),
+)
+
+const subjectOptions = computed<SelectOption<string>[]>(() =>
+  props.subjects.map((subj) => ({ value: subj, label: subjectName(subj) })),
+)
+
+const topicOptions = computed<SelectOption<number | null>[]>(() => [
+  { value: null, label: t('ui.lessons.form.topic_none') },
+  ...subjectTopics.value.map((topic) => ({ value: topic.id, label: topic.name })),
+])
+
+const subtopicOptions = computed<SelectOption<number | null>[]>(() => [
+  { value: null, label: t('ui.lessons.form.subtopic_none') },
+  ...subtopics.value.map((sub) => ({ value: sub.id, label: sub.name })),
+])
+
+const topicStatusOptions = computed<SelectOption<string>[]>(() => [
+  { value: 'in_progress', label: t('ui.lessons.form.topic_status_in_progress') },
+  { value: 'mastered', label: t('ui.lessons.form.topic_status_mastered') },
+  { value: 'review', label: t('ui.lessons.form.topic_status_review') },
+])
 
 // ─── Быстрое добавление темы/подтемы ────────────────────────
 const showTopicForm = ref(false)
@@ -231,31 +262,23 @@ const title = computed(() => props.mode === 'edit' ? t('ui.lessons.form.edit_tit
             <!-- Student -->
             <div>
               <label class="field-label">{{ t('ui.lessons.form.student') }}</label>
-              <select
+              <Select
                 v-model="form.lesson_student_id"
+                :options="studentOptions"
+                :placeholder="t('ui.lessons.form.student_placeholder')"
                 required
-                class="field w-full px-3.5 py-2.5"
-              >
-                <option value="" disabled>{{ t('ui.lessons.form.student_placeholder') }}</option>
-                <option v-for="student in students" :key="student.id" :value="student.id">
-                  {{ student.name }}{{ student.current_class ? ` ${student.current_class}` : '' }}
-                </option>
-              </select>
+              />
             </div>
 
             <!-- Subject -->
             <div>
               <label class="field-label">{{ t('ui.lessons.form.subject') }}</label>
-              <select
+              <Select
                 v-model="form.lesson_subject"
+                :options="subjectOptions"
+                :placeholder="t('ui.lessons.form.subject_placeholder')"
                 required
-                class="field w-full px-3.5 py-2.5"
-              >
-                <option value="" disabled>{{ t('ui.lessons.form.subject_placeholder') }}</option>
-                <option v-for="subj in subjects" :key="subj" :value="subj">
-                  {{ subjectName(subj) }}
-                </option>
-              </select>
+              />
             </div>
 
             <!-- Topic & Subtopic -->
@@ -273,16 +296,11 @@ const title = computed(() => props.mode === 'edit' ? t('ui.lessons.form.edit_tit
                     <Plus class="h-4 w-4" />
                   </button>
                 </div>
-                <select
+                <Select
                   v-model="form.lesson_topic_id"
+                  :options="topicOptions"
                   :disabled="!form.lesson_subject"
-                  class="field w-full px-3.5 py-2.5 disabled:opacity-50"
-                >
-                  <option :value="null">{{ t('ui.lessons.form.topic_none') }}</option>
-                  <option v-for="topic in subjectTopics" :key="topic.id" :value="topic.id">
-                    {{ topic.name }}
-                  </option>
-                </select>
+                />
               </div>
               <div v-if="hasTopic">
                 <div class="mb-1.5 flex items-center justify-between gap-2">
@@ -296,29 +314,20 @@ const title = computed(() => props.mode === 'edit' ? t('ui.lessons.form.edit_tit
                     <Plus class="h-4 w-4" />
                   </button>
                 </div>
-                <select
+                <Select
                   v-model="form.lesson_subtopic_id"
-                  class="field w-full px-3.5 py-2.5"
-                >
-                  <option :value="null">{{ t('ui.lessons.form.subtopic_none') }}</option>
-                  <option v-for="sub in subtopics" :key="sub.id" :value="sub.id">
-                    {{ sub.name }}
-                  </option>
-                </select>
+                  :options="subtopicOptions"
+                />
               </div>
             </div>
 
             <!-- Topic status -->
             <div v-if="hasTopic">
               <label class="field-label">{{ t('ui.lessons.form.topic_status') }}</label>
-              <select
+              <Select
                 v-model="form.lesson_topic_status"
-                class="field w-full px-3.5 py-2.5"
-              >
-                <option value="in_progress">{{ t('ui.lessons.form.topic_status_in_progress') }}</option>
-                <option value="mastered">{{ t('ui.lessons.form.topic_status_mastered') }}</option>
-                <option value="review">{{ t('ui.lessons.form.topic_status_review') }}</option>
-              </select>
+                :options="topicStatusOptions"
+              />
             </div>
 
             <!-- Comment -->
@@ -378,22 +387,8 @@ const title = computed(() => props.mode === 'edit' ? t('ui.lessons.form.edit_tit
 
             <!-- Toggles -->
             <div class="flex items-center gap-6">
-              <label class="flex items-center gap-2 cursor-pointer">
-                <input
-                  v-model="form.lesson_is_payed"
-                  type="checkbox"
-                  class="rounded border-border text-primary focus:ring-primary/30"
-                />
-                <span class="text-sm text-foreground">{{ t('ui.lessons.form.is_paid') }}</span>
-              </label>
-              <label class="flex items-center gap-2 cursor-pointer">
-                <input
-                  v-model="form.lesson_is_future"
-                  type="checkbox"
-                  class="rounded border-border text-primary focus:ring-primary/30"
-                />
-                <span class="text-sm text-foreground">{{ t('ui.lessons.form.is_future') }}</span>
-              </label>
+              <Checkbox v-model="form.lesson_is_payed">{{ t('ui.lessons.form.is_paid') }}</Checkbox>
+              <Checkbox v-model="form.lesson_is_future">{{ t('ui.lessons.form.is_future') }}</Checkbox>
             </div>
 
             <!-- Date payed (when is_payed checked) -->

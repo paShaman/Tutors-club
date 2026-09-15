@@ -3,6 +3,8 @@ import { Head, Link, router, usePage } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import Card from '@/components/ui/Card.vue'
 import Button from '@/components/ui/Button.vue'
+import Select from '@/components/ui/Select.vue'
+import type { SelectOption } from '@/components/ui/Select.vue'
 import Tabs from '@/components/ui/Tabs.vue'
 import type { TabItem } from '@/components/ui/Tabs.vue'
 import StudentAvatar from '@/components/ui/StudentAvatar.vue'
@@ -271,7 +273,20 @@ const currentTree = computed<TopicNode[]>(
 )
 
 const showNotStarted = ref(false)
-const statusFilter = ref<'all' | 'not_started' | 'in_progress' | 'mastered'>('all')
+const statusFilter = ref<string>('all')
+
+const statusFilterOptions = computed<SelectOption<string>[]>(() => [
+  { value: 'all', label: t('ui.planning.filters.all') },
+  { value: 'not_started', label: t('ui.planning.status.not_started') },
+  { value: 'in_progress', label: t('ui.planning.status.in_progress') },
+  { value: 'mastered', label: t('ui.planning.status.mastered') },
+])
+
+const topicStatusOptions = computed<SelectOption<string>[]>(() => [
+  { value: 'not_started', label: t('ui.planning.status.not_started') },
+  { value: 'in_progress', label: t('ui.planning.status.in_progress') },
+  { value: 'mastered', label: t('ui.planning.status.mastered') },
+])
 
 function subjectLabel(key: string): string {
   return page.props.subjectNames?.[key] ?? t(key)
@@ -345,10 +360,6 @@ function setMasteredAt(topicId: number, date: string): void {
     preserveScroll: true,
     onError: () => toast.error(t('error.set_topic_status')),
   })
-}
-
-function onStatusChange(topicId: number, event: Event): void {
-  setStatus(topicId, (event.target as HTMLSelectElement).value)
 }
 
 function onMasteredAtChange(topicId: number, event: Event): void {
@@ -806,15 +817,11 @@ function formatTopicDate(dateStr: string | null): string {
           <label class="text-xs font-medium text-muted-foreground">
             {{ t('ui.planning.filters.status') }}
           </label>
-          <select
+          <Select
             v-model="statusFilter"
-            class="field px-3 py-2"
-          >
-            <option value="all">{{ t('ui.planning.filters.all') }}</option>
-            <option value="not_started">{{ t('ui.planning.status.not_started') }}</option>
-            <option value="in_progress">{{ t('ui.planning.status.in_progress') }}</option>
-            <option value="mastered">{{ t('ui.planning.status.mastered') }}</option>
-          </select>
+            :options="statusFilterOptions"
+            class="w-auto px-3 py-2"
+          />
         </div>
         <button
           class="inline-flex items-center gap-1.5 rounded-xl border border-border bg-background px-3 py-2 text-sm text-muted-foreground transition-colors hover:text-foreground cursor-pointer"
@@ -858,15 +865,12 @@ function formatTopicDate(dateStr: string | null): string {
               </div>
             </div>
             <div class="flex flex-wrap items-center gap-2">
-              <select
-                :value="statusOf(root.id)"
-                class="field px-3 py-2"
-                @change="onStatusChange(root.id, $event)"
-              >
-                <option value="not_started">{{ t('ui.planning.status.not_started') }}</option>
-                <option value="in_progress">{{ t('ui.planning.status.in_progress') }}</option>
-                <option value="mastered">{{ t('ui.planning.status.mastered') }}</option>
-              </select>
+              <Select
+                :model-value="statusOf(root.id)"
+                :options="topicStatusOptions"
+                class="w-auto px-3 py-2"
+                @update:model-value="setStatus(root.id, $event)"
+              />
               <input
                 v-if="statusOf(root.id) === 'mastered'"
                 type="date"
@@ -905,15 +909,12 @@ function formatTopicDate(dateStr: string | null): string {
                 </div>
               </div>
               <div class="flex flex-wrap items-center gap-2">
-                <select
-                  :value="statusOf(child.id)"
-                  class="field px-3 py-2"
-                  @change="onStatusChange(child.id, $event)"
-                >
-                  <option value="not_started">{{ t('ui.planning.status.not_started') }}</option>
-                  <option value="in_progress">{{ t('ui.planning.status.in_progress') }}</option>
-                  <option value="mastered">{{ t('ui.planning.status.mastered') }}</option>
-                </select>
+                <Select
+                  :model-value="statusOf(child.id)"
+                  :options="topicStatusOptions"
+                  class="w-auto px-3 py-2"
+                  @update:model-value="setStatus(child.id, $event)"
+                />
                 <input
                   v-if="statusOf(child.id) === 'mastered'"
                   type="date"

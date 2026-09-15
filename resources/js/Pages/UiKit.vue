@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { Head } from '@inertiajs/vue3'
-import { Plus } from 'lucide-vue-next'
+import { Plus, Pencil, Trash2, RotateCcw } from 'lucide-vue-next'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import Card from '@/components/ui/Card.vue'
 import CardHeader from '@/components/ui/CardHeader.vue'
@@ -13,6 +13,11 @@ import TableRow from '@/components/ui/TableRow.vue'
 import TableHead from '@/components/ui/TableHead.vue'
 import TableCell from '@/components/ui/TableCell.vue'
 import Button from '@/components/ui/Button.vue'
+import IconButton from '@/components/ui/IconButton.vue'
+import Checkbox from '@/components/ui/Checkbox.vue'
+import Radio from '@/components/ui/Radio.vue'
+import Select from '@/components/ui/Select.vue'
+import type { SelectOption } from '@/components/ui/Select.vue'
 import Tabs from '@/components/ui/Tabs.vue'
 import type { TabItem } from '@/components/ui/Tabs.vue'
 import UserAvatar from '@/components/ui/UserAvatar.vue'
@@ -46,6 +51,16 @@ const toast = useToast()
 const color = ref('violet')
 const avatar = ref<string | null>(null)
 const cropperSrc = ref<string | null>(null)
+
+const formSelect = ref<string | null>(null)
+const formCheckbox = ref(false)
+const formRadio = ref('first')
+
+const formSelectOptions = computed<SelectOption<string>[]>(() => [
+  { value: 'first', label: t('ui.uikit.forms.option_first') },
+  { value: 'second', label: t('ui.uikit.forms.option_second') },
+  { value: 'third', label: t('ui.uikit.forms.option_third') },
+])
 
 const showConfirm = ref(false)
 const showStudent = ref(false)
@@ -174,6 +189,15 @@ const snippets = {
     '  <Trash2 class="h-4 w-4" />',
     "  {{ t('ui.common.delete') }}",
     '</Button>',
+    '',
+    '<!-- Иконки-действия в списках/карточках: правка, удаление, восстановление -->',
+    '<IconButton :title="t(\'ui.common.edit\')"><Pencil class="h-4 w-4" /></IconButton>',
+    '<IconButton variant="destructive" :title="t(\'ui.common.delete\')">',
+    '  <Trash2 class="h-4 w-4" />',
+    '</IconButton>',
+    '<IconButton variant="success" :title="t(\'ui.common.restore\')">',
+    '  <RotateCcw class="h-4 w-4" />',
+    '</IconButton>',
   ].join('\n'),
 
   card: [
@@ -227,11 +251,14 @@ const snippets = {
 
   form: [
     '<label class="field-label">Label</label>',
-    '<input',
-    '  v-model="value"',
-    '  class="field w-full px-3.5 py-2.5"',
-    '  :placeholder="t(\'ui.uikit.forms.input_placeholder\')"',
-    '/>',
+    '<input v-model="value" class="field w-full px-3.5 py-2.5" />',
+    '',
+    '<Select v-model="choice" :options="options" :placeholder="..." />',
+    '',
+    '<Checkbox v-model="checked">{{ label }}</Checkbox>',
+    '',
+    '<Radio v-model="choice" name="group" value="first">{{ label }}</Radio>',
+    '<Radio v-model="choice" name="group" value="second">{{ label }}</Radio>',
   ].join('\n'),
 
   helpers: [
@@ -360,6 +387,30 @@ const snippets = {
             </Button>
           </div>
         </div>
+
+        <div>
+          <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            {{ t('ui.uikit.buttons.icon_actions') }}
+          </p>
+          <div class="flex flex-wrap items-center gap-2">
+            <IconButton :title="t('ui.common.edit')">
+              <Pencil class="h-4 w-4" />
+            </IconButton>
+            <IconButton variant="destructive" :title="t('ui.common.delete')">
+              <Trash2 class="h-4 w-4" />
+            </IconButton>
+            <IconButton variant="success" :title="t('ui.common.restore')">
+              <RotateCcw class="h-4 w-4" />
+            </IconButton>
+            <IconButton variant="primary" :title="t('ui.common.add')">
+              <Plus class="h-4 w-4" />
+            </IconButton>
+            <IconButton disabled :title="t('ui.uikit.buttons.disabled')">
+              <Pencil class="h-4 w-4" />
+            </IconButton>
+          </div>
+          <p class="mt-2 text-xs text-muted-foreground">{{ t('ui.uikit.buttons.icon_actions_hint') }}</p>
+        </div>
       </div>
     </UiKitSection>
 
@@ -487,16 +538,34 @@ const snippets = {
 
         <div>
           <label class="field-label">{{ t('ui.uikit.forms.select') }}</label>
-          <select class="field w-full px-3.5 py-2.5">
-            <option value="" disabled selected>{{ t('ui.uikit.forms.select_placeholder') }}</option>
-            <option value="1">{{ t('ui.uikit.forms.optional') }}</option>
-          </select>
+          <Select
+            v-model="formSelect"
+            :options="formSelectOptions"
+            :placeholder="t('ui.uikit.forms.select_placeholder')"
+          />
+          <p class="mt-1.5 text-xs text-muted-foreground">{{ t('ui.uikit.forms.select_hint') }}</p>
         </div>
 
-        <label class="flex cursor-pointer items-center gap-2">
-          <input type="checkbox" class="rounded border-border text-primary focus:ring-primary/30" />
-          <span class="text-sm text-foreground">{{ t('ui.uikit.forms.checkbox') }}</span>
-        </label>
+        <div class="space-y-2">
+          <p class="field-label mb-0">{{ t('ui.uikit.forms.checkbox') }}</p>
+          <Checkbox v-model="formCheckbox">{{ t('ui.uikit.forms.checkbox_label') }}</Checkbox>
+          <Checkbox :model-value="true" disabled>{{ t('ui.uikit.forms.disabled') }}</Checkbox>
+        </div>
+
+        <div class="space-y-2">
+          <p class="field-label mb-0">{{ t('ui.uikit.forms.radio') }}</p>
+          <div class="flex flex-wrap items-center gap-5">
+            <Radio v-model="formRadio" name="uikit-radio" value="first">
+              {{ t('ui.uikit.forms.option_first') }}
+            </Radio>
+            <Radio v-model="formRadio" name="uikit-radio" value="second">
+              {{ t('ui.uikit.forms.option_second') }}
+            </Radio>
+            <Radio :model-value="'third'" name="uikit-radio" value="third" disabled>
+              {{ t('ui.uikit.forms.disabled') }}
+            </Radio>
+          </div>
+        </div>
       </div>
     </UiKitSection>
 

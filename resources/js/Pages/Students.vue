@@ -3,6 +3,7 @@ import { Head, usePage, router } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import Card from '@/components/ui/Card.vue'
 import Button from '@/components/ui/Button.vue'
+import IconButton from '@/components/ui/IconButton.vue'
 import { ref, computed } from 'vue'
 import { cn } from '@/lib/utils'
 import StudentFormPopup from '@/components/popups/StudentFormPopup.vue'
@@ -218,27 +219,21 @@ function deleteStudent(student: any) {
                 </div>
               </div>
               <div class="flex items-center gap-1">
-                <button
+                <IconButton
                   v-if="!student.is_deleted"
-                  @click.stop="openEditModal(student)"
-                  class="inline-flex items-center justify-center rounded-lg h-9 w-9 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors cursor-pointer"
                   :title="t('ui.common.edit')"
+                  @click.stop="openEditModal(student)"
                 >
                   <Pencil class="h-4 w-4" />
-                </button>
-                <button
-                  @click.stop="deleteStudent(student)"
-                  :class="cn(
-                    'inline-flex items-center justify-center rounded-lg h-9 w-9 transition-colors',
-                    student.is_deleted
-                      ? 'text-emerald-500 hover:bg-emerald-50 hover:text-emerald-600 cursor-pointer'
-                      : 'text-muted-foreground hover:bg-red-50 hover:text-red-600 cursor-pointer',
-                  )"
+                </IconButton>
+                <IconButton
+                  :variant="student.is_deleted ? 'success' : 'destructive'"
                   :title="student.is_deleted ? t('ui.common.restore') : t('ui.common.delete')"
+                  @click.stop="deleteStudent(student)"
                 >
                   <RefreshCcw v-if="student.is_deleted" class="h-4 w-4" />
                   <Trash2 v-else class="h-4 w-4" />
-                </button>
+                </IconButton>
               </div>
             </div>
             <p v-if="student.description" class="mt-3 text-sm text-muted-foreground line-clamp-2">
@@ -284,27 +279,21 @@ function deleteStudent(student: any) {
                 </div>
               </div>
               <div class="flex items-center gap-1">
-                <button
+                <IconButton
                   v-if="!student.is_deleted"
-                  @click.stop="openEditModal(student)"
-                  class="inline-flex items-center justify-center rounded-lg h-9 w-9 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors cursor-pointer"
                   :title="t('ui.common.edit')"
+                  @click.stop="openEditModal(student)"
                 >
                   <Pencil class="h-4 w-4" />
-                </button>
-                <button
-                  @click.stop="deleteStudent(student)"
-                  :class="cn(
-                    'inline-flex items-center justify-center rounded-lg h-9 w-9 transition-colors',
-                    student.is_deleted
-                      ? 'text-emerald-500 hover:bg-emerald-50 hover:text-emerald-600 cursor-pointer'
-                      : 'text-muted-foreground hover:bg-red-50 hover:text-red-600 cursor-pointer',
-                  )"
+                </IconButton>
+                <IconButton
+                  :variant="student.is_deleted ? 'success' : 'destructive'"
                   :title="student.is_deleted ? t('ui.common.restore') : t('ui.common.delete')"
+                  @click.stop="deleteStudent(student)"
                 >
                   <RefreshCcw v-if="student.is_deleted" class="h-4 w-4" />
                   <Trash2 v-else class="h-4 w-4" />
-                </button>
+                </IconButton>
               </div>
             </div>
             <p v-if="student.description" class="mt-3 text-sm text-muted-foreground line-clamp-2">

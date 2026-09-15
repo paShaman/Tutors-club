@@ -4,6 +4,7 @@ import { Head, router, usePage } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import Card from '@/components/ui/Card.vue'
 import Button from '@/components/ui/Button.vue'
+import IconButton from '@/components/ui/IconButton.vue'
 import Tabs from '@/components/ui/Tabs.vue'
 import type { TabItem } from '@/components/ui/Tabs.vue'
 import TopicFormPopup from '@/components/popups/TopicFormPopup.vue'
@@ -344,12 +345,12 @@ function onCancel(): void {
               <Plus class="h-4 w-4" />
               <span class="hidden sm:inline">{{ t('ui.planning.add_subtopic') }}</span>
             </Button>
-            <Button variant="ghost" size="sm" @click="openEdit(root)">
+            <IconButton :title="t('ui.common.edit')" @click="openEdit(root)">
               <Pencil class="h-4 w-4" />
-            </Button>
-            <Button variant="ghost" size="sm" @click="askDelete(root, false)">
-              <Trash2 class="h-4 w-4 text-destructive" />
-            </Button>
+            </IconButton>
+            <IconButton variant="destructive" :title="t('ui.common.delete')" @click="askDelete(root, false)">
+              <Trash2 class="h-4 w-4" />
+            </IconButton>
           </div>
 
           <div
@@ -377,12 +378,12 @@ function onCancel(): void {
               >
                 <GripVertical class="h-4 w-4 shrink-0 cursor-grab text-muted-foreground/50" />
                 <span class="min-w-0 flex-1 truncate text-sm text-foreground">{{ child.name }}</span>
-                <Button variant="ghost" size="sm" @click="openEdit(child)">
+                <IconButton :title="t('ui.common.edit')" @click="openEdit(child)">
                   <Pencil class="h-4 w-4" />
-                </Button>
-                <Button variant="ghost" size="sm" @click="askDelete(child, true)">
-                  <Trash2 class="h-4 w-4 text-destructive" />
-                </Button>
+                </IconButton>
+                <IconButton variant="destructive" :title="t('ui.common.delete')" @click="askDelete(child, true)">
+                  <Trash2 class="h-4 w-4" />
+                </IconButton>
               </div>
             </template>
             <div
