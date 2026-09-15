@@ -207,10 +207,12 @@ final class FeedbackBotService
 
             foreach ($photos as $photo) {
                 $sent = $photo instanceof UploadedFile
-                    ? Http::timeout(30)
+                    ? Http::connectTimeout(5)
+                        ->timeout(30)
                         ->attach('photo', (string) file_get_contents($photo->getPathname()), $photo->getClientOriginalName())
                         ->post("https://api.telegram.org/bot{$token}/sendPhoto", ['chat_id' => $chatId])
                     : Http::asJson()
+                        ->connectTimeout(5)
                         ->timeout(30)
                         ->post("https://api.telegram.org/bot{$token}/sendPhoto", [
                             'chat_id' => $chatId,
@@ -301,6 +303,7 @@ final class FeedbackBotService
         for ($attempt = 1; $attempt <= $attempts; $attempt++) {
             $response = Http::withHeaders(['Authorization' => $token])
                 ->asJson()
+                ->connectTimeout(5)
                 ->timeout(15)
                 ->post($url, $body);
 
@@ -333,6 +336,7 @@ final class FeedbackBotService
     private function maxUploadImage(string $token, UploadedFile $photo): ?array
     {
         $slot = Http::withHeaders(['Authorization' => $token])
+            ->connectTimeout(5)
             ->timeout(15)
             ->post(self::MAX_API . '/uploads?type=image');
 
