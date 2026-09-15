@@ -678,7 +678,7 @@ return [
                 'disabled' => 'Отключённая',
                 'with_icon' => 'С иконкой',
                 'icon_actions' => 'Иконки-действия',
-                'icon_actions_hint' => 'Единый размер и подъём при ховере. Варианты: default (правка), destructive (удаление), success (восстановление), primary (добавление).',
+                'icon_actions_hint' => 'Единый размер и подъём при ховере. Варианты: default (правка), destructive (удаление), success (восстановление), primary (добавление). Подъём отключается пропом lift.',
             ],
             'cards' => [
                 'header' => 'Заголовок карточки',

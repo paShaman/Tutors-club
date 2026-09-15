@@ -282,7 +282,7 @@ const title = computed(() => props.mode === 'edit' ? t('ui.lessons.form.edit_tit
             </div>
 
             <!-- Topic & Subtopic -->
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-2 gap-4 [&>*]:min-w-0">
               <div>
                 <div class="mb-1.5 flex items-center justify-between gap-2">
                   <label class="block text-sm font-medium text-foreground">{{ t('ui.lessons.form.topic') }}</label>
@@ -342,7 +342,7 @@ const title = computed(() => props.mode === 'edit' ? t('ui.lessons.form.edit_tit
             </div>
 
             <!-- Date & Time row -->
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-2 gap-4 [&>*]:min-w-0">
               <div>
                 <label class="field-label">{{ t('ui.lessons.form.date') }}</label>
                 <input
@@ -363,7 +363,7 @@ const title = computed(() => props.mode === 'edit' ? t('ui.lessons.form.edit_tit
             </div>
 
             <!-- Price & Duration row -->
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-2 gap-4 [&>*]:min-w-0">
               <div>
                 <label class="field-label">{{ t('ui.lessons.form.price') }}</label>
                 <input

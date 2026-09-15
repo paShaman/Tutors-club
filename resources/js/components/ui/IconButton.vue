@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, type Component } from 'vue'
 import { cn } from '@/lib/utils'
 import Button from './Button.vue'
 
@@ -10,14 +10,18 @@ const props = withDefaults(defineProps<{
   title?: string
   disabled?: boolean
   type?: 'button' | 'submit' | 'reset'
+  as?: string | Component
+  lift?: boolean
   class?: string
 }>(), {
   variant: 'default',
   type: 'button',
+  as: 'button',
+  lift: true,
 })
 
 // Единый вид иконок-действий (правка, удаление, восстановление, публикация).
-// Размер и подъём при ховере наследуются от Button, здесь только цвет по смыслу действия.
+// Размер наследуется от Button, здесь — цвет по смыслу действия и подъём при ховере.
 const colorClass = computed(() => {
   switch (props.variant) {
     case 'primary':
@@ -36,10 +40,11 @@ const colorClass = computed(() => {
   <Button
     variant="ghost"
     size="icon-sm"
-    :type="type"
+    :as="as"
+    :type="as === 'button' ? type : undefined"
     :title="title"
     :disabled="disabled"
-    :class="cn(colorClass, props.class)"
+    :class="cn(colorClass, lift && 'hover:-translate-y-0.5', props.class)"
   >
     <slot />
   </Button>

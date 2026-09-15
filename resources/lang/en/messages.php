@@ -670,7 +670,7 @@ return [
                 'disabled' => 'Disabled',
                 'with_icon' => 'With icon',
                 'icon_actions' => 'Action icons',
-                'icon_actions_hint' => 'One size and a hover lift everywhere. Variants: default (edit), destructive (delete), success (restore), primary (add).',
+                'icon_actions_hint' => 'One size and a hover lift everywhere. Variants: default (edit), destructive (delete), success (restore), primary (add). The lift can be turned off with the lift prop.',
             ],
             'cards' => [
                 'header' => 'Card header',

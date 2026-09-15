@@ -5,6 +5,7 @@ import Card from '@/components/ui/Card.vue'
 import CardHeader from '@/components/ui/CardHeader.vue'
 import CardTitle from '@/components/ui/CardTitle.vue'
 import Button from '@/components/ui/Button.vue'
+import IconButton from '@/components/ui/IconButton.vue'
 import StudentAvatar from '@/components/ui/StudentAvatar.vue'
 import { cn } from '@/lib/utils'
 import {
@@ -359,9 +360,9 @@ const barChartOptions = computed(() => ({
               <p class="font-medium text-foreground truncate">{{ student.name }}</p>
               <p class="text-xs text-muted-foreground">{{ student.studentClass }}</p>
             </div>
-              <Link :href="`/students/${student.slug}`" class="inline-flex items-center justify-center rounded-lg h-9 w-9 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors shrink-0">
+              <IconButton :as="Link" :href="`/students/${student.slug}`" class="shrink-0" :title="student.name">
                 <ChevronRight class="h-4 w-4" />
-              </Link>
+              </IconButton>
           </div>
           <div class="mt-4 flex items-center gap-3 text-sm">
             <span class="inline-flex items-center gap-1">

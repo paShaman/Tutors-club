@@ -95,7 +95,7 @@ const title = computed(() =>
                 />
               </div>
 
-              <div class="grid grid-cols-2 gap-4">
+              <div class="grid grid-cols-2 gap-4 [&>*]:min-w-0">
                 <div>
                   <label class="field-label">{{ t('ui.promo.form.button_text') }}</label>
                   <input
@@ -118,7 +118,7 @@ const title = computed(() =>
 
               <div>
                 <label class="field-label">{{ t('ui.promo.form.period') }}</label>
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-2 gap-4 [&>*]:min-w-0">
                   <input
                     v-model="form.starts_at"
                     type="date"

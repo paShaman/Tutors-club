@@ -8,11 +8,11 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: 'bg-primary text-primary-foreground shadow hover:shadow-lg hover:shadow-primary/25 hover:-translate-y-0.5 cursor-pointer',
-        destructive: 'bg-destructive text-destructive-foreground shadow-sm hover:shadow-md hover:shadow-destructive/25 hover:-translate-y-0.5 cursor-pointer',
-        outline: 'border border-input bg-background shadow-sm hover:shadow-md hover:border-foreground/20 hover:-translate-y-0.5 cursor-pointer',
-        secondary: 'bg-secondary text-secondary-foreground shadow-sm hover:shadow-md hover:bg-secondary/80 hover:-translate-y-0.5 cursor-pointer',
-        ghost: 'hover:bg-accent hover:text-accent-foreground hover:-translate-y-0.5 cursor-pointer',
+        default: 'bg-primary text-primary-foreground shadow hover:shadow-lg hover:shadow-primary/25 cursor-pointer',
+        destructive: 'bg-destructive text-destructive-foreground shadow-sm hover:shadow-md hover:shadow-destructive/25 cursor-pointer',
+        outline: 'border border-input bg-background shadow-sm hover:shadow-md hover:border-foreground/20 cursor-pointer',
+        secondary: 'bg-secondary text-secondary-foreground shadow-sm hover:shadow-md hover:bg-secondary/80 cursor-pointer',
+        ghost: 'hover:bg-accent hover:text-accent-foreground cursor-pointer',
         link: 'text-primary underline-offset-4 hover:underline hover:text-primary/80 cursor-pointer',
       },
       size: {

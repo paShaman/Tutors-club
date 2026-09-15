@@ -597,6 +597,7 @@ function formatDatePayed(dateStr: string | null): string {
                       <IconButton
                         variant="primary"
                         class="shrink-0"
+                        :lift="false"
                         :title="t('ui.lessons.add_for_student')"
                         @click.stop="requestAddLessonForStudent(studentGroup)"
                       >

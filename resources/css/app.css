@@ -96,7 +96,8 @@ body {
 
 /* Поверхность попапа на базе Card (форма внутри попапа). */
 @utility popup-card {
-  @apply relative w-full p-6 shadow-xl;
+  /* min-w-0: иначе intrinsic-ширина полей (в т.ч. нативных date/time на iOS) распирает flex-элемент шире экрана. */
+  @apply relative w-full min-w-0 p-6 shadow-xl;
 }
 
 /* Самостоятельная поверхность попапа (без Card). */
@@ -113,7 +114,8 @@ body {
 
 /* Поле ввода: input, textarea, select. Ширина и отступы задаются на месте — они различаются. */
 @utility field {
-  @apply rounded-xl border border-border bg-white/50 text-sm text-foreground transition-colors;
+  /* min-w-0: нативные date/time на iOS имеют большую intrinsic-ширину, без этого они вылезают из грида/карточки. */
+  @apply min-w-0 rounded-xl border border-border bg-white/50 text-sm text-foreground transition-colors;
   @apply placeholder:text-muted-foreground;
   @apply focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30;
 }
