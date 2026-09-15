@@ -184,7 +184,7 @@ function submit(): void {
             <span class="text-xs leading-relaxed text-muted-foreground">
               {{ t('ui.auth.agreement_prefix') }}
               <template v-for="(doc, index) in agreements" :key="index">
-                <span v-if="index > 0"> {{ t('ui.auth.and') }} </span>
+                <span v-if="index > 0">{{ ' ' + t('ui.auth.and') + ' ' }}</span>
                 <a
                   v-if="doc.url"
                   :href="doc.url"
@@ -194,7 +194,7 @@ function submit(): void {
                 >{{ t(doc.genitive ?? doc.label) }}</a>
                 <span v-else class="font-medium text-primary">{{ t(doc.genitive ?? doc.label) }}</span>
               </template>
-              <span class="text-destructive">*</span>
+              {{ ' ' }}<span class="text-destructive">*</span>
             </span>
           </Checkbox>
           <p v-if="form.errors.agreement" class="field-error">{{ form.errors.agreement }}</p>
