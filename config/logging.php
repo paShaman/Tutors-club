@@ -35,7 +35,7 @@ return [
     'channels' => [
         'stack' => [
             'driver' => 'stack',
-            'channels' => ['single'],
+            'channels' => ['single', 'sentry'],
         ],
 
         'single' => [
@@ -75,6 +75,15 @@ return [
         'errorlog' => [
             'driver' => 'errorlog',
             'level' => 'debug',
+        ],
+
+        // Ошибки уровня error и выше дополнительно уходят в GlitchTip (без DSN — молча ничего не делает).
+        'sentry' => [
+            'driver' => 'sentry',
+            'level' => env('SENTRY_LOG_LEVEL', 'error'),
+            // Записи с исключением пропускаем: их и так отправляет Integration::handles(),
+            // иначе каждое необработанное исключение попадало бы в трекер дважды.
+            'report_exceptions' => false,
         ],
     ],
 
