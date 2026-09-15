@@ -30,6 +30,7 @@ $app = Application::configure(basePath: dirname(__DIR__))
 
         $middleware->validateCsrfTokens(except: [
             'telegram/webhook',
+            'telegram/students/webhook',
             'max/webhook',
         ]);
     })

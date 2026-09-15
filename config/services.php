@@ -65,6 +65,13 @@ return [
         'webhook_secret' => env('TELEGRAM_WEBHOOK_SECRET'),
     ],
 
+    // Отдельный бот управления учениками (личный кабинет прямо в Telegram).
+    'telegram_students' => [
+        'bot_token'      => env('TELEGRAM_STUDENTS_BOT_TOKEN'),
+        'bot_username'   => env('TELEGRAM_STUDENTS_BOT_USERNAME'),
+        'webhook_secret' => env('TELEGRAM_STUDENTS_WEBHOOK_SECRET'),
+    ],
+
     'max' => [
         'bot_token'      => env('MAX_BOT_TOKEN'),
         'owner_id'       => env('MAX_OWNER_ID'),

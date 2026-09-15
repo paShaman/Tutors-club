@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, router, usePage, useForm } from '@inertiajs/vue3'
-import { Settings, User, Shield, Save, Link2, Unlink, Languages, CreditCard, AlertTriangle } from 'lucide-vue-next'
+import { Settings, User, Shield, Save, Link2, Unlink, Languages, CreditCard, AlertTriangle, RefreshCw } from 'lucide-vue-next'
 import Button from '@/components/ui/Button.vue'
 import Card from '@/components/ui/Card.vue'
 import CardHeader from '@/components/ui/CardHeader.vue'
@@ -15,6 +15,7 @@ import VkIdAuth from '@/components/social/VkIdAuth.vue'
 import YandexAuth from '@/components/social/YandexAuth.vue'
 import VkIcon from '@/components/social/VkIcon.vue'
 import YandexIcon from '@/components/social/YandexIcon.vue'
+import TelegramIcon from '@/components/social/TelegramIcon.vue'
 import ConfirmDialog from '@/components/popups/ConfirmDialog.vue'
 import { providerMeta } from '@/lib/social'
 import { useI18n } from '@/lib/i18n'
@@ -25,8 +26,18 @@ interface SocialBinding {
   created_at: string | null
 }
 
+interface TelegramInfo {
+  configured: boolean
+  linked: boolean
+  username: string | null
+  link_url: string | null
+  code: string | null
+  ttl: number
+}
+
 interface SettingsPageProps extends SharedProps {
   socials: SocialBinding[]
+  telegram: TelegramInfo | null
 }
 
 defineOptions({ layout: AppLayout })
@@ -43,6 +54,7 @@ const localeOptions = computed<SelectOption<string>[]>(() =>
 const configuredProviders = computed(() => (page.props.social ?? []).filter((p) => p.configured))
 
 const tariff = computed(() => page.props.tariff ?? null)
+const telegram = computed(() => page.props.telegram ?? null)
 
 function formatTariffDate(raw: string | null | undefined): string | null {
   if (!raw) return null
@@ -180,6 +192,18 @@ function confirmUnlink(): void {
 function cancelUnlink(): void {
   showUnlinkConfirm.value = false
   unlinkProvider.value = null
+}
+
+// Telegram unlink / link refresh
+const showTelegramUnlinkConfirm = ref(false)
+
+function refreshTelegramLink(): void {
+  router.post('/user/telegram/refresh', {}, { preserveScroll: true })
+}
+
+function confirmTelegramUnlink(): void {
+  showTelegramUnlinkConfirm.value = false
+  router.post('/user/telegram/unlink', {}, { preserveScroll: true })
 }
 </script>
 
@@ -435,6 +459,70 @@ function cancelUnlink(): void {
       </div>
     </Card>
 
+    <!-- Telegram section -->
+    <Card v-if="telegram?.configured">
+      <CardHeader>
+        <div class="flex items-center gap-3">
+          <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-[#229ED9]/10">
+            <TelegramIcon class="h-5 w-5 text-[#229ED9]" />
+          </div>
+          <div>
+            <CardTitle>{{ t('ui.settings.telegram') }}</CardTitle>
+            <p class="text-sm text-muted-foreground">{{ t('ui.settings.telegram_subtitle') }}</p>
+          </div>
+        </div>
+      </CardHeader>
+
+      <div class="px-6 pb-6 space-y-4">
+        <p class="text-sm text-muted-foreground">{{ t('ui.settings.telegram_hint') }}</p>
+
+        <div class="flex items-center justify-between gap-4 rounded-xl border border-border/60 bg-white/40 px-4 py-3">
+          <div class="flex items-center gap-3">
+            <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-[#229ED9]/10 text-[#229ED9]">
+              <TelegramIcon class="h-4 w-4" />
+            </div>
+            <div>
+              <p class="text-sm font-medium text-foreground">{{ t('ui.settings.telegram') }}</p>
+              <p v-if="telegram?.linked" class="text-xs text-muted-foreground">
+                {{ telegram?.username
+                  ? t('ui.settings.telegram_linked', { username: telegram?.username })
+                  : t('ui.settings.telegram_linked_plain') }}
+              </p>
+              <p v-else class="text-xs text-muted-foreground">{{ t('ui.settings.telegram_not_linked') }}</p>
+            </div>
+          </div>
+          <Button
+            v-if="telegram?.linked"
+            variant="outline"
+            size="sm"
+            class="text-destructive hover:text-destructive"
+            @click="showTelegramUnlinkConfirm = true"
+          >
+            <Unlink class="h-4 w-4" />
+            {{ t('ui.settings.unlink') }}
+          </Button>
+        </div>
+
+        <div v-if="!telegram?.linked" class="space-y-3">
+          <Button as="a" :href="telegram?.link_url ?? '#'" target="_blank" rel="noopener">
+            <TelegramIcon class="h-4 w-4" />
+            {{ t('ui.settings.telegram_connect') }}
+          </Button>
+          <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <Button variant="ghost" size="sm" @click="refreshTelegramLink">
+              <RefreshCw class="h-4 w-4" />
+              {{ t('ui.settings.telegram_refresh') }}
+            </Button>
+            <span class="text-xs text-muted-foreground">
+              {{ t('ui.settings.telegram_code_hint', { ttl: telegram?.ttl ?? 0 }) }}
+            </span>
+          </div>
+        </div>
+
+        <p class="text-xs text-muted-foreground/70">{{ t('ui.settings.telegram_commands_hint') }}</p>
+      </div>
+    </Card>
+
     <!-- Security section -->
     <Card>
       <CardHeader>
@@ -524,6 +612,16 @@ function cancelUnlink(): void {
       variant="danger"
       @confirm="confirmUnlink"
       @cancel="cancelUnlink"
+    />
+
+    <!-- Telegram unlink confirm -->
+    <ConfirmDialog
+      :show="showTelegramUnlinkConfirm"
+      :title="t('ui.settings.telegram_unlink_confirm')"
+      :confirmText="t('ui.settings.unlink')"
+      variant="danger"
+      @confirm="confirmTelegramUnlink"
+      @cancel="showTelegramUnlinkConfirm = false"
     />
   </div>
 </template>

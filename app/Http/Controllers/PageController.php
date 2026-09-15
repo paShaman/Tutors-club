@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Services\StudentTelegramBotService;
 use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Support\Facades\Auth;
@@ -33,8 +34,9 @@ final class PageController extends Controller
     public function settings(): Response
     {
         $socials = [];
+        $user = Auth::user();
 
-        if ($user = Auth::user()) {
+        if ($user) {
             $socials = DB::table('users_social')
                 ->where('user_id', $user->id)
                 ->orderBy('social')
@@ -50,6 +52,13 @@ final class PageController extends Controller
                 ->all();
         }
 
-        return Inertia::render('Settings', ['socials' => $socials]);
+        $telegram = $user
+            ? app(StudentTelegramBotService::class)->settingsPayload($user)
+            : ['configured' => false, 'linked' => false, 'username' => null, 'link_url' => null, 'code' => null, 'ttl' => 0];
+
+        return Inertia::render('Settings', [
+            'socials'  => $socials,
+            'telegram' => $telegram,
+        ]);
     }
 }

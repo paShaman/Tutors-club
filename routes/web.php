@@ -14,6 +14,8 @@ use App\Http\Controllers\PlanningController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ChangelogController;
 use App\Http\Controllers\FeedbackController;
+use App\Http\Controllers\StudentBotController;
+use App\Http\Controllers\TelegramController;
 use App\Http\Controllers\PromoController;
 use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\UiKitController;
@@ -64,6 +66,8 @@ Route::get('/user/socials/link/yandex', [AuthController::class, 'yandexLink'])
     ->name('auth.yandex.link')
     ->middleware('auth');
 Route::post('/user/socials/unlink', [UserController::class, 'socialUnlink'])->middleware('auth');
+Route::post('/user/telegram/refresh', [TelegramController::class, 'refresh'])->middleware('auth');
+Route::post('/user/telegram/unlink', [TelegramController::class, 'unlink'])->middleware('auth');
 
 // ─── Avatar ─────────────────────────────────────────────────
 Route::post('/avatar/upload', [AvatarController::class, 'upload'])->middleware('auth');
@@ -82,6 +86,9 @@ Route::get('/changelog', [ChangelogController::class, 'getChangelog'])
 Route::post('/feedback', [FeedbackController::class, 'send'])->middleware('auth');
 Route::post('/telegram/webhook', [FeedbackController::class, 'webhook'])->name('telegram.webhook');
 Route::post('/max/webhook', [FeedbackController::class, 'maxWebhook'])->name('max.webhook');
+
+// ─── Telegram-бот управления учениками ──────────────────────
+Route::post('/telegram/students/webhook', [StudentBotController::class, 'webhook'])->name('telegram.students.webhook');
 
 // ─── Admin ──────────────────────────────────────────────────
 Route::get('/admin/users', [AdminUserController::class, 'index'])
