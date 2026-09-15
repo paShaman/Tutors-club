@@ -13,6 +13,7 @@ export type ReviewFormData = {
 const props = defineProps<{
   show: boolean
   topicName: string
+  submitting?: boolean
 }>()
 
 useScrollLock(() => props.show)
@@ -85,7 +86,7 @@ watch(() => props.show, (val) => {
               </div>
 
               <div class="flex items-center gap-3 pt-2">
-                <Button type="submit" class="flex-1">
+                <Button type="submit" class="flex-1" :loading="submitting">
                   {{ t('ui.common.save') }}
                 </Button>
                 <Button type="button" variant="outline" class="flex-1" @click="emit('close')">

@@ -96,7 +96,7 @@ function submit(): void {
           <Button
             type="submit"
             class="w-full"
-            :disabled="form.processing"
+            :loading="form.processing"
           >
             <LogIn class="h-4 w-4" />
             {{ form.processing ? t('ui.auth.logging_in') : t('ui.auth.login_action') }}

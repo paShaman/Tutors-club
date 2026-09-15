@@ -57,6 +57,7 @@ const props = defineProps<{
   defaultDuration: number
   canAddTopic: boolean
   initialForm?: LessonFormData | null
+  submitting?: boolean
 }>()
 
 useScrollLock(() => props.show)
@@ -131,6 +132,7 @@ const topicStatusOptions = computed<SelectOption<string>[]>(() => [
 // ─── Быстрое добавление темы/подтемы ────────────────────────
 const showTopicForm = ref(false)
 const topicFormParent = ref<{ id: number; name: string } | null>(null)
+const topicSubmitting = ref(false)
 
 function openAddTopic(): void {
   if (!props.canAddTopic) {
@@ -173,7 +175,10 @@ function selectCreatedTopic(name: string, isSubtopic: boolean): void {
 }
 
 function submitNewTopic(data: TopicFormData): void {
+  if (topicSubmitting.value) return
+
   const isSubtopic = topicFormParent.value !== null
+  topicSubmitting.value = true
 
   router.post('/topics/edit', data, {
     preserveScroll: true,
@@ -183,6 +188,7 @@ function submitNewTopic(data: TopicFormData): void {
       nextTick(() => selectCreatedTopic(data.name, isSubtopic))
     },
     onError: () => toast.error(t('error.add_topic')),
+    onFinish: () => { topicSubmitting.value = false },
   })
 }
 
@@ -403,7 +409,7 @@ const title = computed(() => props.mode === 'edit' ? t('ui.lessons.form.edit_tit
 
             <!-- Actions -->
             <div class="flex items-center gap-3 pt-2">
-              <Button type="submit" class="flex-1">
+              <Button type="submit" class="flex-1" :loading="submitting">
                 {{ mode === 'edit' ? t('ui.common.save') : t('ui.common.add') }}
               </Button>
               <Button
@@ -433,6 +439,7 @@ const title = computed(() => props.mode === 'edit' ? t('ui.lessons.form.edit_tit
     :parent="topicFormParent"
     :initial="null"
     :nested="true"
+    :submitting="topicSubmitting"
     @close="showTopicForm = false"
     @submit="submitNewTopic"
   />

@@ -142,6 +142,7 @@ const summary = computed(() => page.props.summary)
 // ─── Edit student ───────────────────────────────────────────
 const showEditModal = ref(false)
 const editForm = ref<StudentFormData | null>(null)
+const studentSubmitting = ref(false)
 
 function openEditModal(): void {
   const s = student.value
@@ -158,10 +159,14 @@ function openEditModal(): void {
 }
 
 function submitStudent(formData: StudentFormData): void {
+  if (studentSubmitting.value) return
+
+  studentSubmitting.value = true
   router.post('/students/edit', formData, {
     preserveScroll: true,
     onSuccess: () => { showEditModal.value = false },
     onError: (errors) => toast.error(Object.values(errors).join('\n')),
+    onFinish: () => { studentSubmitting.value = false },
   })
 }
 
@@ -455,6 +460,7 @@ function showAll(): void {
 // ─── Review popup ───────────────────────────────────────────
 const showReviewForm = ref(false)
 const reviewTopic = ref<{ id: number; name: string } | null>(null)
+const reviewSubmitting = ref(false)
 
 function openReview(topic: { id: number; name: string }): void {
   reviewTopic.value = topic
@@ -462,8 +468,9 @@ function openReview(topic: { id: number; name: string }): void {
 }
 
 function submitReview(form: ReviewFormData): void {
-  if (!reviewTopic.value) return
+  if (!reviewTopic.value || reviewSubmitting.value) return
 
+  reviewSubmitting.value = true
   router.post('/student-topics/review', {
     student_id: student.value.id,
     topic_id: reviewTopic.value.id,
@@ -475,6 +482,7 @@ function submitReview(form: ReviewFormData): void {
       showReviewForm.value = false
     },
     onError: () => toast.error(t('error.review_topic')),
+    onFinish: () => { reviewSubmitting.value = false },
   })
 }
 
@@ -976,6 +984,7 @@ function formatTopicDate(dateStr: string | null): string {
     <ReviewFormPopup
       :show="showReviewForm"
       :topic-name="reviewTopic?.name ?? ''"
+      :submitting="reviewSubmitting"
       @close="showReviewForm = false"
       @submit="submitReview"
     />
@@ -984,6 +993,7 @@ function formatTopicDate(dateStr: string | null): string {
       :show="showEditModal"
       mode="edit"
       :initial-form="editForm"
+      :submitting="studentSubmitting"
       @close="showEditModal = false"
       @submit="submitStudent"
     />

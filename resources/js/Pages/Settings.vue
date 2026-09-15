@@ -306,7 +306,7 @@ function confirmTelegramUnlink(): void {
 
         <!-- Save button -->
         <div class="pt-2">
-          <Button type="submit" :disabled="form.processing">
+          <Button type="submit" :loading="form.processing">
             <Save class="h-4 w-4" />
             {{ form.processing ? t('ui.common.saving') : t('ui.settings.save') }}
           </Button>
@@ -594,7 +594,7 @@ function confirmTelegramUnlink(): void {
               <p v-if="passwordForm.errors.password_confirmation" class="field-error">{{ passwordForm.errors.password_confirmation }}</p>
             </div>
 
-            <Button type="submit" :disabled="passwordForm.processing">
+            <Button type="submit" :loading="passwordForm.processing">
               {{ passwordForm.processing ? t('ui.common.saving') : (user?.has_password ? t('ui.settings.change_password') : t('ui.settings.set_password')) }}
             </Button>
           </form>

@@ -19,6 +19,7 @@ const props = defineProps<{
   parent?: { id: number; name: string } | null
   initial?: TopicFormData | null
   nested?: boolean
+  submitting?: boolean
 }>()
 
 useScrollLock(() => props.show)
@@ -103,7 +104,7 @@ const title = computed(() => {
               </div>
 
               <div class="flex items-center gap-3 pt-2">
-                <Button type="submit" class="flex-1">
+                <Button type="submit" class="flex-1" :loading="submitting">
                   {{ mode === 'edit' ? t('ui.common.save') : t('ui.common.add') }}
                 </Button>
                 <Button type="button" variant="outline" class="flex-1" @click="emit('close')">

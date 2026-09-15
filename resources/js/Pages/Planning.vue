@@ -80,6 +80,7 @@ const showTopicForm = ref(false)
 const formMode = ref<'add' | 'edit'>('add')
 const formParent = ref<{ id: number; name: string } | null>(null)
 const formInitial = ref<TopicFormData | null>(null)
+const submitting = ref(false)
 
 function requestAddRoot(): void {
   if (!canAddTopic.value) {
@@ -128,6 +129,9 @@ function closeForm(): void {
 }
 
 function submitTopic(form: TopicFormData): void {
+  if (submitting.value) return
+
+  submitting.value = true
   router.post('/topics/edit', form, {
     preserveScroll: true,
     onSuccess: () => {
@@ -136,6 +140,7 @@ function submitTopic(form: TopicFormData): void {
     onError: () => {
       toast.error(t('error.add_topic'))
     },
+    onFinish: () => { submitting.value = false },
   })
 }
 
@@ -408,6 +413,7 @@ function onCancel(): void {
     :subject="selectedSubject"
     :parent="formParent"
     :initial="formInitial"
+    :submitting="submitting"
     @close="closeForm"
     @submit="submitTopic"
   />

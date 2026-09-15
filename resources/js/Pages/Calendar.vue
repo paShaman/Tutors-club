@@ -138,6 +138,7 @@ function changeView(view: string): void {
 // Popup state
 const showLessonPopup = ref(false)
 const lessonPopupInitial = ref<LessonFormData | null>(null)
+const lessonSubmitting = ref(false)
 
 // Confirm dialog state
 const showConfirm = ref(false)
@@ -198,6 +199,9 @@ function refetchEvents() {
 }
 
 function handleLessonSubmit(form: LessonFormData) {
+  if (lessonSubmitting.value) return
+
+  lessonSubmitting.value = true
   router.post('/lessons/edit', form, {
     preserveScroll: true,
     onSuccess: () => {
@@ -205,6 +209,7 @@ function handleLessonSubmit(form: LessonFormData) {
       refetchEvents()
     },
     onError: (errors) => toast.error(Object.values(errors).join('\n')),
+    onFinish: () => { lessonSubmitting.value = false },
   })
 }
 
@@ -311,6 +316,7 @@ function handleLessonDelete() {
       :defaultDuration="page.props.defaultDuration"
       :canAddTopic="page.props.tariff?.can.topics ?? true"
       :initialForm="lessonPopupInitial"
+      :submitting="lessonSubmitting"
       @close="closeLessonPopup"
       @submit="handleLessonSubmit"
       @delete="handleLessonDelete"

@@ -244,6 +244,7 @@ function toggleStudent(year: number, month: number, studentId: number) {
 const showLessonPopup = ref(false)
 const lessonPopupMode = ref<'add' | 'edit'>('add')
 const lessonPopupInitial = ref<LessonFormData | null>(null)
+const lessonSubmitting = ref(false)
 
 // Confirm dialog state
 const showConfirm = ref(false)
@@ -370,10 +371,14 @@ function closeLessonPopup() {
 }
 
 function handleLessonSubmit(form: LessonFormData) {
+  if (lessonSubmitting.value) return
+
+  lessonSubmitting.value = true
   router.post('/lessons/edit', form, {
     preserveScroll: true,
     onSuccess: () => closeLessonPopup(),
     onError: (errors) => toast.error(Object.values(errors).join('\n')),
+    onFinish: () => { lessonSubmitting.value = false },
   })
 }
 
@@ -880,6 +885,7 @@ function formatDatePayed(dateStr: string | null): string {
       :defaultDuration="page.props.defaultDuration"
       :canAddTopic="page.props.tariff?.can.topics ?? true"
       :initialForm="lessonPopupInitial"
+      :submitting="lessonSubmitting"
       @close="closeLessonPopup"
       @submit="handleLessonSubmit"
       @delete="handleLessonDelete"

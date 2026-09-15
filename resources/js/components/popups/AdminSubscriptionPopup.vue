@@ -19,6 +19,7 @@ const props = defineProps<{
   initial?: SubscriptionFormData | null
   plans: string[]
   periods: string[]
+  submitting?: boolean
 }>()
 
 useScrollLock(() => props.show)
@@ -87,7 +88,7 @@ const periodOptions = computed<SelectOption<string>[]>(() =>
               </div>
 
               <div class="flex items-center gap-3 pt-2">
-                <Button type="submit" class="flex-1">{{ t('ui.common.save') }}</Button>
+                <Button type="submit" class="flex-1" :loading="submitting">{{ t('ui.common.save') }}</Button>
                 <Button type="button" variant="outline" class="flex-1" @click="emit('close')">
                   {{ t('ui.common.cancel') }}
                 </Button>

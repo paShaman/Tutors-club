@@ -264,7 +264,7 @@ function submit(): void {
               </div>
 
               <div class="flex items-center gap-3 pt-2">
-                <Button type="submit" class="flex-1" :disabled="form.processing">
+                <Button type="submit" class="flex-1" :loading="form.processing">
                   <Send class="h-4 w-4" />
                   {{ t('ui.feedback.submit') }}
                 </Button>

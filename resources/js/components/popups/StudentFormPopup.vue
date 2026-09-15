@@ -24,6 +24,7 @@ const props = withDefaults(defineProps<{
   show: boolean
   mode: 'add' | 'edit'
   initialForm?: StudentFormData | null
+  submitting?: boolean
 }>(), {})
 
 useScrollLock(() => props.show)
@@ -157,7 +158,7 @@ const title = computed(() => props.mode === 'edit' ? t('ui.students.form.edit_ti
               </div>
 
               <div class="flex items-center gap-3 pt-2">
-                <Button type="submit" class="flex-1">
+                <Button type="submit" class="flex-1" :loading="submitting">
                   {{ mode === 'edit' ? t('ui.common.save') : t('ui.common.add') }}
                 </Button>
                 <Button type="button" variant="outline" class="flex-1" @click="emit('close')">

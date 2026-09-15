@@ -35,6 +35,7 @@ const banners = computed(() => page.props.banners ?? [])
 
 const showForm = ref(false)
 const editing = ref<PromoFormData | null>(null)
+const submitting = ref(false)
 const showConfirm = ref(false)
 const deleting = ref<PromoBannerRow | null>(null)
 
@@ -64,11 +65,15 @@ function closeForm() {
 }
 
 function submit(data: PromoFormData) {
+  if (submitting.value) return
+
   const isEdit = data.banner_id !== null
+  submitting.value = true
   router.post('/admin/promo/edit', data, {
     preserveScroll: true,
     onSuccess: () => closeForm(),
     onError: () => toast.error(t(isEdit ? 'error.edit_promo' : 'error.add_promo')),
+    onFinish: () => { submitting.value = false },
   })
 }
 
@@ -231,6 +236,7 @@ function periodLabel(banner: PromoBannerRow): string {
   <PromoFormPopup
     :show="showForm"
     :initial="editing"
+    :submitting="submitting"
     @close="closeForm"
     @submit="submit"
   />

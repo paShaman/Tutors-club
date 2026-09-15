@@ -141,7 +141,7 @@ return [
             ],
             'hints' => [
                 'tokens'  => 'Цвета, радиус и шрифты берутся только из @theme в resources/css/app.css. Не добавляйте произвольные hex-цвета.',
-                'buttons' => 'Кнопки — только Button.vue (variant/size). Иконки-действия — IconButton.vue с вариантами default/destructive/success/primary.',
+                'buttons' => 'Кнопки — только Button.vue (variant/size); кнопки сохранения и отправки получают :loading и блокируют повторные нажатия. Иконки-действия — IconButton.vue с вариантами default/destructive/success/primary.',
                 'cards'   => 'Контент оборачивается в Card, заголовки — в CardHeader + CardTitle.',
                 'stats'   => 'Плашки со статистикой собираются только компонентом StatCard.vue. Число в нём всегда набегает от нуля, а при обновлении данных — от прошлого значения; подключать анимацию отдельно не нужно.',
                 'tables'  => 'Таблицу собирайте из примитивов Table / TableHeader / TableBody / TableRow / TableHead / TableCell и оборачивайте в Card с overflow-hidden.',
@@ -178,7 +178,8 @@ return [
                 'variants' => 'Варианты',
                 'sizes'    => 'Размеры',
                 'disabled' => 'Отключённая',
-                'with_icon' => 'С иконкой',
+                'loading' => 'Загрузка',
+                'with_icon' => 'С иконкой',
                 'icon_actions' => 'Иконки-действия',
                 'icon_actions_hint' => 'Единый размер и подъём при ховере. Варианты: default (правка), destructive (удаление), success (восстановление), primary (добавление). Подъём отключается пропом lift.',
             ],

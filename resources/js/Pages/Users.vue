@@ -99,6 +99,7 @@ const summary = computed<SummaryItem[]>(() => [
 
 const showSubscription = ref(false)
 const subscriptionTarget = ref<UserRow | null>(null)
+const subscriptionSubmitting = ref(false)
 const subscriptionInitial = computed<SubscriptionFormData | null>(() => {
   const user = subscriptionTarget.value
   if (!user) return null
@@ -166,10 +167,14 @@ function closeSubscription(): void {
 }
 
 function submitSubscription(data: SubscriptionFormData): void {
+  if (subscriptionSubmitting.value) return
+
+  subscriptionSubmitting.value = true
   router.post('/admin/users/subscription', data, {
     preserveScroll: true,
     onSuccess: () => closeSubscription(),
     onError: () => toast.error(t('error.admin_subscription')),
+    onFinish: () => { subscriptionSubmitting.value = false },
   })
 }
 
@@ -337,6 +342,7 @@ function cancelCancelSubscription(): void {
     :initial="subscriptionInitial"
     :plans="plans"
     :periods="periods"
+    :submitting="subscriptionSubmitting"
     @close="closeSubscription"
     @submit="submitSubscription"
   />

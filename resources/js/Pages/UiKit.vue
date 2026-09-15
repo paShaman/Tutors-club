@@ -187,6 +187,7 @@ const snippets = {
   button: [
     "<Button>{{ t('ui.common.save') }}</Button>",
     "<Button variant=\"outline\">{{ t('ui.common.cancel') }}</Button>",
+    '<Button :loading="form.processing">{{ t(\'ui.common.save\') }}</Button>',
     "<Button variant=\"destructive\" size=\"sm\">",
     '  <Trash2 class="h-4 w-4" />',
     "  {{ t('ui.common.delete') }}",
@@ -406,6 +407,12 @@ const snippets = {
               {{ t('ui.uikit.buttons.disabled') }}
             </p>
             <Button disabled>{{ t('ui.common.save') }}</Button>
+          </div>
+          <div>
+            <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              {{ t('ui.uikit.buttons.loading') }}
+            </p>
+            <Button loading>{{ t('ui.common.saving') }}</Button>
           </div>
           <div>
             <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">

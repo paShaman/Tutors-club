@@ -16,6 +16,7 @@ export type SubjectFormData = {
 const props = defineProps<{
   show: boolean
   initial?: SubjectFormData | null
+  submitting?: boolean
 }>()
 
 useScrollLock(() => props.show)
@@ -99,7 +100,7 @@ const isEdit = computed(() => Boolean(props.initial?.subject_id))
               <p v-if="!isEdit" class="text-xs text-muted-foreground">{{ t('ui.subjects.form.code_hint') }}</p>
 
               <div class="flex items-center gap-3 pt-2">
-                <Button type="submit" class="flex-1">
+                <Button type="submit" class="flex-1" :loading="submitting">
                   {{ isEdit ? t('ui.common.save') : t('ui.common.add') }}
                 </Button>
                 <Button type="button" variant="outline" class="flex-1" @click="emit('close')">

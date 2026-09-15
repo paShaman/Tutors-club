@@ -64,6 +64,7 @@ const specialStudents = computed(() => filteredStudents.value.filter((s: any) =>
 const regularStudents = computed(() => filteredStudents.value.filter((s: any) => !s.type))
 
 const initialForm = ref<StudentFormData | null>(null)
+const submitting = ref(false)
 
 // Confirm dialog state
 const showConfirm = ref(false)
@@ -160,10 +161,14 @@ function closeModals() {
 }
 
 function submitStudent(formData: StudentFormData) {
+  if (submitting.value) return
+
+  submitting.value = true
   router.post('/students/edit', formData, {
     preserveScroll: true,
     onSuccess: () => closeModals(),
     onError: (errors) => toast.error(Object.values(errors).join('\n')),
+    onFinish: () => { submitting.value = false },
   })
 }
 
@@ -357,6 +362,7 @@ function deleteStudent(student: any) {
       :show="showModal"
       :mode="showEditModal ? 'edit' : 'add'"
       :initial-form="initialForm"
+      :submitting="submitting"
       @close="closeModals"
       @submit="submitStudent"
     />

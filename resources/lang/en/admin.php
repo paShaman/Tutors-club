@@ -141,7 +141,7 @@ return [
             ],
             'hints' => [
                 'tokens'  => 'Colors, radius and fonts come only from @theme in resources/css/app.css. Do not add arbitrary hex colors.',
-                'buttons' => 'Buttons are Button.vue only (variant/size). Action icons are IconButton.vue with default/destructive/success/primary variants.',
+                'buttons' => 'Buttons are Button.vue only (variant/size); save buttons take :loading and block repeated clicks. Action icons are IconButton.vue with default/destructive/success/primary variants.',
                 'cards'   => 'Wrap content in Card, headings in CardHeader + CardTitle.',
                 'stats'   => 'Stat tiles are built with the StatCard.vue component only. Its number always counts up from zero (and from the previous value on updates); no extra animation wiring is needed.',
                 'tables'  => 'Build a table from the Table / TableHeader / TableBody / TableRow / TableHead / TableCell primitives and wrap it in a Card with overflow-hidden.',
@@ -178,6 +178,7 @@ return [
                 'variants' => 'Variants',
                 'sizes'    => 'Sizes',
                 'disabled' => 'Disabled',
+                'loading' => 'Loading',
                 'with_icon' => 'With icon',
                 'icon_actions' => 'Action icons',
                 'icon_actions_hint' => 'One size and a hover lift everywhere. Variants: default (edit), destructive (delete), success (restore), primary (add). The lift can be turned off with the lift prop.',

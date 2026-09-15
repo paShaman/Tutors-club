@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, type Component, type PropType } from 'vue'
+import { Loader2 } from 'lucide-vue-next'
 import { cn } from '@/lib/utils'
 import { cva, type VariantProps } from 'class-variance-authority'
 
@@ -34,6 +35,8 @@ interface Props {
   variant?: VariantProps<typeof buttonVariants>['variant']
   size?: VariantProps<typeof buttonVariants>['size']
   as?: string | Component
+  loading?: boolean
+  disabled?: boolean
   class?: string
 }
 
@@ -41,11 +44,23 @@ const props = withDefaults(defineProps<Props>(), {
   variant: 'default',
   size: 'default',
   as: 'button',
+  loading: false,
+  disabled: false,
 })
 </script>
 
 <template>
-  <component :is="as" :class="cn(buttonVariants({ variant, size }), props.class)">
+  <component
+    :is="as"
+    :disabled="as === 'button' ? disabled || loading : undefined"
+    :aria-busy="loading || undefined"
+    :class="cn(
+      buttonVariants({ variant, size }),
+      loading && '[&>svg:not(.animate-spin)]:hidden',
+      props.class,
+    )"
+  >
+    <Loader2 v-if="loading" class="animate-spin" />
     <slot />
   </component>
 </template>
