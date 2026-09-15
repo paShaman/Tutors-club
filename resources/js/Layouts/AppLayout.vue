@@ -277,8 +277,8 @@ onUnmounted(() => {
         </div>
 
         <!-- Main nav -->
-        <nav class="flex-1 space-y-0.5">
-          <div v-for="group in navGroups" :key="group.key" :class="group.labelKey && 'pt-4'">
+        <nav class="flex-1 space-y-1">
+          <div v-for="group in navGroups" :key="group.key" :class="cn('space-y-0.5', group.labelKey && 'pt-4')">
             <!-- Подпись группы админских разделов (в компактном режиме — разделитель) -->
             <p
               v-if="group.labelKey && (!sidebarCompact || sidebarOpen)"

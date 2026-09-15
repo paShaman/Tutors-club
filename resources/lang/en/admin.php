@@ -129,6 +129,7 @@ return [
                 'tokens'  => 'Design tokens',
                 'buttons' => 'Buttons',
                 'cards'   => 'Cards',
+                'stats'   => 'Stat tiles',
                 'tables'  => 'Tables',
                 'tabs'    => 'Tabs',
                 'avatars' => 'Avatars',
@@ -142,6 +143,7 @@ return [
                 'tokens'  => 'Colors, radius and fonts come only from @theme in resources/css/app.css. Do not add arbitrary hex colors.',
                 'buttons' => 'Buttons are Button.vue only (variant/size). Action icons are IconButton.vue with default/destructive/success/primary variants.',
                 'cards'   => 'Wrap content in Card, headings in CardHeader + CardTitle.',
+                'stats'   => 'Stat tiles are built with the StatCard.vue component only. Its number always counts up from zero (and from the previous value on updates); no extra animation wiring is needed.',
                 'tables'  => 'Build a table from the Table / TableHeader / TableBody / TableRow / TableHead / TableCell primitives and wrap it in a Card with overflow-hidden.',
                 'tabs'    => 'Use Tabs for section/filter switchers (segmented look). Do not hand-build tabs.',
                 'avatars' => 'UserAvatar for the profile, StudentAvatar for students (gender + color), AvatarPicker for upload with cropping.',
@@ -183,6 +185,13 @@ return [
             'cards' => [
                 'header' => 'Card header',
                 'body'   => 'Card content: any content inside Card.',
+            ],
+            'stats' => [
+                'label_lessons' => 'Total lessons',
+                'label_paid'    => 'Paid',
+                'label_earned'  => 'Earned',
+                'label_debt'    => 'Debt',
+                'hint'          => 'Extra line',
             ],
             'table' => [
                 'student' => 'Student',

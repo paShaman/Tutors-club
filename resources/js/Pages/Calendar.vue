@@ -8,12 +8,13 @@ import Button from '@/components/ui/Button.vue'
 import Tabs from '@/components/ui/Tabs.vue'
 import type { TabItem } from '@/components/ui/Tabs.vue'
 import FullCalendar from '@fullcalendar/vue3'
-import dayGridPlugin from '@fullcalendar/daygrid'
-import timeGridPlugin from '@fullcalendar/timegrid'
-import interactionPlugin from '@fullcalendar/interaction'
-import ruLocale from '@fullcalendar/core/locales/ru'
-import enLocale from '@fullcalendar/core/locales/en-gb'
-import type { CalendarOptions, EventClickArg } from '@fullcalendar/core'
+import classicTheme from '@fullcalendar/vue3/themes/classic'
+import dayGridPlugin from '@fullcalendar/vue3/daygrid'
+import timeGridPlugin from '@fullcalendar/vue3/timegrid'
+import interactionPlugin from '@fullcalendar/vue3/interaction'
+import ruLocale from '@fullcalendar/vue3/locales/ru'
+import enLocale from '@fullcalendar/vue3/locales/en-gb'
+import type { CalendarOptions, EventClickInfo } from '@fullcalendar/vue3'
 import LessonFormPopup from '@/components/popups/LessonFormPopup.vue'
 import type { LessonFormData, TopicNode } from '@/components/popups/LessonFormPopup.vue'
 import ConfirmDialog from '@/components/popups/ConfirmDialog.vue'
@@ -21,6 +22,8 @@ import { useToast } from '@/lib/toast'
 import { useI18n } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import type { TariffInfo } from '@/types'
+// Стили темы v7 подключаются вместе с переопределениями (resources/css/fullcalendar.css)
+import '../../css/fullcalendar.css'
 
 // Соответствие кода языка и локали FullCalendar (список расширяется вместе с config/locales.php)
 const FC_LOCALES: Record<string, any> = {
@@ -69,11 +72,10 @@ const periodItems = computed<TabItem[]>(() => [
 ])
 
 const calendarOptions = computed<CalendarOptions>(() => ({
-  plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin],
+  plugins: [classicTheme, dayGridPlugin, timeGridPlugin, interactionPlugin],
   initialView: 'dayGridMonth',
   locales: [fullCalendarLocale.value],
   locale: fullCalendarLocale.value,
-  headerToolbar: false,
   events: '/calendar/events',
   loading: (isLoading: boolean) => {
     isEventsLoading.value = isLoading
@@ -87,11 +89,34 @@ const calendarOptions = computed<CalendarOptions>(() => ({
   selectable: false,
   firstDay: 1,
   height: '100%',
+  // В v7 заголовок недели по умолчанию без чисел — возвращаем привычный диапазон дат
+  views: {
+    timeGridWeek: {
+      titleFormat: {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+      },
+    },
+  },
   eventTimeFormat: {
     hour: '2-digit',
     minute: '2-digit',
     hour12: false,
   },
+  // Классы, за которые цепляются проектные стили (resources/css/fullcalendar.css)
+  eventClass: (info) =>
+    info.event.extendedProps.is_future
+      ? 'cal-event cal-event--future'
+      : info.event.extendedProps.is_payed
+        ? 'cal-event'
+        : 'cal-event cal-event--unpaid',
+  eventTimeClass: 'cal-event-time',
+  eventTitleClass: 'cal-event-title',
+  moreLinkInnerClass: 'cal-more-link',
+  dayHeaderInnerClass: 'cal-day-header',
+  dayCellTopInnerClass: 'cal-day-number',
+  slotHeaderInnerClass: 'cal-slot-header',
 }))
 
 function goPrev(): void {
@@ -138,7 +163,7 @@ function onCancel() {
   confirmCallback = null
 }
 
-function handleEventClick(arg: EventClickArg) {
+function handleEventClick(arg: EventClickInfo) {
   const props = arg.event.extendedProps
 
   lessonPopupInitial.value = {
@@ -257,11 +282,20 @@ function handleLessonDelete() {
         />
       </div>
 
-      <FullCalendar
-        ref="calendarRef"
-        :class="cn('min-h-0 flex-1 transition-opacity duration-200', isEventsLoading && 'opacity-60 delay-200')"
-        :options="calendarOptions"
-      />
+      <!-- ВАЖНО: у <FullCalendar> не должно быть динамических классов. Vue перезаписывает
+           атрибут class целиком и стирает классы (fc-pp, fc-vg, …), которые библиотека
+           вешает на свой корень императивно, — после этого flex-раскладка схлопывается.
+           Поэтому приглушение загрузки живёт на обёртке, а у календаря классы статичные. -->
+      <div
+        :class="cn('flex min-h-0 flex-1 flex-col transition-opacity duration-200', isEventsLoading && 'opacity-60 delay-200')"
+        :aria-busy="isEventsLoading"
+      >
+        <FullCalendar
+          ref="calendarRef"
+          class="min-h-0 min-w-0 flex-1"
+          :options="calendarOptions"
+        />
+      </div>
     </Card>
 
     <!-- Lesson Form Popup -->
@@ -291,91 +325,3 @@ function handleLessonDelete() {
     />
   </div>
 </template>
-
-<style>
-.fc-theme-custom {
-  --fc-border-color: hsl(214.3 31.8% 91.4%);
-  --fc-today-bg-color: hsl(252 87% 67% / 0.05);
-  --fc-page-bg-color: transparent;
-  --fc-neutral-bg-color: transparent;
-}
-
-.fc-theme-custom .fc-event {
-  border: none;
-  border-radius: 0.5rem;
-  padding: 2px 6px;
-  font-size: 0.75rem;
-  cursor: pointer;
-  transition: filter 0.2s ease, transform 0.2s ease;
-}
-.fc-theme-custom .fc-event:hover {
-  filter: brightness(0.92);
-  transform: translateY(-1px);
-}
-
-.fc-theme-custom .fc-daygrid-day-number {
-  padding: 6px 8px;
-  font-size: 0.8125rem;
-  font-weight: 500;
-  color: hsl(215.4 16.3% 46.9%);
-}
-
-/* --- Mobile: compact day cells --- */
-@media (max-width: 639px) {
-  /* Month view: compact day cells */
-  .fc-theme-custom .fc-daygrid-day-number {
-    padding: 2px 4px !important;
-    font-size: 0.6875rem !important;
-  }
-
-  .fc-theme-custom .fc-daygrid-day-events {
-    margin: 0 1px !important;
-  }
-
-  .fc-theme-custom .fc-daygrid-event {
-    padding: 1px 3px !important;
-    font-size: 0.5625rem !important;
-    line-height: 1.2 !important;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .fc-theme-custom .fc-daygrid-event-harness {
-    margin-bottom: 1px !important;
-  }
-
-  .fc-theme-custom .fc-more-link {
-    font-size: 0.625rem !important;
-  }
-
-  .fc-theme-custom .fc-daygrid-day-frame {
-    min-height: 0 !important;
-  }
-
-  .fc-theme-custom .fc-daygrid-day-top {
-    flex-direction: row !important;
-  }
-
-  .fc-theme-custom th .fc-scrollgrid-sync-inner {
-    padding: 0.25rem 0.125rem !important;
-    font-size: 0.6875rem !important;
-  }
-
-  .fc-theme-custom .fc-col-header-cell-cushion {
-    font-size: 0.6875rem !important;
-    padding: 2px !important;
-  }
-
-  /* Hide event time on mobile — show names only */
-  .fc-theme-custom .fc-event-time {
-    display: none !important;
-  }
-
-  .fc-theme-custom .fc-event-title {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-}
-</style>

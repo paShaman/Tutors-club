@@ -2,6 +2,7 @@
 import { Head, Link } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import Card from '@/components/ui/Card.vue'
+import StatCard from '@/components/ui/StatCard.vue'
 import CardHeader from '@/components/ui/CardHeader.vue'
 import CardTitle from '@/components/ui/CardTitle.vue'
 import Button from '@/components/ui/Button.vue'
@@ -224,69 +225,38 @@ const barChartOptions = computed(() => ({
 
     <!-- Stats mini-cards -->
     <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-      <Card class="p-5">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-              {{ t('ui.dashboard.hours_week') }}
-            </p>
-            <p class="mt-2 text-2xl xl:text-3xl font-bold text-foreground whitespace-nowrap">
-              {{ totalHoursThisWeek }}
-            </p>
-          </div>
-          <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10">
-            <Clock class="h-5 w-5 shrink-0 text-primary" />
-          </div>
-        </div>
-      </Card>
+      <StatCard
+        :label="t('ui.dashboard.hours_week')"
+        :value="totalHoursThisWeek"
+        :decimals="1"
+        :icon="Clock"
+      />
 
-      <Card class="p-5">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-              {{ t('ui.dashboard.active_students') }}
-            </p>
-            <p class="mt-2 text-2xl xl:text-3xl font-bold text-foreground whitespace-nowrap">
-              {{ students.length }}
-            </p>
-          </div>
-          <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10">
-            <GraduationCap class="h-5 w-5 shrink-0 text-emerald-600" />
-          </div>
-        </div>
-      </Card>
+      <StatCard
+        :label="t('ui.dashboard.active_students')"
+        :value="students.length"
+        tone="emerald"
+        :icon="GraduationCap"
+      />
 
-      <Card class="p-5">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-              {{ t('ui.dashboard.earned_month') }}
-            </p>
-            <p class="mt-2 text-2xl xl:text-3xl font-bold text-foreground whitespace-nowrap">
-              {{ totalEarnings.toLocaleString(intlLocale) }} ₽
-            </p>
-          </div>
-          <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-500/10">
-            <span class="text-xl font-bold text-blue-600">₽</span>
-          </div>
-        </div>
-      </Card>
+      <StatCard
+        :label="t('ui.dashboard.earned_month')"
+        :value="totalEarnings"
+        format="money"
+        tone="blue"
+      >
+        <template #icon>
+          <span class="text-xl font-bold text-blue-600">₽</span>
+        </template>
+      </StatCard>
 
-      <Card class="p-5">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-              {{ t('ui.dashboard.paid_lessons') }}
-            </p>
-            <p class="mt-2 text-2xl xl:text-3xl font-bold text-foreground whitespace-nowrap">
-              {{ paidPercent }}%
-            </p>
-          </div>
-          <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-500/10">
-            <TrendingUp class="h-5 w-5 shrink-0 text-amber-600" />
-          </div>
-        </div>
-      </Card>
+      <StatCard
+        :label="t('ui.dashboard.paid_lessons')"
+        :value="paidPercent"
+        format="percent"
+        tone="amber"
+        :icon="TrendingUp"
+      />
     </div>
 
     <template v-if="hasStudents">

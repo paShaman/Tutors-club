@@ -1,0 +1,96 @@
+/* ==========================================================================
+   FullCalendar (тема classic).
+   Стили темы подключаются здесь же: skeleton обязателен, palette — значения
+   переменных, theme — сама тема. Ниже только переопределения под палитру
+   проекта. Говорящих имён классов у v7 нет: классы элементов задаются опциями
+   календаря (eventClass, dayCellTopInnerClass и т.д.), а цвета темы меняются
+   её CSS-переменными.
+   ========================================================================== */
+
+@import '@fullcalendar/vue3/skeleton.css';
+@import '@fullcalendar/vue3/themes/classic/palette.css';
+@import '@fullcalendar/vue3/themes/classic/theme.css';
+
+.fc-theme-custom {
+  /* Палитра темы classic на токенах проекта (resources/css/app.css) */
+  --fc-classic-border: var(--color-border);
+  --fc-classic-strong-border: var(--color-border);
+  --fc-classic-background: var(--color-card);
+  --fc-classic-foreground: var(--color-foreground);
+  --fc-classic-muted-foreground: var(--color-muted-foreground);
+  --fc-classic-faint-foreground: var(--color-muted-foreground);
+  --fc-classic-primary: var(--color-primary);
+  --fc-classic-primary-foreground: var(--color-primary-foreground);
+  --fc-classic-event: var(--color-primary);
+  --fc-classic-event-contrast: var(--color-primary-foreground);
+  --fc-classic-today: color-mix(in oklab, var(--color-primary) 5%, transparent);
+}
+
+/* --- События (занятия) --- */
+
+.fc-theme-custom .cal-event {
+  border: none;
+  border-radius: 0.5rem;
+  padding: 2px 6px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: filter 0.2s ease, transform 0.2s ease;
+}
+
+.fc-theme-custom .cal-event:hover {
+  filter: brightness(0.92);
+  transform: translateY(-1px);
+}
+
+/* Цвет статуса занятия: FullCalendar ставит --fc-event-color инлайном,
+   поэтому перебить его можно только через !important. */
+.fc-theme-custom .cal-event--unpaid {
+  --fc-event-color: var(--color-destructive) !important;
+  --fc-event-contrast-color: var(--color-destructive-foreground) !important;
+}
+
+.fc-theme-custom .cal-event--future {
+  --fc-event-color: var(--color-warning) !important;
+  --fc-event-contrast-color: var(--color-warning-foreground) !important;
+}
+
+/* --- Мелочи под проект --- */
+
+.fc-theme-custom .cal-day-number {
+  font-weight: 500;
+  color: var(--color-muted-foreground);
+}
+
+/* --- Телефон: компактная сетка --- */
+@media (max-width: 639px) {
+  .fc-theme-custom .cal-day-number {
+    padding: 2px 4px !important;
+    font-size: 0.6875rem !important;
+  }
+
+  .fc-theme-custom .cal-event {
+    padding: 1px 3px !important;
+    font-size: 0.5625rem !important;
+    line-height: 1.2 !important;
+  }
+
+  /* Оставляем только имена учеников — время не влезает в узкую колонку */
+  .fc-theme-custom .cal-event-time {
+    display: none !important;
+  }
+
+  .fc-theme-custom .cal-event-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .fc-theme-custom .cal-day-header,
+  .fc-theme-custom .cal-slot-header {
+    font-size: 0.6875rem !important;
+  }
+
+  .fc-theme-custom .cal-more-link {
+    font-size: 0.625rem !important;
+  }
+}

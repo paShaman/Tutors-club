@@ -7,11 +7,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@fullcalendar/core": "^6.1.20",
-    "@fullcalendar/daygrid": "^6.1.20",
-    "@fullcalendar/interaction": "^6.1.20",
-    "@fullcalendar/timegrid": "^6.1.20",
-    "@fullcalendar/vue3": "^6.1.20",
+    "@fullcalendar/vue3": "^7.1.0",
     "@inertiajs/vite": "^3.7.1",
     "@inertiajs/vue3": "^3.0",
     "@vkid/sdk": "^2.6.8",
@@ -21,6 +17,7 @@
     "lucide-vue-next": "^0.400.0",
     "radix-vue": "^1.9.0",
     "tailwind-merge": "^2.6.0",
+    "temporal-polyfill": "^1.0.5",
     "vue": "^3.5.0",
     "vue-chartjs": "^5.3.3"
   },

@@ -160,13 +160,6 @@ final class CalendarController extends Controller
                 $event['end'] = $dateEnd->format("Y-m-d\TH:i:s");
             }
 
-            if (!$lesson->is_payed) {
-                $event['classNames'] = ['bg-danger', 'text-white'];
-            }
-            if ($lesson->is_future) {
-                $event['classNames'] = ['bg-warning', ''];
-            }
-
             $events[] = $event;
         }
 

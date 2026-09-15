@@ -2,6 +2,7 @@
 import { Head, Link, router, usePage } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import Card from '@/components/ui/Card.vue'
+import StatCard from '@/components/ui/StatCard.vue'
 import Button from '@/components/ui/Button.vue'
 import Select from '@/components/ui/Select.vue'
 import type { SelectOption } from '@/components/ui/Select.vue'
@@ -187,6 +188,10 @@ const years = computed(() =>
 )
 
 const totalHours = computed(() => Math.round((summary.value.total_minutes / 60) * 10) / 10)
+
+const totalHoursHint = computed(() =>
+  summary.value.total_minutes ? `${totalHours.value} ${t('ui.student.hours_short')}` : '',
+)
 
 const monthNames = computed(() => {
   const formatter = new Intl.DateTimeFormat(intlLocale.value, { month: 'long' })
@@ -569,77 +574,36 @@ function formatTopicDate(dateStr: string | null): string {
         {{ t('ui.student.summary_title') }}
       </h2>
       <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card class="p-5">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                {{ t('ui.student.total_lessons') }}
-              </p>
-              <p class="mt-2 text-2xl xl:text-3xl font-bold text-foreground">
-                {{ summary.total_lessons }}
-              </p>
-              <p v-if="summary.total_minutes" class="mt-1 text-xs text-muted-foreground">
-                {{ totalHours }} {{ t('ui.student.hours_short') }}
-              </p>
-            </div>
-            <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10">
-              <BookOpen class="h-5 w-5 text-primary" />
-            </div>
-          </div>
-        </Card>
+        <StatCard
+          :label="t('ui.student.total_lessons')"
+          :value="summary.total_lessons"
+          :hint="totalHoursHint"
+          :icon="BookOpen"
+        />
 
-        <Card class="p-5">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                {{ t('ui.student.paid_lessons') }}
-              </p>
-              <p class="mt-2 text-2xl xl:text-3xl font-bold text-foreground">
-                {{ summary.paid_lessons }}
-              </p>
-            </div>
-            <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10">
-              <CheckCircle2 class="h-5 w-5 text-emerald-600" />
-            </div>
-          </div>
-        </Card>
+        <StatCard
+          :label="t('ui.student.paid_lessons')"
+          :value="summary.paid_lessons"
+          tone="emerald"
+          :icon="CheckCircle2"
+        />
 
-        <Card class="p-5">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                {{ t('ui.student.earned') }}
-              </p>
-              <p class="mt-2 text-2xl xl:text-3xl font-bold text-foreground whitespace-nowrap">
-                {{ formatNumber(summary.earned) }} ₽
-              </p>
-            </div>
-            <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-500/10">
-              <Wallet class="h-5 w-5 text-blue-600" />
-            </div>
-          </div>
-        </Card>
+        <StatCard
+          :label="t('ui.student.earned')"
+          :value="summary.earned"
+          format="money"
+          tone="blue"
+          :icon="Wallet"
+        />
 
-        <Card class="p-5">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                {{ t('ui.student.debt') }}
-              </p>
-              <p
-                :class="cn(
-                  'mt-2 text-2xl xl:text-3xl font-bold whitespace-nowrap',
-                  summary.debt > 0 ? 'text-red-600' : 'text-foreground',
-                )"
-              >
-                {{ formatNumber(summary.debt) }} ₽
-              </p>
-            </div>
-            <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-red-500/10">
-              <TrendingUp class="h-5 w-5 text-red-600" />
-            </div>
-          </div>
-        </Card>
+        <StatCard
+          :label="t('ui.student.debt')"
+          :value="summary.debt"
+          format="money"
+          tone="red"
+          :value-class="summary.debt > 0 ? 'text-red-600' : 'text-foreground'"
+          :icon="TrendingUp"
+        />
       </div>
     </div>
 

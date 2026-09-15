@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { Head } from '@inertiajs/vue3'
-import { Plus, Pencil, Trash2, RotateCcw } from 'lucide-vue-next'
+import { Plus, Pencil, Trash2, RotateCcw, BookOpen, CheckCircle2, Wallet, TrendingUp } from 'lucide-vue-next'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import Card from '@/components/ui/Card.vue'
+import StatCard from '@/components/ui/StatCard.vue'
 import CardHeader from '@/components/ui/CardHeader.vue'
 import CardTitle from '@/components/ui/CardTitle.vue'
 import Table from '@/components/ui/Table.vue'
@@ -82,6 +83,7 @@ const colorTokens = [
   { name: 'muted-foreground', class: 'bg-muted-foreground' },
   { name: 'accent', class: 'bg-accent' },
   { name: 'destructive', class: 'bg-destructive' },
+  { name: 'warning', class: 'bg-warning' },
   { name: 'border', class: 'bg-border' },
   { name: 'input', class: 'bg-input' },
   { name: 'ring', class: 'bg-ring' },
@@ -209,6 +211,25 @@ const snippets = {
     '    {{ body }}',
     '  </div>',
     '</Card>',
+  ].join('\n'),
+
+  stat: [
+    '<StatCard',
+    "  :label=\"t('ui.dashboard.hours_week')\"",
+    '  :value="totalHoursThisWeek"',
+    '  :decimals="1"',
+    '  :icon="Clock"',
+    '/>',
+    '',
+    '<StatCard',
+    "  :label=\"t('ui.student.earned')\"",
+    '  :value="summary.earned"',
+    '  format="money"',
+    '  tone="blue"',
+    '  :icon="Wallet"',
+    '>',
+    '  <template #icon><span class="text-xl font-bold text-blue-600">₽</span></template>',
+    '</StatCard>',
   ].join('\n'),
 
   table: [
@@ -438,6 +459,43 @@ const snippets = {
           {{ t('ui.uikit.cards.body') }}
         </div>
       </Card>
+    </UiKitSection>
+
+    <!-- Числовые плашки -->
+    <UiKitSection
+      :title="t('ui.uikit.sections.stats')"
+      :hint="t('ui.uikit.hints.stats')"
+      :code="snippets.stat"
+    >
+      <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCard
+          :label="t('ui.uikit.stats.label_lessons')"
+          :value="128"
+          :icon="BookOpen"
+        />
+        <StatCard
+          :label="t('ui.uikit.stats.label_paid')"
+          :value="96"
+          tone="emerald"
+          :icon="CheckCircle2"
+        />
+        <StatCard
+          :label="t('ui.uikit.stats.label_earned')"
+          :value="384000"
+          format="money"
+          tone="blue"
+          :hint="t('ui.uikit.stats.hint')"
+          :icon="Wallet"
+        />
+        <StatCard
+          :label="t('ui.uikit.stats.label_debt')"
+          :value="12500"
+          format="money"
+          tone="red"
+          value-class="text-red-600"
+          :icon="TrendingUp"
+        />
+      </div>
     </UiKitSection>
 
     <!-- Таблицы -->

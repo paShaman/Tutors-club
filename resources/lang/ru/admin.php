@@ -129,6 +129,7 @@ return [
                 'tokens'  => 'Дизайн-токены',
                 'buttons' => 'Кнопки',
                 'cards'   => 'Карточки',
+                'stats'   => 'Числовые плашки',
                 'tables'  => 'Таблицы',
                 'tabs'    => 'Табы',
                 'avatars' => 'Аватары',
@@ -142,6 +143,7 @@ return [
                 'tokens'  => 'Цвета, радиус и шрифты берутся только из @theme в resources/css/app.css. Не добавляйте произвольные hex-цвета.',
                 'buttons' => 'Кнопки — только Button.vue (variant/size). Иконки-действия — IconButton.vue с вариантами default/destructive/success/primary.',
                 'cards'   => 'Контент оборачивается в Card, заголовки — в CardHeader + CardTitle.',
+                'stats'   => 'Плашки со статистикой собираются только компонентом StatCard.vue. Число в нём всегда набегает от нуля, а при обновлении данных — от прошлого значения; подключать анимацию отдельно не нужно.',
                 'tables'  => 'Таблицу собирайте из примитивов Table / TableHeader / TableBody / TableRow / TableHead / TableCell и оборачивайте в Card с overflow-hidden.',
                 'tabs'    => 'Переключатели разделов/фильтров делайте через Tabs (сегментированный вид). Не собирайте табы вручную.',
                 'avatars' => 'UserAvatar — для профиля, StudentAvatar — для учеников (пол + цвет), AvatarPicker — загрузка с кропом.',
@@ -183,6 +185,13 @@ return [
             'cards' => [
                 'header' => 'Заголовок карточки',
                 'body'   => 'Содержимое карточки: любой контент внутри Card.',
+            ],
+            'stats' => [
+                'label_lessons' => 'Всего уроков',
+                'label_paid'    => 'Оплачено',
+                'label_earned'  => 'Заработано',
+                'label_debt'    => 'Задолженность',
+                'hint'          => 'Дополнительная строка',
             ],
             'table' => [
                 'student' => 'Ученик',
