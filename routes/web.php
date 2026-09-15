@@ -15,6 +15,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\ChangelogController;
 use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\PromoController;
+use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\UiKitController;
 use Illuminate\Support\Facades\Route;
 
@@ -82,6 +83,10 @@ Route::post('/feedback', [FeedbackController::class, 'send'])->middleware('auth'
 Route::post('/telegram/webhook', [FeedbackController::class, 'webhook'])->name('telegram.webhook');
 
 // ─── Admin ──────────────────────────────────────────────────
+Route::get('/admin/users', [AdminUserController::class, 'index'])
+    ->name('admin.users')
+    ->middleware(['auth', 'admin']);
+
 Route::get('/admin/uikit', [UiKitController::class, 'index'])
     ->name('admin.uikit')
     ->middleware(['auth', 'admin']);

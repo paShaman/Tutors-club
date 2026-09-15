@@ -19,6 +19,7 @@ import {
   Palette,
   Megaphone,
   BookOpen,
+  UsersRound,
 } from 'lucide-vue-next'
 import Button from '@/components/ui/Button.vue'
 import UserAvatar from '@/components/ui/UserAvatar.vue'
@@ -98,6 +99,12 @@ const user = computed(() => page.props.auth?.user ?? null)
 
 // Служебные разделы (/admin/*) видны только администратору (сервер всё равно проверяет роль)
 const adminNavItems: NavItem[] = [
+  {
+    labelKey: 'ui.nav.users',
+    href: '/admin/users',
+    icon: UsersRound,
+    activeRoute: 'admin/users',
+  },
   {
     labelKey: 'ui.nav.subjects',
     href: '/admin/subjects',
