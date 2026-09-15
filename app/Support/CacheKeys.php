@@ -87,6 +87,12 @@ final class CacheKeys
         return 'lang.messages.' . $locale . '.' . $signature;
     }
 
+    /** Админские переводы (admin.php) кэшируются отдельно от messages.php. */
+    public static function langAdmin(string $locale, string $signature): string
+    {
+        return 'lang.admin.' . $locale . '.' . $signature;
+    }
+
     // ─── Роли и тариф ───────────────────────────────────────────────────
 
     public static function userRoles(int $userId): string

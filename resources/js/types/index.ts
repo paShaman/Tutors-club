@@ -105,6 +105,7 @@ export interface SharedProps {
   locale: string
   locales: LocaleOption[]
   translations: Record<string, unknown>
+  adminTranslations?: Record<string, unknown>
 }
 
 declare module '@inertiajs/core' {

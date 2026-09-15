@@ -11,10 +11,18 @@ use App\Services\YandexIdService;
 use App\Support\CacheKeys;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Inertia\Inertia;
 use Inertia\Middleware;
 
 final class HandleInertiaRequests extends Middleware
 {
+    /**
+     * «Версия» словарей, уже отданных этому клиенту (язык + признак админа).
+     * Хранится в сессии, чтобы при смене языка или роли переводы ушли заново,
+     * а не остались в памяти клиента от предыдущей страницы.
+     */
+    private const TRANSLATIONS_VARIANT = 'inertia.translations.variant';
+
     /**
      * Determines the current asset version.
      */
@@ -79,7 +87,6 @@ final class HandleInertiaRequests extends Middleware
                 ? PromoBanner::activePayloads()
                 : [],
             'locale'       => app()->getLocale(),
-            'translations' => fn (): array => $this->translations(),
             'locales'      => collect(config('locales.available', []))
                 ->map(fn (string $label, string $code): array => ['code' => $code, 'label' => $label])
                 ->values()
@@ -100,7 +107,46 @@ final class HandleInertiaRequests extends Middleware
     }
 
     /**
-     * Переводы текущей локали.
+     * Переводы отдаём один раз за клиентскую сессию (once-prop): при навигации
+     * внутри приложения Inertia не пересылает словари, а берёт их из памяти клиента.
+     * Админские строки (admin.php) получают только администраторы.
+     *
+     * @return array<string, \Inertia\OnceProp>
+     */
+    public function shareOnce(Request $request): array
+    {
+        $locale  = (string) app()->getLocale();
+        $isAdmin = (bool) $request->user()?->isAdmin();
+        $variant = $locale . '|' . ($isAdmin ? '1' : '0');
+
+        // Подпись файла в ключе once-prop: после деплоя с правкой строк
+        // ключ меняется и переводы приходят заново, не дожидаясь перезагрузки.
+        $props = [
+            'translations' => Inertia::once(fn (): array => $this->translations())
+                ->as('translations.' . $locale . '.' . $this->langSignature($locale, 'messages')),
+        ];
+
+        if ($isAdmin) {
+            $props['adminTranslations'] = Inertia::once(fn (): array => $this->adminTranslations())
+                ->as('adminTranslations.' . $locale . '.' . $this->langSignature($locale, 'admin'));
+        }
+
+        $alreadySent = $request->session()->get(self::TRANSLATIONS_VARIANT) === $variant;
+
+        if (! $alreadySent) {
+            // первая загрузка документа либо смена языка/роли — словари устарели
+            foreach ($props as $prop) {
+                $prop->fresh();
+            }
+
+            $request->session()->put(self::TRANSLATIONS_VARIANT, $variant);
+        }
+
+        return $props;
+    }
+
+    /**
+     * Переводы текущей локали (messages.php).
      *
      * Ключ включает подпись файла messages.php, поэтому после деплоя
      * с новыми строками кэш обновляется сам.
@@ -112,20 +158,36 @@ final class HandleInertiaRequests extends Middleware
         $locale = (string) app()->getLocale();
 
         return Cache::remember(
-            CacheKeys::langMessages($locale, $this->langSignature($locale)),
+            CacheKeys::langMessages($locale, $this->langSignature($locale, 'messages')),
             now()->addDay(),
             fn (): array => (array) trans('messages'),
         );
     }
 
     /**
+     * Админские переводы (admin.php). В общий словарь не попадают.
+     *
+     * @return array<string, mixed>
+     */
+    private function adminTranslations(): array
+    {
+        $locale = (string) app()->getLocale();
+
+        return Cache::remember(
+            CacheKeys::langAdmin($locale, $this->langSignature($locale, 'admin')),
+            now()->addDay(),
+            fn (): array => (array) trans('admin'),
+        );
+    }
+
+    /**
      * Подпись файла переводов: меняется при любом деплое с правкой строк.
      */
-    private function langSignature(string $locale): string
+    private function langSignature(string $locale, string $file): string
     {
         $candidates = [
-            app()->langPath() . DIRECTORY_SEPARATOR . $locale . DIRECTORY_SEPARATOR . 'messages.php',
-            resource_path('lang' . DIRECTORY_SEPARATOR . $locale . DIRECTORY_SEPARATOR . 'messages.php'),
+            app()->langPath() . DIRECTORY_SEPARATOR . $locale . DIRECTORY_SEPARATOR . $file . '.php',
+            resource_path('lang' . DIRECTORY_SEPARATOR . $locale . DIRECTORY_SEPARATOR . $file . '.php'),
         ];
 
         foreach ($candidates as $path) {

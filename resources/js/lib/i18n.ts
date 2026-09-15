@@ -16,9 +16,7 @@ export const locale = computed<string>(() => page.props.locale ?? 'ru')
 
 export const intlLocale = computed<string>(() => INTL_LOCALES[locale.value] ?? locale.value)
 
-function resolve(key: string): unknown {
-  const dict = page.props.translations
-
+function lookup(dict: Record<string, unknown> | undefined, key: string): unknown {
   if (!dict) {
     return undefined
   }
@@ -29,6 +27,13 @@ function resolve(key: string): unknown {
     }
     return undefined
   }, dict)
+}
+
+function resolve(key: string): unknown {
+  const value = lookup(page.props.translations, key)
+
+  // Админские строки приходят отдельным словарём и только администраторам
+  return value !== undefined ? value : lookup(page.props.adminTranslations, key)
 }
 
 function interpolate(value: string, replace?: Replace): string {
