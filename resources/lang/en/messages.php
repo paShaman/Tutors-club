@@ -721,6 +721,9 @@ return [
                 'forms_items' => 'field — an input (input / textarea), field-label — its label, field-error — the error text.',
                 'misc' => 'Headings and badges',
                 'misc_items' => 'page-title — a page heading, pill — a rounded status badge.',
+                'header' => 'Page header',
+                'header_title' => 'Page heading',
+                'header_items' => 'page-header — a header with a heading and actions: one row on desktop, stacked on phones; page-header-actions — the button block that does not wrap or squeeze the heading on desktop. On phones button labels are hidden, leaving icons only (hidden sm:inline).',
             ],
             'buttons' => [
                 'variants' => 'Variants',

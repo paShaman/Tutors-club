@@ -129,20 +129,24 @@ const confirmMessage = computed(() => {
   <Head :title="t('ui.subjects.title')" />
 
   <div class="max-w-4xl space-y-6 animate-fade-up">
-    <div class="flex items-start justify-between gap-4">
+    <div class="page-header">
       <div>
         <h1 class="page-title text-3xl">{{ t('ui.subjects.title') }}</h1>
         <p class="mt-1 text-sm text-muted-foreground">{{ t('ui.subjects.subtitle') }}</p>
       </div>
-      <div class="flex shrink-0 items-center gap-3">
-        <Button variant="outline" @click="showDeleted = !showDeleted">
+      <div class="page-header-actions">
+        <Button
+          variant="outline"
+          :title="showDeleted ? t('ui.subjects.active') : t('ui.subjects.deleted')"
+          @click="showDeleted = !showDeleted"
+        >
           <BookOpen v-if="showDeleted" class="h-4 w-4" />
           <Trash2 v-else class="h-4 w-4" />
-          {{ showDeleted ? t('ui.subjects.active') : t('ui.subjects.deleted') }}
+          <span class="hidden sm:inline">{{ showDeleted ? t('ui.subjects.active') : t('ui.subjects.deleted') }}</span>
         </Button>
-        <Button @click="openAdd">
+        <Button :title="t('ui.subjects.add')" @click="openAdd">
           <Plus />
-          {{ t('ui.subjects.add') }}
+          <span class="hidden sm:inline">{{ t('ui.subjects.add') }}</span>
         </Button>
       </div>
     </div>

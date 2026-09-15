@@ -272,6 +272,15 @@ const snippets = {
     '    <p class="field-error">Ошибка</p>',
     '  </Card>',
     '</div>',
+    '',
+    '<!-- Шапка страницы: заголовок + кнопки-действия -->',
+    '<div class="page-header">',
+    '  <h1 class="page-title text-3xl">Заголовок</h1>',
+    '  <div class="page-header-actions">',
+    '    <Button variant="outline">Отмена</Button>',
+    '    <Button>Добавить</Button>',
+    '  </div>',
+    '</div>',
   ].join('\n'),
 
   toast: [
@@ -647,6 +656,22 @@ const snippets = {
               {{ t('ui.uikit.helpers.misc_items') }}
             </span>
           </div>
+        </div>
+
+        <div>
+          <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            {{ t('ui.uikit.helpers.header') }}
+          </p>
+          <div class="rounded-xl border border-dashed border-border p-4">
+            <div class="page-header">
+              <span class="page-title text-xl">{{ t('ui.uikit.helpers.header_title') }}</span>
+              <div class="page-header-actions">
+                <Button variant="outline">{{ t('ui.common.cancel') }}</Button>
+                <Button>{{ t('ui.common.add') }}</Button>
+              </div>
+            </div>
+          </div>
+          <p class="mt-2 text-sm text-muted-foreground">{{ t('ui.uikit.helpers.header_items') }}</p>
         </div>
       </div>
     </UiKitSection>

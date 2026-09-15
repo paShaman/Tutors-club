@@ -152,15 +152,17 @@ function periodLabel(banner: PromoBannerRow): string {
   <Head :title="t('ui.promo.title')" />
 
   <div class="max-w-4xl space-y-6 animate-fade-up">
-    <div class="flex items-start justify-between gap-4">
+    <div class="page-header">
       <div>
         <h1 class="page-title text-3xl">{{ t('ui.promo.title') }}</h1>
         <p class="mt-1 text-sm text-muted-foreground">{{ t('ui.promo.subtitle') }}</p>
       </div>
-      <Button class="shrink-0" @click="openAdd">
-        <Plus />
-        {{ t('ui.promo.add') }}
-      </Button>
+      <div class="page-header-actions">
+        <Button @click="openAdd">
+          <Plus />
+          {{ t('ui.promo.add') }}
+        </Button>
+      </div>
     </div>
 
     <div v-if="banners.length" class="space-y-3">
