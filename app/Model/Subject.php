@@ -6,6 +6,7 @@ namespace App\Model;
 
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 final class Subject extends Model
 {
@@ -18,6 +19,16 @@ final class Subject extends Model
         'position'   => 'integer',
         'is_deleted' => 'boolean',
     ];
+
+    public function lessons(): HasMany
+    {
+        return $this->hasMany(Lesson::class, 'subject_id');
+    }
+
+    public function topics(): HasMany
+    {
+        return $this->hasMany(Topic::class, 'subject_id');
+    }
 
     /**
      * Активные предметы в порядке отображения.
@@ -114,5 +125,24 @@ final class Subject extends Model
         }
 
         return (string) $this->code;
+    }
+
+    /**
+     * Данные предмета для админской панели.
+     *
+     * @return array<string, mixed>
+     */
+    public function toAdminArray(): array
+    {
+        return [
+            'id'            => (int) $this->id,
+            'code'          => (string) $this->code,
+            'slug'          => (string) $this->slug,
+            'name'          => is_array($this->name) ? $this->name : [],
+            'position'      => (int) $this->position,
+            'is_deleted'    => (bool) $this->is_deleted,
+            'lessons_count' => (int) ($this->lessons_count ?? 0),
+            'topics_count'  => (int) ($this->topics_count ?? 0),
+        ];
     }
 }

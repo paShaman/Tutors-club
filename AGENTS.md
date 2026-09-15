@@ -193,7 +193,7 @@ The only thing to ask the user is the bump type:
 - **minor** — `1.*` (e.g. `1.5`): new features or noticeable behavior/UI changes;
 - **patch** — `1.*.*` (e.g. `1.5.1`): fixes and small tweaks.
 
-Only include changes that make sense to describe to a user of the system (new functionality, visible UI/behavior changes, user-visible fixes). **Do not describe internal/technical changes** (refactors, code cleanup, package/infra moves, type-only edits) — omit them entirely from the entry.
+Only include changes that make sense to describe to a user of the system (new functionality, visible UI/behavior changes, user-visible fixes). **Do not describe internal/technical changes** (refactors, code cleanup, package/infra moves, type-only edits) — omit them entirely from the entry. **Do not describe admin-only changes** (everything under `/admin/*`, e.g. the subjects/promo/UI-kit sections) — they are not visible to regular users, so a session that only touches the admin part adds no changelog entry at all.
 
 ## 11. Do / Don't checklist
 

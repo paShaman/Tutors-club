@@ -9,6 +9,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AvatarController;
 use App\Http\Controllers\LessonController;
 use App\Http\Controllers\StudentController;
+use App\Http\Controllers\SubjectController;
 use App\Http\Controllers\PlanningController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ChangelogController;
@@ -96,6 +97,19 @@ Route::post('/admin/promo/delete', [PromoController::class, 'delete'])
     ->middleware(['auth', 'admin']);
 
 Route::post('/admin/promo/toggle', [PromoController::class, 'toggle'])
+    ->middleware(['auth', 'admin']);
+
+Route::get('/admin/subjects', [SubjectController::class, 'index'])
+    ->name('admin.subjects')
+    ->middleware(['auth', 'admin']);
+
+Route::post('/admin/subjects/edit', [SubjectController::class, 'edit'])
+    ->middleware(['auth', 'admin']);
+
+Route::post('/admin/subjects/delete', [SubjectController::class, 'delete'])
+    ->middleware(['auth', 'admin']);
+
+Route::post('/admin/subjects/restore', [SubjectController::class, 'restore'])
     ->middleware(['auth', 'admin']);
 
 // ─── Lessons ────────────────────────────────────────────────
