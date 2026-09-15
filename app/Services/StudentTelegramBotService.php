@@ -11,6 +11,7 @@ use App\Model\User;
 use App\Support\UserCache;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use Throwable;
@@ -1249,11 +1250,14 @@ final class StudentTelegramBotService
     }
 
     /**
+     * В боте участвуют только обычные ученики: особые группы/организации (type)
+     * не показываем, не ищем и не даём выбрать.
+     *
      * @return Collection<int, Student>
      */
     private function activeStudents(User $user): Collection
     {
-        return $user->students()
+        return $this->regularStudents($user)
             ->where('is_deleted', 0)
             ->orderBy('name')
             ->get();
@@ -1261,7 +1265,14 @@ final class StudentTelegramBotService
 
     private function studentById(User $user, int $studentId): ?Student
     {
-        return $user->students()->where('students.id', $studentId)->first();
+        return $this->regularStudents($user)->where('students.id', $studentId)->first();
+    }
+
+    private function regularStudents(User $user): BelongsToMany
+    {
+        return $user->students()->where(function ($query): void {
+            $query->whereNull('type')->orWhere('type', '');
+        });
     }
 
     private function studentByIndex(User $user, string $index): ?Student
