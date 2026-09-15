@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Model;
 
+use App\Support\CacheKeys;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Cache;
 
 final class Topic extends Model
 {
@@ -62,39 +64,48 @@ final class Topic extends Model
      * Дерево тем преподавателя по предмету (тема → подтемы).
      * Предмет задаётся кодом из таблицы subjects.
      *
+     * Кэшируется по версии данных пользователя: любая правка тем/уроков
+     * поднимает версию и делает старые ключи недоступными.
+     *
      * @return array<int, array<string, mixed>>
      */
     public static function treeForSubject(int $userId, string $subject): array
     {
-        $topics = self::query()
-            ->where('user_id', $userId)
-            ->whereHas('subject', fn ($query) => $query->where('code', $subject))
-            ->where('is_deleted', 0)
-            ->orderBy('position')
-            ->orderBy('id')
-            ->get();
+        return Cache::remember(
+            CacheKeys::topicTree($userId, CacheKeys::dataVersion($userId), $subject),
+            now()->addMinutes(CacheKeys::TTL_PAGE_MINUTES),
+            function () use ($userId, $subject): array {
+                $topics = self::query()
+                    ->where('user_id', $userId)
+                    ->whereHas('subject', fn ($query) => $query->where('code', $subject))
+                    ->where('is_deleted', 0)
+                    ->orderBy('position')
+                    ->orderBy('id')
+                    ->get();
 
-        $grouped = [];
+                $grouped = [];
 
-        foreach ($topics as $topic) {
-            $grouped[(int) ($topic->parent_id ?? 0)][] = $topic;
-        }
+                foreach ($topics as $topic) {
+                    $grouped[(int) ($topic->parent_id ?? 0)][] = $topic;
+                }
 
-        $build = function (int $parentId) use (&$build, $grouped): array {
-            $nodes = [];
+                $build = function (int $parentId) use (&$build, $grouped): array {
+                    $nodes = [];
 
-            foreach ($grouped[$parentId] ?? [] as $topic) {
-                $nodes[] = [
-                    'id'       => (int) $topic->id,
-                    'name'     => $topic->name,
-                    'position' => (int) $topic->position,
-                    'children' => $build((int) $topic->id),
-                ];
-            }
+                    foreach ($grouped[$parentId] ?? [] as $topic) {
+                        $nodes[] = [
+                            'id'       => (int) $topic->id,
+                            'name'     => $topic->name,
+                            'position' => (int) $topic->position,
+                            'children' => $build((int) $topic->id),
+                        ];
+                    }
 
-            return $nodes;
-        };
+                    return $nodes;
+                };
 
-        return $build(0);
+                return $build(0);
+            },
+        );
     }
 }

@@ -92,6 +92,8 @@ final class SubjectController extends Controller
             return back()->with('error', lng('error.' . ($subjectId !== null ? 'edit_subject' : 'add_subject')));
         }
 
+        Subject::flushCache();
+
         return back()->with('success', lng('success.' . ($subjectId !== null ? 'edit_subject' : 'add_subject')));
     }
 
@@ -134,6 +136,8 @@ final class SubjectController extends Controller
         if (!$subject->save()) {
             return back()->with('error', lng($errorKey));
         }
+
+        Subject::flushCache();
 
         return back()->with('success', lng($successKey));
     }

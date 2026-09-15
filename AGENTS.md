@@ -16,7 +16,7 @@ Guidance for AI coding agents working in this repository. Read this file before 
 
 The user-facing UI is Russian; backend locale is `ru` (with `en` translation files that must be kept in sync for backend strings, see §7).
 
-Monetization: there are two **tariff plans** — free "Free" (full functionality, 1 student) and paid "Paid" (100 ₽/month or 1000 ₽/year, unlimited). Payments and self-service plan switching are **not implemented**; plans are assigned manually in the DB via the `user_subscriptions` table (see §5).
+Monetization: there are two **tariff plans** — free "Free" (full functionality, 1 student) and paid "Paid" (100 ₽/month or 1000 ₽/year, unlimited). Payments and self-service plan switching are **not implemented**; an administrator assigns and cancels plans (roles too) in the admin section under `/admin/users` (see §5).
 
 ## 2. Non-negotiable rules (read first)
 
@@ -30,7 +30,8 @@ Monetization: there are two **tariff plans** — free "Free" (full functionality
 - **Form controls and icon actions are mandatory components — do not use native ones.** Use `components/ui/Select.vue` (never a raw `<select>`), `Checkbox.vue` (never `<input type="checkbox">`), `Radio.vue` (never `<input type="radio">`) and `IconButton.vue` for compact icon actions (edit/delete/restore/show). Only `field`-styled `input`/`textarea` (text, number, date, time, search) stay native.
 - **Do not refactor legacy code** (`app/Model`, `App\Common`, `App\Notification`, `App\Form`, `App\Image`, old controllers/models) unless the task explicitly requires it. Match the surrounding file's style when you do edit one.
 - **Do not update the changelog** (hardcoded in `ChangelogController`) unless explicitly asked.
-- **Billing/tariffs are not self-service.** Do not implement payment flows or plan switching. Limits come from `config/tariffs.php` only; the effective plan is the latest active row in `user_subscriptions` (or `free`). Do not use the legacy `users.account` column or the empty `users_payments` table.
+- **Billing/tariffs are not self-service for users.** Do not implement payment flows or user-facing plan switching; an administrator assigns/cancels subscriptions in the admin section under `/admin/users` (see §5). Limits come from `config/tariffs.php` only; the effective plan is the latest active row in `user_subscriptions` (or `free`). Do not use the legacy `users.account` column or the empty `users_payments` table.
+- **Caching is mandatory for hot reads (Redis).** `CACHE_DRIVER=redis` and `SESSION_DRIVER=redis` (predis or phpredis); Redis db 0 holds sessions, db 1 holds the cache. Every cache key goes through `app/Support/CacheKeys.php` — never inline a key string in a controller/model. Personal keys must contain the user/student id. Use `rememberForever` + explicit `forget` only where a code hook exists; where it does not (or where data changes by time alone), use a short TTL or the per-user data version (`CacheKeys::dataVersion()` / `bumpData()`), which invalidates the user's dashboard, lessons, calendar, student card and topic trees. Never cache `flash`, `auth.user`, CSRF data, CAPTCHA/OAuth tokens or whole Inertia responses.
 - **Do not add new `window.location.reload()` calls** and prefer migrating touched flows away from full reloads (see §7).
 
 ## 3. Tech stack
@@ -68,6 +69,7 @@ app/
 │                              # Topic, StudentTopic, TopicReview, UserSubscription, Page  (NOT App\Models)
 ├── Services/                  # SocialAccountService, SocialOAuthProvider,
 │                              # VkIdService, YandexIdService, TariffService
+├── Support/                   # CacheKeys — единый реестр ключей кэша
 └── Providers/
 routes/
 ├── web.php                    # THE single routing file (all HTTP routes)
@@ -93,7 +95,8 @@ resources/
     │   │                      # CardHeader, CardTitle, Table + Table* parts, UserAvatar,
     │   │                      # AvatarPicker, ImageCropper, TopicStatusBadge, Toaster + ToastItem
     │   ├── popups/            # ConfirmDialog, ChangelogModal, StudentFormPopup,
-    │   │                      # LessonFormPopup, TopicFormPopup, ReviewFormPopup
+    │   │                      # LessonFormPopup, TopicFormPopup, ReviewFormPopup,
+    │   │                      # PromoFormPopup, AdminSubscriptionPopup
     │   ├── uikit/             # UiKitSection + CodeBlock (helpers for the /admin/uikit page)
     │   └── social/            # SocialAuth, VkIdAuth, YandexAuth
     ├── lib/                   # utils.ts (cn), upload.ts (avatar upload), social.ts,
@@ -109,8 +112,8 @@ public_html/                   # web root (Laravel public dir via usePublicPath)
 - **Models** use the legacy namespace `App\Model` (singular). Keep using it for new models. Relations: `User` ↔ `Student` (many-to-many via `students_to_users`), `User` has many `Topic` and `UserSubscription`; `Student` has many `Lesson`, `StudentTopic` (per-student topic status) and `TopicReview` (review log); `Topic` belongs to `Subject` via `subject_id` (while `Lesson.subject` still stores the subject `code`).
 - **Localization**: user-facing backend strings MUST go through the `lng('...')` helper (dot key under `messages.php`), e.g. `lng('success.add_student')`. **Every new key must be added to BOTH `resources/lang/ru/messages.php` and `resources/lang/en/messages.php`.** Group keys under `success.*`, `error.*`, `title`, etc. See existing usage in controllers. Validation texts and field names (`attributes`) live in `resources/lang/<locale>/validation.php` — keep a file for **every** locale listed in `config/locales.php`, not just the primary one.
 - **Language-file typography (неразрывные пробелы)**: неразрывный пробел — часть самой строки в `resources/lang/**`; ставьте **литеральный символ U+00A0** прямо в значение. Никогда не `&nbsp;` (клиентские строки приходят в Vue как plain text и сущность отрендерится буквально) и никогда не через JS/runtime-типографику. Правила повторяют набор `nbsp` из Typograf (данные `src/data/ru.ts` / `en-US.ts`) и применяются к `messages.php` и `validation.php` обеих локалей: NBSP после любого слова из 1–2 букв и после слова из списка локали — ru `а|без|в|во|если|да|до|для|за|и|или|из|к|ко|как|ли|на|но|не|ни|о|об|обо|от|по|про|при|под|с|со|то|у`, en `a|an|and|as|at|bar|but|by|for|if|in|nor|not|of|off|on|or|out|per|pro|so|the|to|up|via|yet`; NBSP перед частицами `ли|ль|же|ж|бы|б` (только ru); NBSP между словом и завершающим коротким словом (1–3 буквы с `.`/`!`/`?`/`…`). Внутри HTML-тегов и `:placeholder` пробелы не трогаем. В ru-списке набор букв кириллический, поэтому латинские «VK ID», «Telegram» не склеиваются.
-- **Roles (admin)**: `roles`/`roles_to_users` power a minimal role system: `App\Model\Role` (with `Role::ADMIN = 'admin'`), `User::roles()` / `User::hasRole($code)` / `User::isAdmin()`. **Admin-only pages live under `/admin/*`** and use the `admin` middleware alias (`App\Http\Middleware\EnsureUserIsAdmin`, registered in `bootstrap/app.php`), which renders the Inertia `Error` page with status **403** for non-admins. Roles are assigned **manually in the DB** (`roles` + `roles_to_users`) — do not build a role-management UI or self-service role changes. The shared prop `auth.user.is_admin` drives admin-only sidebar links (`AppLayout`). The old `App\Access` constants no longer exist.
-- **Tariffs (планы)**: limits live only in `config/tariffs.php` (`plans.<plan>.limits.<feature>`). Feature registry: `students`, `lessons`, `topics` — quotas (`null` = unlimited); `subjects` (предметы) now live in the `subjects` table (`App\Model\Subject`), not in code — read codes via `Subject::codes()` and display names via `Subject::nameMap()` (name is a per-locale JSON map). The effective plan = latest active row in `user_subscriptions` (not expired) or `free`; an expired paid plan auto-falls back to `free` and surfaces a notice (`TariffService::expired()`). Enforce quotas only on **creation** via `TariffService::canUse()` (edit/delete/restore don't consume quota); a new creatable entity must add its counter to `TariffService::used()` and a guard at its creation point. The single student-creation path is `StudentController::editStudent()` (plus the `User::addStudent()` safety net).
+- **Roles (admin)**: `roles`/`roles_to_users` power a minimal role system: `App\Model\Role` (with `Role::ADMIN = 'admin'`), `User::roles()` / `User::hasRole($code)` / `User::isAdmin()`. **Admin-only pages live under `/admin/*`** and use the `admin` middleware alias (`App\Http\Middleware\EnsureUserIsAdmin`, registered in `bootstrap/app.php`), which renders the Inertia `Error` page with status **403** for non-admins. Roles are assigned by an administrator on `/admin/users` (`POST /admin/users/roles`, checkbox per role); an admin cannot remove their own `admin` role, and roles are not edited directly in the DB anymore. `User::roleTitles()` caches the role list (30 min) and `User::flushRoleCache($id)` clears it. The shared prop `auth.user.is_admin` drives admin-only sidebar links (`AppLayout`). The old `App\Access` constants no longer exist.
+- **Tariffs (планы)**: limits live only in `config/tariffs.php` (`plans.<plan>.limits.<feature>`). Feature registry: `students`, `lessons`, `topics` — quotas (`null` = unlimited); `subjects` (предметы) now live in the `subjects` table (`App\Model\Subject`), not in code — read codes via `Subject::codes()` and display names via `Subject::nameMap()` (name is a per-locale JSON map). The effective plan = latest active row in `user_subscriptions` (not expired) or `free`; an expired paid plan auto-falls back to `free` and surfaces a notice (`TariffService::expired()`). Enforce quotas only on **creation** via `TariffService::canUse()` (edit/delete/restore don't consume quota); a new creatable entity must add its counter to `TariffService::used()` and a guard at its creation point. The single student-creation path is `StudentController::editStudent()` (plus the `User::addStudent()` safety net). Subscriptions are assigned/cancelled on `/admin/users` (`TariffService::assign()` / `cancel()`, `POST /admin/users/subscription[/cancel]`), and those methods flush the user's tariff cache.
 - **PHP style for NEW files**: add `declare(strict_types=1);`, typed signatures/return types, `final class` where sensible, aligned multi-line arrays, no noisy PHPDoc — write short Russian comments only where they explain "why". Do not retro-edit old files to this style.
 - Middleware: `auth`, `guest`, `signed` (auto-login link). Shared Inertia props are assembled in `app/Http/Middleware/HandleInertiaRequests.php` (`auth.user`, `flash`, `social`, `agreements`, `tariff`) — when you add globally shared data, extend this class AND `resources/js/types/index.ts` (`SharedProps`).
 
@@ -148,6 +151,7 @@ public_html/                   # web root (Laravel public dir via usePublicPath)
 - Do **not** add new `fetch()` JSON endpoints or new `window.location.reload()` calls; keep mutations Inertia-native.
 - Server responses for user-facing messages come localized via `lng()`; keep `success.*` / `error.*` keys synced in ru + en.
 - Backend `back()->with('success'|'error', lng(...))` lands in the `flash` prop and is shown by the global `Toaster`; client-side Inertia `onError` uses `toast.error(...)` from `useToast()`. Do **not** render ad-hoc inline flash banners.
+- **Cache invalidation rides on mutations.** Call `$this->flushUserCache($userId)` (protected helper in the base `Controller`) from every student/lesson/topic/status/review mutation — it bumps the user's data version and clears the tariff usage counters. The matching admin controllers clear their own keys: `Subject::flushCache()`, `PromoBanner::flushCache()`, `User::flushRoleCache($id)`, and `TariffService::assign()` / `cancel()` flush the tariff plan. Non-web writers (the Telegram bot `StudentTelegramBotService` — it creates lessons, toggles payments and undoes lessons) call `App\Support\UserCache::flush($user)`, the same helper the base controller delegates to.
 
 **Social/auth flows.**
 - Registration: agreement consent (props `agreements` from `config/agreements.php`) + Yandex SmartCaptcha.
@@ -183,6 +187,8 @@ php -l path/to/file.php  # syntax-check each changed PHP file
 ```
 
 There is no automated test suite, no linter and no formatter configured — do not invent or run alternative quality commands, and do not add config for them.
+
+Cache/Redis work additionally requires: Redis reachable (`CACHE_DRIVER=redis`, `SESSION_DRIVER=redis`, sessions in db 0 / cache in db 1), `config:cache`/`route:cache`/`view:cache` re-run by the user after `.env` or config changes, and a manual check that a mutation (student/lesson/topic/status/review, promo banner, subject, role, subscription) is reflected on the next page load instead of a stale cached value.
 
 ## 10. Changelog
 

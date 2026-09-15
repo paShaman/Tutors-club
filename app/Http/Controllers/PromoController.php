@@ -81,6 +81,8 @@ final class PromoController extends Controller
             return back()->with('error', lng('error.' . ($bannerId !== null ? 'edit_promo' : 'add_promo')));
         }
 
+        PromoBanner::flushCache();
+
         return back()->with('success', lng('success.' . ($bannerId !== null ? 'edit_promo' : 'add_promo')));
     }
 
@@ -104,6 +106,8 @@ final class PromoController extends Controller
         if (!$banner || !$banner->delete()) {
             return back()->with('error', lng('error.delete_promo'));
         }
+
+        PromoBanner::flushCache();
 
         return back()->with('success', lng('success.delete_promo'));
     }
@@ -134,6 +138,8 @@ final class PromoController extends Controller
         if (!$banner->save()) {
             return back()->with('error', lng('error.toggle_promo'));
         }
+
+        PromoBanner::flushCache();
 
         return back()->with('success', lng('success.toggle_promo'));
     }

@@ -10,10 +10,13 @@ use App\Model\StudentTopic;
 use App\Model\Subject;
 use App\Model\Topic;
 use App\Model\TopicReview;
+use App\Model\User;
 use App\Services\TariffService;
+use App\Support\CacheKeys;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Validator;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -57,6 +60,27 @@ final class StudentController extends Controller
             abort(404);
         }
 
+        $props = Cache::remember(
+            CacheKeys::studentDetail(
+                (int) $student->id,
+                (int) $user->id,
+                CacheKeys::dataVersion((int) $user->id),
+                (string) app()->getLocale(),
+            ),
+            now()->addMinutes(CacheKeys::TTL_PAGE_MINUTES),
+            fn (): array => $this->buildShowPayload($user, $student),
+        );
+
+        return Inertia::render('StudentDetail', $props);
+    }
+
+    /**
+     * Данные карточки ученика (строятся один раз и кэшируются целиком).
+     *
+     * @return array<string, mixed>
+     */
+    private function buildShowPayload(User $user, Student $student): array
+    {
         $lessons = Lesson::where('student_id', $student->id)
             ->where('is_deleted', 0)
             ->with('subject')
@@ -178,7 +202,7 @@ final class StudentController extends Controller
 
         $topicStates = $this->topicStatesForStudent((int) $student->id);
 
-        return Inertia::render('StudentDetail', [
+        return [
             'student' => [
                 'id'            => $student->id,
                 'slug'          => $student->slug,
@@ -213,7 +237,7 @@ final class StudentController extends Controller
             'subjectNames'    => Subject::nameMap(),
             'topicsBySubject' => $topicsBySubject,
             'topicStates'     => $topicStates,
-        ]);
+        ];
     }
 
     /**
@@ -328,6 +352,8 @@ final class StudentController extends Controller
             return back()->with('error', lng('error.' . $str));
         }
 
+        $this->flushUserCache((int) Auth::id());
+
         return back()->with('success', lng('success.' . $str));
     }
 
@@ -349,6 +375,8 @@ final class StudentController extends Controller
         if (empty($result)) {
             return back()->with('error', lng('error.' . $str));
         }
+
+        $this->flushUserCache((int) Auth::id());
 
         return back()->with('success', lng('success.' . $str));
     }

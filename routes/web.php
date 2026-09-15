@@ -95,6 +95,15 @@ Route::get('/admin/users', [AdminUserController::class, 'index'])
     ->name('admin.users')
     ->middleware(['auth', 'admin']);
 
+Route::post('/admin/users/roles', [AdminUserController::class, 'updateRoles'])
+    ->middleware(['auth', 'admin']);
+
+Route::post('/admin/users/subscription', [AdminUserController::class, 'updateSubscription'])
+    ->middleware(['auth', 'admin']);
+
+Route::post('/admin/users/subscription/cancel', [AdminUserController::class, 'cancelSubscription'])
+    ->middleware(['auth', 'admin']);
+
 Route::get('/admin/uikit', [UiKitController::class, 'index'])
     ->name('admin.uikit')
     ->middleware(['auth', 'admin']);

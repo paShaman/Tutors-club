@@ -8,6 +8,7 @@ use App\Model\Lesson;
 use App\Model\Student;
 use App\Model\Subject;
 use App\Model\User;
+use App\Support\UserCache;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Http;
@@ -726,6 +727,9 @@ final class StudentTelegramBotService
 
         $student->lessons()->save($lesson);
 
+        // Бот пишет в те же таблицы, что и кабинет, поэтому обязан гасить кэш.
+        UserCache::flush($user);
+
         $this->clearWizard($user);
 
         // Кнопка отмены — на случай, если урок добавили по ошибке (из бота удалить иначе негде).
@@ -1108,6 +1112,8 @@ final class StudentTelegramBotService
         $lesson->is_payed = $lesson->is_payed ? 0 : 1;
         $lesson->date_payed = $lesson->is_payed ? Carbon::now() : null;
         $lesson->save();
+
+        UserCache::flush($user);
 
         $date = $lesson->date ? Carbon::parse($lesson->date)->format('d.m.Y') : '';
 
@@ -1584,6 +1590,8 @@ final class StudentTelegramBotService
 
         $lesson->is_deleted = 1;
         $lesson->save();
+
+        UserCache::flush($user);
 
         $this->sendMessage($chatId, lng('telegram.lesson_undone'));
     }

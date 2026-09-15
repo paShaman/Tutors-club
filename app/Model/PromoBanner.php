@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Model;
 
+use App\Support\CacheKeys;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
 
 final class PromoBanner extends Model
 {
@@ -45,13 +47,26 @@ final class PromoBanner extends Model
     /**
      * Данные активных баннеров для общего Inertia-пропса.
      *
+     * Кэшируется до конца суток: окно показа баннера меняется по дате,
+     * поэтому без TTL результат «залипнет» на границе периода.
+     *
      * @return array<int, array<string, mixed>>
      */
     public static function activePayloads(): array
     {
-        return self::active()
-            ->map(fn (self $banner): array => $banner->toPayload())
-            ->all();
+        return Cache::remember(
+            CacheKeys::promoBanners(),
+            Carbon::now()->endOfDay(),
+            fn (): array => self::active()
+                ->map(fn (self $banner): array => $banner->toPayload())
+                ->all(),
+        );
+    }
+
+    /** Сброс кэша после правки баннеров в админке. */
+    public static function flushCache(): void
+    {
+        Cache::forget(CacheKeys::promoBanners());
     }
 
     /**

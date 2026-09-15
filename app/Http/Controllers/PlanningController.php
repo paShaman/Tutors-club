@@ -122,6 +122,8 @@ final class PlanningController extends Controller
             return back()->with('error', lng('error.' . $str));
         }
 
+        $this->flushUserCache((int) Auth::id());
+
         return back()->with('success', lng('success.' . $str));
     }
 
@@ -161,6 +163,8 @@ final class PlanningController extends Controller
             return back()->with('error', lng('error.delete_topic'));
         }
 
+        $this->flushUserCache((int) Auth::id());
+
         return back()->with('success', lng('success.delete_topic'));
     }
 
@@ -191,6 +195,8 @@ final class PlanningController extends Controller
                     'updated_at' => Carbon::now(),
                 ]);
         }
+
+        $this->flushUserCache((int) Auth::id());
 
         return back()->with('success', lng('success.reorder_topics'));
     }
@@ -243,6 +249,8 @@ final class PlanningController extends Controller
         if (empty($result)) {
             return back()->with('error', lng('error.set_topic_status'));
         }
+
+        $this->flushUserCache((int) Auth::id());
 
         return back()->with('success', lng('success.set_topic_status'));
     }
@@ -298,6 +306,8 @@ final class PlanningController extends Controller
         }
 
         $studentTopic->save();
+
+        $this->flushUserCache((int) Auth::id());
 
         return back()->with('success', lng('success.review_topic'));
     }

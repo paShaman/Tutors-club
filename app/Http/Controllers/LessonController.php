@@ -10,9 +10,12 @@ use App\Model\StudentTopic;
 use App\Model\Subject;
 use App\Model\Topic;
 use App\Model\TopicReview;
+use App\Model\User;
 use App\Services\TariffService;
+use App\Support\CacheKeys;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Validator;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -24,17 +27,44 @@ final class LessonController extends Controller
      */
     public function getLessons(?Student $student = null, ?Subject $subject = null): Response
     {
-        $students = Auth::user()->students()->get()->keyBy('id')->toArray();
+        $user = Auth::user();
+
+        $students = $user->students()->get()->keyBy('id')->toArray();
 
         // Фильтр по ученику применяем только если это ученик текущего пользователя.
         $selectedStudentId = $student !== null && isset($students[$student->id]) ? (int) $student->id : null;
 
         $subjectCodes = Subject::codes();
-        $subjectIds = Subject::idMap();
-        $subjectCodeById = Subject::codeMap();
         $selectedSubject = $subject !== null && in_array($subject->code, $subjectCodes, true)
             ? (string) $subject->code
             : '';
+
+        $props = Cache::remember(
+            CacheKeys::lessons(
+                (int) $user->id,
+                CacheKeys::dataVersion((int) $user->id),
+                $selectedStudentId,
+                $selectedSubject,
+                (string) app()->getLocale(),
+            ),
+            now()->addMinutes(CacheKeys::TTL_PAGE_MINUTES),
+            fn (): array => $this->buildLessonsPayload($user, $students, $subjectCodes, $selectedStudentId, $selectedSubject),
+        );
+
+        return Inertia::render('Lessons', $props);
+    }
+
+    /**
+     * Данные страницы уроков: строятся один раз и кэшируются целиком.
+     *
+     * @param array<int, array<string, mixed>> $students
+     * @param array<int, string> $subjectCodes
+     * @return array<string, mixed>
+     */
+    private function buildLessonsPayload(User $user, array $students, array $subjectCodes, ?int $selectedStudentId, string $selectedSubject): array
+    {
+        $subjectIds = Subject::idMap();
+        $subjectCodeById = Subject::codeMap();
 
         $lessonsQuery = Lesson::where('is_deleted', 0)
             ->whereIn('student_id', array_keys($students));
@@ -50,7 +80,7 @@ final class LessonController extends Controller
         $lessons = $lessonsQuery->orderBy('date', 'desc')->get()->toArray();
 
         // Названия выбранных тем/подтем, чтобы показывать их в списке без N+1.
-        $topicNames = Topic::where('user_id', Auth::id())
+        $topicNames = Topic::where('user_id', $user->id)
             ->where('is_deleted', 0)
             ->pluck('name', 'id');
 
@@ -167,7 +197,7 @@ final class LessonController extends Controller
             return $a['name'] < $b['name'] ? -1 : 1;
         });
 
-        return Inertia::render('Lessons', [
+        return [
             'sortedLessons'     => $sortedLessons,
             'students'          => $activeStudents,
             'selectedStudentId' => $selectedStudentId,
@@ -176,12 +206,12 @@ final class LessonController extends Controller
             'subjectNames'      => Subject::nameMap(),
             'subjectSlugs'      => Subject::slugMap(),
             'studentSlugs'      => array_column($activeStudents, 'slug', 'id'),
-            'topicTree'         => Topic::treesBySubject((int) Auth::id(), $subjectCodes),
+            'topicTree'         => Topic::treesBySubject((int) $user->id, $subjectCodes),
             'topicStatuses'     => StudentTopic::statusMapForStudents(array_keys($students)),
             'defaultPrice'      => config('lesson.default_price'),
             'defaultDuration'   => config('lesson.default_duration'),
             'defaultDate'       => date('Y-m-d'),
-        ]);
+        ];
     }
 
     /**
@@ -267,6 +297,8 @@ final class LessonController extends Controller
                 !empty($post['lesson_comment']) ? (string) $post['lesson_comment'] : null,
             );
         }
+
+        $this->flushUserCache((int) Auth::id());
 
         return back()->with('success', lng('success.' . $str));
     }
@@ -409,6 +441,8 @@ final class LessonController extends Controller
             return back()->with('error', lng('error.del_lesson'));
         }
 
+        $this->flushUserCache((int) Auth::id());
+
         return back()->with('success', lng('success.del_lesson'));
     }
 
@@ -434,6 +468,8 @@ final class LessonController extends Controller
         if (empty($result)) {
             return back()->with('error', lng('error.del_lesson'));
         }
+
+        $this->flushUserCache((int) Auth::id());
 
         return back();
     }

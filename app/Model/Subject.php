@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Model;
 
+use App\Support\CacheKeys;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Cache;
 
 final class Subject extends Model
 {
@@ -33,15 +35,20 @@ final class Subject extends Model
     /**
      * Активные предметы в порядке отображения.
      *
+     * Справочник меняется только администратором, поэтому кэшируется до явного сброса.
+     *
      * @return Collection<int, self>
      */
     public static function active(): Collection
     {
-        return self::query()
-            ->where('is_deleted', 0)
-            ->orderBy('position')
-            ->orderBy('id')
-            ->get();
+        return Cache::rememberForever(
+            CacheKeys::subjectActive(),
+            fn (): Collection => self::query()
+                ->where('is_deleted', 0)
+                ->orderBy('position')
+                ->orderBy('id')
+                ->get(),
+        );
     }
 
     /**
@@ -51,7 +58,10 @@ final class Subject extends Model
      */
     public static function codes(): array
     {
-        return self::active()->pluck('code')->all();
+        return Cache::rememberForever(
+            CacheKeys::subjectCodes(),
+            fn (): array => self::active()->pluck('code')->all(),
+        );
     }
 
     /**
@@ -61,10 +71,13 @@ final class Subject extends Model
      */
     public static function idMap(): array
     {
-        return self::query()
-            ->pluck('id', 'code')
-            ->map(fn ($id): int => (int) $id)
-            ->all();
+        return Cache::rememberForever(
+            CacheKeys::subjectIdMap(),
+            fn (): array => self::query()
+                ->pluck('id', 'code')
+                ->map(fn ($id): int => (int) $id)
+                ->all(),
+        );
     }
 
     /**
@@ -74,7 +87,10 @@ final class Subject extends Model
      */
     public static function codeMap(): array
     {
-        return self::query()->pluck('code', 'id')->all();
+        return Cache::rememberForever(
+            CacheKeys::subjectCodeMap(),
+            fn (): array => self::query()->pluck('code', 'id')->all(),
+        );
     }
 
     /**
@@ -84,7 +100,10 @@ final class Subject extends Model
      */
     public static function slugMap(): array
     {
-        return self::query()->pluck('slug', 'code')->all();
+        return Cache::rememberForever(
+            CacheKeys::subjectSlugMap(),
+            fn (): array => self::query()->pluck('slug', 'code')->all(),
+        );
     }
 
     /**
@@ -94,9 +113,20 @@ final class Subject extends Model
      */
     public static function nameMap(): array
     {
-        return self::active()
-            ->mapWithKeys(fn (self $subject): array => [$subject->code => $subject->localizedName()])
-            ->all();
+        $locale = (string) app()->getLocale();
+
+        return Cache::rememberForever(
+            CacheKeys::subjectNames($locale),
+            fn (): array => self::active()
+                ->mapWithKeys(fn (self $subject): array => [$subject->code => $subject->localizedName()])
+                ->all(),
+        );
+    }
+
+    /** Сброс кэша справочника после правки предметов в админке. */
+    public static function flushCache(): void
+    {
+        CacheKeys::forgetSubjects();
     }
 
     /**

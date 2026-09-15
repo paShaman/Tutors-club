@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Support\CacheKeys;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Throwable;
 
@@ -103,6 +105,12 @@ final class FeedbackBotService
     /** Прямая ссылка на файл Telegram — нужна, чтобы переслать фото в MAX. */
     public function telegramPhotoUrl(string $fileId): ?string
     {
+        $cached = Cache::get(CacheKeys::telegramFile($fileId));
+
+        if (is_string($cached) && $cached !== '') {
+            return $cached;
+        }
+
         $token = $this->telegramToken();
 
         try {
@@ -116,7 +124,11 @@ final class FeedbackBotService
                 return null;
             }
 
-            return "https://api.telegram.org/file/bot{$token}/{$path}";
+            $url = "https://api.telegram.org/file/bot{$token}/{$path}";
+
+            Cache::put(CacheKeys::telegramFile($fileId), $url, now()->addHour());
+
+            return $url;
         } catch (Throwable) {
             return null;
         }

@@ -5,9 +5,10 @@
     "type": "project",
     "require": {
         "php": "^8.5",
+        "inertiajs/inertia-laravel": "^2.0",
         "laravel/framework": "^13.0",
         "laravel/tinker": "^3.0",
-        "inertiajs/inertia-laravel": "^2.0"
+        "predis/predis": "^3.6"
     },
     "autoload": {
         "psr-4": {

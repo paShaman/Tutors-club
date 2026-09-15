@@ -2,14 +2,19 @@
 
 namespace App\Model;
 
+use App\Support\CacheKeys;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\URL;
 
 class User extends Authenticatable
 {
     use Notifiable;
+
+    /** Кэш ролей в рамках запроса: isAdmin() не должен ходить в БД дважды. */
+    private ?array $roleTitlesCache = null;
 
     /**
      * The attributes that are mass assignable.
@@ -78,6 +83,30 @@ class User extends Authenticatable
      */
 
     /**
+     * названия ролей пользователя (кэш 30 минут, сбрасывается при правке ролей в админке)
+     *
+     * @return array<int, string>
+     */
+    public function roleTitles()
+    {
+        if ($this->roleTitlesCache !== null) {
+            return $this->roleTitlesCache;
+        }
+
+        return $this->roleTitlesCache = Cache::remember(
+            CacheKeys::userRoles((int) $this->id),
+            now()->addMinutes(30),
+            fn (): array => $this->roles()->pluck('title')->all(),
+        );
+    }
+
+    /** сброс кэша ролей после изменения в админке */
+    public static function flushRoleCache(int $userId): void
+    {
+        Cache::forget(CacheKeys::userRoles($userId));
+    }
+
+    /**
      * есть ли у пользователя роль с указанным кодом
      *
      * @param string $role
@@ -85,7 +114,7 @@ class User extends Authenticatable
      */
     public function hasRole($role)
     {
-        return $this->roles()->where('title', $role)->exists();
+        return in_array($role, $this->roleTitles(), true);
     }
 
     /**

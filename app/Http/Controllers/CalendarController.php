@@ -9,8 +9,11 @@ use App\Model\Student;
 use App\Model\StudentTopic;
 use App\Model\Subject;
 use App\Model\Topic;
+use App\Model\User;
+use App\Support\CacheKeys;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -61,6 +64,9 @@ final class CalendarController extends Controller
 
     /**
      * Get calendar events as JSON (FullCalendar endpoint).
+     *
+     * Календарь запрашивает события после каждой мутации и при листании
+     * периодов, поэтому результат кэшируется по диапазону и версии данных.
      */
     public function getEvents(): \Illuminate\Http\JsonResponse
     {
@@ -69,7 +75,28 @@ final class CalendarController extends Controller
         $start = Carbon::parse($get['start']);
         $end = Carbon::parse($get['end']);
 
-        $students = Auth::user()->students()->get()->keyBy('id')->toArray();
+        $user = Auth::user();
+
+        $events = Cache::remember(
+            CacheKeys::calendarEvents(
+                (int) $user->id,
+                CacheKeys::dataVersion((int) $user->id),
+                $start->toDateTimeString(),
+                $end->toDateTimeString(),
+            ),
+            now()->addMinutes(CacheKeys::TTL_PAGE_MINUTES),
+            fn (): array => $this->buildEvents($user, $start, $end),
+        );
+
+        return response()->json($events);
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function buildEvents(User $user, Carbon $start, Carbon $end): array
+    {
+        $students = $user->students()->get()->keyBy('id')->toArray();
         $lessons = Lesson::where('is_deleted', 0)
             ->whereIn('student_id', array_keys($students))
             ->whereBetween('date', [$start, $end])
@@ -123,6 +150,6 @@ final class CalendarController extends Controller
             $events[] = $event;
         }
 
-        return response()->json($events);
+        return $events;
     }
 }

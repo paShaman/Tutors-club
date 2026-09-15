@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Model\Lesson;
+use App\Model\User;
+use App\Support\CacheKeys;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -19,7 +22,27 @@ final class DashboardController
     public function index(): Response
     {
         $user = Auth::user();
+        $userId = (int) $user->getId();
 
+        $props = Cache::remember(
+            CacheKeys::dashboard($userId, CacheKeys::dataVersion($userId), (string) app()->getLocale()),
+            now()->addMinutes(CacheKeys::TTL_PAGE_MINUTES),
+            fn (): array => $this->buildDashboard($user),
+        );
+
+        return Inertia::render('Dashboard', $props);
+    }
+
+    /**
+     * Данные дашборда: строятся один раз и кэшируются целиком.
+     *
+     * Все агрегаты собраны групповыми запросами, чтобы не делать
+     * по несколько запросов на каждого ученика.
+     *
+     * @return array<string, mixed>
+     */
+    private function buildDashboard(User $user): array
+    {
         // Collect IDs of students belonging to the authenticated user
         $studentIds = DB::table('students_to_users')
             ->where('user_id', $user->getId())
@@ -35,54 +58,50 @@ final class DashboardController
                 ->get();
         }
 
-        // For each student, get their last lesson date (for sorting)
-        $studentLastLessonDates = [];
-        foreach ($studentsRaw as $student) {
-            $lastLesson = $student->lessons()
+        // Дата последнего состоявшегося урока по каждому ученику — одним запросом.
+        $lastLessonDates = collect();
+        if (!empty($studentIds)) {
+            $lastLessonDates = Lesson::whereIn('student_id', $studentIds)
                 ->where('is_deleted', 0)
                 ->where('is_future', 0)
-                ->orderBy('date', 'desc')
-                ->orderBy('time', 'desc')
-                ->first();
-
-            $studentLastLessonDates[$student->id] = $lastLesson ? $lastLesson->date : null;
+                ->groupBy('student_id')
+                ->selectRaw('student_id, MAX(date) as last_date')
+                ->pluck('last_date', 'student_id');
         }
 
         // Sort students by last lesson date descending
-        $studentsRaw = $studentsRaw->sortByDesc(function ($student) use ($studentLastLessonDates) {
-            return $studentLastLessonDates[$student->id] ?? '0000-00-00';
-        });
-
-        // Take only first 4
-        $studentsRaw = $studentsRaw->take(4);
+        $studentsRaw = $studentsRaw
+            ->sortByDesc(fn ($student) => $lastLessonDates[$student->id] ?? '0000-00-00')
+            ->take(4);
 
         $monthStart = Carbon::today()->startOfMonth()->toDateString();
         $todayEnd = Carbon::today()->endOfDay()->toDateTimeString();
 
+        // Уроки и оплаты текущего месяца по ученикам — одним запросом.
+        $monthStats = collect();
+        if (!empty($studentIds)) {
+            $monthStats = Lesson::whereIn('student_id', $studentIds)
+                ->where('is_deleted', 0)
+                ->where('is_future', 0)
+                ->where('date', '>=', $monthStart)
+                ->where('date', '<=', $todayEnd)
+                ->groupBy('student_id')
+                ->selectRaw('student_id, COUNT(*) as total, SUM(CASE WHEN is_payed = 1 THEN 1 ELSE 0 END) as paid')
+                ->get()
+                ->keyBy('student_id');
+        }
+
         $students = [];
         foreach ($studentsRaw as $student) {
-            $totalLessons = $student->lessons()
-                ->where('is_deleted', 0)
-                ->where('is_future', 0)
-                ->where('date', '>=', $monthStart)
-                ->where('date', '<=', $todayEnd)
-                ->count();
-
-            $paidLessons = $student->lessons()
-                ->where('is_deleted', 0)
-                ->where('is_future', 0)
-                ->where('date', '>=', $monthStart)
-                ->where('date', '<=', $todayEnd)
-                ->where('is_payed', 1)
-                ->count();
+            $stat = $monthStats->get($student->id);
 
             $students[] = [
                 'id'           => $student->id,
                 'slug'         => $student->slug,
                 'name'         => $student->name,
                 'studentClass' => $student->current_class,
-                'totalLessons' => $totalLessons,
-                'paidLessons'  => $paidLessons,
+                'totalLessons' => (int) ($stat->total ?? 0),
+                'paidLessons'  => (int) ($stat->paid ?? 0),
                 'gender'       => $student->gender,
                 'color'        => $student->color,
             ];
@@ -207,7 +226,7 @@ final class DashboardController
             ];
         }
 
-        return Inertia::render('Dashboard', [
+        return [
             'userName'           => $user->name ?: $user->email,
             'nextLesson'         => $nextLesson,
             'students'           => $students,
@@ -215,6 +234,6 @@ final class DashboardController
             'earningsByMonth'    => $earningsByMonth,
             'totalEarnings'      => $totalEarnings,
             'todaysLessonsCount' => $todaysLessonsCount,
-        ]);
+        ];
     }
 }

@@ -8,7 +8,9 @@ use App\Model\PromoBanner;
 use App\Services\FeedbackBotService;
 use App\Services\VkIdService;
 use App\Services\YandexIdService;
+use App\Support\CacheKeys;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Middleware;
 
 final class HandleInertiaRequests extends Middleware
@@ -77,7 +79,7 @@ final class HandleInertiaRequests extends Middleware
                 ? PromoBanner::activePayloads()
                 : [],
             'locale'       => app()->getLocale(),
-            'translations' => fn (): array => trans('messages'),
+            'translations' => fn (): array => $this->translations(),
             'locales'      => collect(config('locales.available', []))
                 ->map(fn (string $label, string $code): array => ['code' => $code, 'label' => $label])
                 ->values()
@@ -95,5 +97,43 @@ final class HandleInertiaRequests extends Middleware
                 ],
             ],
         ];
+    }
+
+    /**
+     * Переводы текущей локали.
+     *
+     * Ключ включает подпись файла messages.php, поэтому после деплоя
+     * с новыми строками кэш обновляется сам.
+     *
+     * @return array<string, mixed>
+     */
+    private function translations(): array
+    {
+        $locale = (string) app()->getLocale();
+
+        return Cache::remember(
+            CacheKeys::langMessages($locale, $this->langSignature($locale)),
+            now()->addDay(),
+            fn (): array => (array) trans('messages'),
+        );
+    }
+
+    /**
+     * Подпись файла переводов: меняется при любом деплое с правкой строк.
+     */
+    private function langSignature(string $locale): string
+    {
+        $candidates = [
+            app()->langPath() . DIRECTORY_SEPARATOR . $locale . DIRECTORY_SEPARATOR . 'messages.php',
+            resource_path('lang' . DIRECTORY_SEPARATOR . $locale . DIRECTORY_SEPARATOR . 'messages.php'),
+        ];
+
+        foreach ($candidates as $path) {
+            if (is_file($path)) {
+                return filemtime($path) . '-' . filesize($path);
+            }
+        }
+
+        return 'unknown';
     }
 }
