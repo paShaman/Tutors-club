@@ -24,7 +24,7 @@ class AuthController extends Controller
     public function register(Request $request): RedirectResponse
     {
         $rules = [
-            'email'                 => 'required|email',
+            'email'                 => 'required|email:rfc,dns',
             'password'              => 'required',
             'password_confirmation' => 'required|same:password',
             'smart-token'           => 'required|string',
@@ -34,6 +34,7 @@ class AuthController extends Controller
         $messages = [
             'agreement.required' => lng('error.agreement'),
             'agreement.accepted' => lng('error.agreement'),
+            'email.email'        => lng('error.email_invalid'),
         ];
 
         $request->validate($rules, $messages);
