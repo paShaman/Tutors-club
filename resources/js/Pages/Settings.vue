@@ -439,10 +439,11 @@ function confirmTelegramUnlink(): void {
               variant="outline"
               size="sm"
               class="text-destructive hover:text-destructive"
+              :title="t('ui.settings.unlink')"
               @click="requestUnlink(key)"
             >
               <Unlink class="h-4 w-4" />
-              {{ t('ui.settings.unlink') }}
+              <span class="hidden sm:inline">{{ t('ui.settings.unlink') }}</span>
             </Button>
           </div>
 
@@ -496,10 +497,11 @@ function confirmTelegramUnlink(): void {
             variant="outline"
             size="sm"
             class="text-destructive hover:text-destructive"
+            :title="t('ui.settings.unlink')"
             @click="showTelegramUnlinkConfirm = true"
           >
             <Unlink class="h-4 w-4" />
-            {{ t('ui.settings.unlink') }}
+            <span class="hidden sm:inline">{{ t('ui.settings.unlink') }}</span>
           </Button>
         </div>
 

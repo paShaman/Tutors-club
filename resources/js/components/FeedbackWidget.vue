@@ -183,9 +183,10 @@ function submit(): void {
                   target="_blank"
                   rel="noopener"
                   class="inline-flex shrink-0 items-center gap-1.5 text-xs font-medium text-primary hover:underline"
+                  :title="t('ui.feedback.open_bot')"
                 >
                   <Send class="h-3.5 w-3.5" />
-                  {{ t('ui.feedback.open_bot') }}
+                  <span class="hidden sm:inline">{{ t('ui.feedback.open_bot') }}</span>
                 </a>
               </div>
             </div>
