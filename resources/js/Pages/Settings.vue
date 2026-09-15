@@ -11,6 +11,8 @@ import AppLayout from '@/Layouts/AppLayout.vue'
 import AvatarPicker from '@/components/ui/AvatarPicker.vue'
 import VkIdAuth from '@/components/social/VkIdAuth.vue'
 import YandexAuth from '@/components/social/YandexAuth.vue'
+import VkIcon from '@/components/social/VkIcon.vue'
+import YandexIcon from '@/components/social/YandexIcon.vue'
 import ConfirmDialog from '@/components/popups/ConfirmDialog.vue'
 import { providerMeta } from '@/lib/social'
 import { useI18n } from '@/lib/i18n'
@@ -388,7 +390,9 @@ function cancelUnlink(): void {
                 class="flex h-9 w-9 items-center justify-center rounded-lg"
                 :class="providerMeta(key).badgeClass"
               >
-                <span class="text-xs font-bold">{{ providerMeta(key).badge }}</span>
+                <VkIcon v-if="key === 'vkontakte'" class="h-4 w-4" />
+                <YandexIcon v-else-if="key === 'yandex'" class="h-4 w-2" />
+                <span v-else class="text-xs font-bold">{{ providerMeta(key).badge }}</span>
               </div>
               <div>
                 <p class="text-sm font-medium text-foreground">{{ t(providerMeta(key).labelKey) }}</p>

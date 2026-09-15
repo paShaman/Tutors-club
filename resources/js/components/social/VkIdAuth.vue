@@ -23,11 +23,13 @@ const props = withDefaults(defineProps<{
 })
 
 const page = usePage<SharedProps>()
-const { t } = useI18n()
+const { t, locale } = useI18n()
 
 const container = ref<HTMLElement | null>(null)
 const error = ref('')
 const processing = ref(false)
+
+const vkLang = computed(() => (locale.value === 'ru' ? VKID.Languages.RUS : VKID.Languages.ENG))
 
 const vk = computed(() => page.props.social?.find((p) => p.key === 'vkontakte') ?? null)
 const enabled = computed(() => Boolean(vk.value?.configured && vk.value?.app && vk.value?.redirectUrl))
@@ -94,7 +96,14 @@ onMounted(() => {
     .on(VKID.OneTapInternalEvents.LOGIN_SUCCESS, handleLoginSuccess)
     .render({
       container: container.value,
-      showAlternativeLogin: true,
+      // Размеры и скругление совпадают с кнопкой Яндекс ID (h-11 / rounded-xl)
+      styles: { width: 0, height: 44, borderRadius: 12 },
+      skin: VKID.OneTapSkin.Primary,
+      scheme: VKID.Scheme.LIGHT,
+      lang: vkLang.value,
+      contentId: props.register ? VKID.OneTapContentId.SIGN_UP : VKID.OneTapContentId.SIGN_IN,
+      // При привязке — одна кнопка, идентичная кнопке Яндекс ID; при входе — альтернативный вход
+      showAlternativeLogin: props.mode !== 'link',
     })
 })
 

@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import { usePage } from '@inertiajs/vue3'
 import type { SharedProps } from '@/types'
 import { useI18n } from '@/lib/i18n'
+import YandexIcon from '@/components/social/YandexIcon.vue'
 
 const { t } = useI18n()
 
@@ -69,12 +70,10 @@ function start(): void {
   <div v-if="enabled" class="w-full">
     <button
       type="button"
-      class="flex w-full cursor-pointer items-center justify-center gap-3 rounded-xl border border-border bg-white px-4 py-3 text-sm font-medium text-foreground shadow-sm transition-all duration-200 hover:border-[#FC3F1D]/40 hover:shadow-md active:scale-[0.98]"
+      class="flex h-11 w-full cursor-pointer items-center justify-center gap-2.5 rounded-xl bg-[#FC3F1D] px-4 text-sm font-medium text-white shadow-sm transition-all duration-200 hover:bg-[#E5351A] active:scale-[0.98]"
       @click="start"
     >
-      <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#FC3F1D] text-xs font-bold text-white">
-        Я
-      </span>
+      <YandexIcon class="h-5 w-2.5 shrink-0" />
       <span>{{ label }}</span>
     </button>
     <p v-if="error" class="field-error">{{ error }}</p>
