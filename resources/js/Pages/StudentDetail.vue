@@ -822,7 +822,7 @@ function formatTopicDate(dateStr: string | null): string {
                                 'inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-sm font-bold',
                                 lesson.is_payed
                                   ? 'bg-emerald-100 text-emerald-700'
-                                  : lesson.is_future
+                                  : !lesson.is_future
                                     ? 'bg-red-50 text-red-600'
                                     : 'bg-foreground/5 text-foreground',
                               )"

@@ -24,7 +24,27 @@ final class CalendarController extends Controller
      */
     public function index(): Response
     {
-        $students = Auth::user()->students()->get()->keyBy('id')->toArray();
+        $user = Auth::user();
+        $userId = (int) $user->id;
+
+        // Пропсы страницы меняются только вместе с данными пользователя (ученики,
+        // предметы, деревья тем, статусы тем), поэтому кэшируются по версии данных —
+        // как дашборд и список уроков.
+        $props = Cache::remember(
+            CacheKeys::calendarPage($userId, CacheKeys::dataVersion($userId), (string) app()->getLocale()),
+            now()->addMinutes(CacheKeys::TTL_PAGE_MINUTES),
+            fn (): array => $this->buildIndexPayload($user),
+        );
+
+        return Inertia::render('Calendar', $props);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function buildIndexPayload(User $user): array
+    {
+        $students = $user->students()->get()->keyBy('id')->toArray();
 
         // Remove deleted students
         $activeStudents = [];
@@ -50,16 +70,16 @@ final class CalendarController extends Controller
 
         $subjectCodes = Subject::codes();
 
-        return Inertia::render('Calendar', [
+        return [
             'students'          => $activeStudents,
             'lessonsSubjects'   => $subjectCodes,
             'subjectNames'      => Subject::nameMap(),
-            'topicTree'         => Topic::treesBySubject((int) Auth::id(), $subjectCodes),
+            'topicTree'         => Topic::treesBySubject((int) $user->id, $subjectCodes),
             'topicStatuses'     => StudentTopic::statusMapForStudents(array_keys($students)),
             'defaultPrice'      => config('lesson.default_price'),
             'defaultDuration'   => config('lesson.default_duration'),
             'defaultDate'       => date('Y-m-d'),
-        ]);
+        ];
     }
 
     /**

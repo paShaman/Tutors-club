@@ -267,9 +267,17 @@ final class LessonController extends Controller
 
         if (!empty($post['lesson_id'])) {
             $str = 'edit_lesson';
-            $lessonId = $post['lesson_id'];
 
-            $result = (new Lesson())->editLesson($lessonId, $params);
+            $ownedLesson = $this->ownedLesson((int) $post['lesson_id']);
+
+            if ($ownedLesson === null) {
+                return back()->with('error', lng('error.no_access'))->withInput();
+            }
+
+            // Статус темы пишем ученику самого урока, а не тому, что пришёл в запросе.
+            $studentId = (int) $ownedLesson->student_id;
+
+            $result = (new Lesson())->editLesson((int) $post['lesson_id'], $params);
         } else {
             $user = Auth::user();
 
@@ -277,7 +285,14 @@ final class LessonController extends Controller
                 return back()->with('error', lng('error.tariff_lessons_limit'))->withInput();
             }
 
-            $student = Student::findOrFail($post['lesson_student_id']);
+            // Урок можно добавить только своему ученику.
+            $student = $user->students()->where('students.id', (int) $post['lesson_student_id'])->first();
+
+            if ($student === null) {
+                return back()->with('error', lng('error.no_access'))->withInput();
+            }
+
+            $studentId = (int) $student->id;
 
             $result = $student->addLesson($params);
         }
@@ -290,7 +305,7 @@ final class LessonController extends Controller
 
         if ($statusTopicId !== null) {
             $this->applyTopicStatus(
-                (int) $post['lesson_student_id'],
+                $studentId,
                 (int) $statusTopicId,
                 (string) ($post['lesson_topic_status'] ?? 'in_progress'),
                 (string) ($post['lesson_date'] ?? date('Y-m-d')),
@@ -354,6 +369,24 @@ final class LessonController extends Controller
 
         $studentTopic->status = StudentTopic::STATUS_IN_PROGRESS;
         $studentTopic->save();
+    }
+
+    /**
+     * Урок, принадлежащий ученику текущего пользователя (иначе null).
+     */
+    private function ownedLesson(int $lessonId): ?Lesson
+    {
+        return Lesson::where('id', $lessonId)
+            ->whereIn('student_id', Auth::user()->students()->select('students.id'))
+            ->first();
+    }
+
+    /**
+     * Урок принадлежит ученику текущего пользователя.
+     */
+    private function ownsLesson(int $lessonId): bool
+    {
+        return $this->ownedLesson($lessonId) !== null;
     }
 
     /**
@@ -435,6 +468,10 @@ final class LessonController extends Controller
             return back()->withErrors($validator)->withInput();
         }
 
+        if (!$this->ownsLesson((int) $post['lesson_id'])) {
+            return back()->with('error', lng('error.no_access'));
+        }
+
         $result = (new Lesson())->deleteLesson($post['lesson_id']);
 
         if (empty($result)) {
@@ -461,6 +498,10 @@ final class LessonController extends Controller
 
         if ($validator->fails()) {
             return back()->withErrors($validator)->withInput();
+        }
+
+        if (!$this->ownsLesson((int) $post['lesson_id'])) {
+            return back()->with('error', lng('error.no_access'));
         }
 
         $result = (new Lesson())->payLesson($post['lesson_id']);

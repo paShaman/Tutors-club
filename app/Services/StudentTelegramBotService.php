@@ -192,6 +192,8 @@ final class StudentTelegramBotService
                 return;
             }
 
+            // /start начинает диалог заново: незавершённый черновик урока больше не нужен.
+            $this->clearWizard($user);
             $this->applyLocale($user);
             $this->sendMessage($chatId, lng('telegram.greeting', ['help' => lng('telegram.help')]));
 
@@ -720,7 +722,9 @@ final class StudentTelegramBotService
             'date'       => $date->toDateString(),
             'time'       => $time,
             'is_payed'   => 0,
-            'is_future'  => $date->gte(Carbon::today()) ? 1 : 0,
+            // Запланированным считаем только урок на будущую дату: урок на сегодня
+            // бот добавляет уже по факту, иначе он навсегда выпадет из статистики.
+            'is_future'  => $date->gt(Carbon::today()) ? 1 : 0,
             'comment'    => $comment,
             'is_deleted' => 0,
         ]);
@@ -1348,12 +1352,13 @@ final class StudentTelegramBotService
      */
     private function parseCommand(string $text): array
     {
-        if ($text === '') {
+        // Команда — только текст со слэшем: обычное сообщение («start», имя ученика,
+        // комментарий к уроку) не должно запускать команду.
+        if (! str_starts_with($text, '/')) {
             return ['', ''];
         }
 
-        $withoutSlash = str_starts_with($text, '/') ? mb_substr($text, 1) : $text;
-        $parts = preg_split('/\s+/u', trim($withoutSlash)) ?: [];
+        $parts = preg_split('/\s+/u', trim(mb_substr($text, 1))) ?: [];
         $command = mb_strtolower((string) array_shift($parts));
 
         // /help@bot_name → help

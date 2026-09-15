@@ -189,7 +189,7 @@ function deleteStudent(student: any) {
 
   <div class="space-y-6 animate-fade-up">
     <!-- Page header -->
-    <div class="flex items-center justify-between flex-wrap gap-4">
+    <div class="page-header">
       <div class="flex items-center gap-4">
         <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500/10">
           <GraduationCap class="h-6 w-6 text-emerald-600" />
@@ -204,15 +204,19 @@ function deleteStudent(student: any) {
         </div>
       </div>
 
-      <div class="flex items-center gap-3">
-        <Button variant="outline" @click="showDeleted = !showDeleted">
+      <div class="page-header-actions">
+        <Button
+          variant="outline"
+          :title="showDeleted ? t('ui.students.active') : t('ui.students.deleted')"
+          @click="showDeleted = !showDeleted"
+        >
           <Users v-if="showDeleted" class="h-4 w-4" />
           <Trash2 v-else class="h-4 w-4" />
-          {{ showDeleted ? t('ui.students.active') : t('ui.students.deleted') }}
+          <span class="hidden sm:inline">{{ showDeleted ? t('ui.students.active') : t('ui.students.deleted') }}</span>
         </Button>
-        <Button @click="requestAddModal">
+        <Button :title="t('ui.students.add')" @click="requestAddModal">
           <UserPlus class="h-4 w-4" />
-          {{ t('ui.students.add') }}
+          <span class="hidden sm:inline">{{ t('ui.students.add') }}</span>
         </Button>
       </div>
     </div>

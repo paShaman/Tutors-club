@@ -118,21 +118,34 @@ final class CacheKeys
     }
 
     /**
-     * Текущая версия данных пользователя. 0 означает «кэша ещё нет».
+     * Текущая версия данных пользователя.
+     *
+     * При промахе версия не просто возвращается нулём, а сразу записывается
+     * меткой времени в миллисекундах: если ключ вытеснится из кэша (Redis
+     * maxmemory), читатели не вернутся к старым записям «нулевой» версии,
+     * которые ещё живут по своему TTL.
      */
     public static function dataVersion(int $userId): int
     {
-        $value = Cache::get(self::dataVersionKey($userId));
+        $key = self::dataVersionKey($userId);
+        $value = Cache::get($key);
 
-        return is_numeric($value) ? (int) $value : 0;
+        if ($value !== null) {
+            return (int) $value;
+        }
+
+        $version = (int) floor(microtime(true) * 1000);
+        Cache::forever($key, $version);
+
+        return $version;
     }
 
     /**
      * Инвалидирует все пользовательские ключи: старые версии истекают по TTL.
      *
-     * Первое значение — метка времени в миллисекундах, а не счётчик с нуля:
-     * если ключ версии когда-нибудь вытеснится из кэша, новая версия всё равно
-     * окажется больше прежней и старые записи не «оживут».
+     * Версия — метка времени в миллисекундах, а не счётчик с нуля: даже если
+     * ключ версии когда-нибудь вытеснится из кэша, новая версия окажется
+     * больше прежней и старые записи не «оживут».
      */
     public static function bumpData(int $userId): void
     {
@@ -163,6 +176,12 @@ final class CacheKeys
     public static function calendarEvents(int $userId, int $version, string $start, string $end): string
     {
         return 'calendar.' . $userId . '.v' . $version . '.' . $start . '.' . $end;
+    }
+
+    /** Пропсы страницы календаря (ученики, предметы, деревья тем, статусы тем). */
+    public static function calendarPage(int $userId, int $version, string $locale): string
+    {
+        return 'calendar.page.' . $userId . '.v' . $version . '.' . $locale;
     }
 
     /**

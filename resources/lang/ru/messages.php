@@ -39,6 +39,7 @@ return [
         'edit_student'      => 'Ученик не изменен',
         'add_lesson'        => 'Урок не добавлен',
         'del_lesson'        => 'Урок не удален',
+        'edit_lesson'       => 'Урок не изменен',
         'bad_image'         => 'Не удалось обработать изображение',
         'social_login'      => 'Не удалось войти через :provider',
         'social_not_registered' => 'Этот :provider не привязан к аккаунту. Зарегистрируйтесь через :provider на странице регистрации или войдите по email',

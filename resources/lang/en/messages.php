@@ -39,6 +39,7 @@ return [
         'edit_student' => 'Student was not updated',
         'add_lesson' => 'Lesson was not added',
         'del_lesson' => 'Lesson was not deleted',
+        'edit_lesson' => 'Lesson was not updated',
         'bad_image' => 'Could not process the image',
         'social_login' => 'Could not log in via :provider',
         'social_not_registered' => 'This :provider is not linked to an account. Register via :provider on the registration page or log in with email',

@@ -15,6 +15,7 @@ import {
   Trash2,
   Coins,
   Clock,
+  Calendar,
   ChevronDown,
   ChevronRight,
   Timer,
@@ -542,7 +543,7 @@ function formatDatePayed(dateStr: string | null): string {
 
   <div class="space-y-6 animate-fade-up">
     <!-- Page header -->
-    <div class="flex items-center justify-between flex-wrap gap-4">
+    <div class="page-header">
       <div class="flex items-center gap-4">
         <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-500/10">
           <BookOpen class="h-6 w-6 text-violet-600" />
@@ -557,7 +558,7 @@ function formatDatePayed(dateStr: string | null): string {
         </div>
       </div>
 
-      <div class="flex items-center gap-2.5 flex-wrap justify-end">
+      <div class="page-header-actions">
         <Select
           v-model="selectedStudentId"
           :options="studentFilterOptions"
