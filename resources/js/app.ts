@@ -14,17 +14,27 @@ if (metrikaId) {
     })
 }
 
+// Стартовая заставка отрисована в app.blade.php и живёт до первого монтирования приложения
+function removeSplash(): void {
+    document.getElementById('app-splash')?.remove()
+}
+
 createInertiaApp({
     // Резолв страниц генерирует @inertiajs/vite: ленивая загрузка по чанкам
     pages: './Pages',
     title: (title) => (title ? `${title} — ${appName}` : appName),
+    // Значение совпадает с токеном @theme --color-primary (resources/css/app.css)
+    progress: { color: 'hsl(252 87% 67%)' },
     setup({ el, App, props, plugin }) {
         if (!el) {
+            removeSplash();
             return;
         }
 
         createApp({ render: () => [h(App, props), h(Toaster)] })
             .use(plugin)
             .mount(el);
+
+        removeSplash();
     },
 });

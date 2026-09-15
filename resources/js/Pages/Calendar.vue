@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { Head, usePage, router } from '@inertiajs/vue3'
-import { ChevronLeft, ChevronRight } from 'lucide-vue-next'
+import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-vue-next'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import Card from '@/components/ui/Card.vue'
 import Button from '@/components/ui/Button.vue'
@@ -19,6 +19,7 @@ import type { LessonFormData, TopicNode } from '@/components/popups/LessonFormPo
 import ConfirmDialog from '@/components/popups/ConfirmDialog.vue'
 import { useToast } from '@/lib/toast'
 import { useI18n } from '@/lib/i18n'
+import { cn } from '@/lib/utils'
 import type { TariffInfo } from '@/types'
 
 // Соответствие кода языка и локали FullCalendar (список расширяется вместе с config/locales.php)
@@ -51,6 +52,10 @@ const { t, locale } = useI18n()
 
 const calendarRef = ref<InstanceType<typeof FullCalendar> | null>(null)
 
+// FullCalendar сам ходит за событиями (events ниже), мимо Inertia, поэтому о загрузке
+// узнаём только из его колбэка loading.
+const isEventsLoading = ref(false)
+
 const fullCalendarLocale = computed(() => FC_LOCALES[locale.value] ?? ruLocale)
 
 // Заголовок и активный период синхронизируем с самим календарём через datesSet.
@@ -70,6 +75,9 @@ const calendarOptions = computed<CalendarOptions>(() => ({
   locale: fullCalendarLocale.value,
   headerToolbar: false,
   events: '/calendar/events',
+  loading: (isLoading: boolean) => {
+    isEventsLoading.value = isLoading
+  },
   eventClick: handleEventClick,
   datesSet: (arg) => {
     calendarTitle.value = arg.view.title
@@ -229,9 +237,17 @@ function handleLessonDelete() {
           </Button>
         </div>
 
-        <h2 class="order-2 w-full text-center text-lg font-semibold tracking-tight text-foreground lg:order-none lg:w-auto lg:flex-1">
-          {{ calendarTitle }}
-        </h2>
+        <div class="order-2 flex w-full items-center justify-center gap-2 lg:order-none lg:w-auto lg:flex-1">
+          <h2 class="text-lg font-semibold tracking-tight text-foreground">
+            {{ calendarTitle }}
+          </h2>
+          <Loader2
+            v-if="isEventsLoading"
+            class="h-4 w-4 shrink-0 animate-spin text-muted-foreground"
+            role="img"
+            :aria-label="t('ui.common.loading')"
+          />
+        </div>
 
         <Tabs
           class="order-3 lg:order-none"
@@ -243,7 +259,7 @@ function handleLessonDelete() {
 
       <FullCalendar
         ref="calendarRef"
-        class="min-h-0 flex-1"
+        :class="cn('min-h-0 flex-1 transition-opacity duration-200', isEventsLoading && 'opacity-60 delay-200')"
         :options="calendarOptions"
       />
     </Card>

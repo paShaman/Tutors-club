@@ -20,6 +20,7 @@ import {
   Timer,
   Star,
   FilterX,
+  Loader2,
 } from 'lucide-vue-next'
 import LessonFormPopup from '@/components/popups/LessonFormPopup.vue'
 import type { LessonFormData, TopicNode } from '@/components/popups/LessonFormPopup.vue'
@@ -157,6 +158,8 @@ function applyFilters() {
     preserveState: true,
     preserveScroll: true,
     only: ['sortedLessons', 'selectedStudentId', 'selectedSubject'],
+    onStart: () => { isFiltering.value = true },
+    onFinish: () => { isFiltering.value = false },
   })
 }
 
@@ -168,6 +171,10 @@ function clearFilters() {
 }
 
 const hasFilters = computed(() => selectedStudentId.value !== null || selectedSubject.value !== null)
+
+// Смена фильтра — это обычный сетевой переход (only), а выглядит как локальный фильтр:
+// пока список остаётся прежним, показываем, что он обновляется.
+const isFiltering = ref(false)
 
 const monthNames = computed(() => {
   const formatter = new Intl.DateTimeFormat(intlLocale.value, { month: 'long' })
@@ -583,7 +590,21 @@ function formatDatePayed(dateStr: string | null): string {
     </div>
 
     <!-- Years -->
-    <div v-if="years.length" class="space-y-4">
+    <div
+      v-if="years.length"
+      :class="cn('relative space-y-4 transition-opacity duration-200', isFiltering && 'opacity-60 pointer-events-none delay-200')"
+      :aria-busy="isFiltering"
+    >
+      <!-- Обновление списка после смены фильтра: оверлей без v-if, чтобы появление
+           тоже шло с задержкой delay-200 и не мигало на быстрых ответах -->
+      <div
+        class="pointer-events-none absolute inset-0 z-10 flex items-start justify-center pt-16 transition-opacity duration-200"
+        :class="isFiltering ? 'opacity-100 delay-200' : 'opacity-0'"
+        aria-hidden="true"
+      >
+        <Loader2 class="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+
       <div v-for="yearData in years" :key="yearData.year">
         <!-- Year header -->
         <button
