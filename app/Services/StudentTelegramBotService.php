@@ -771,8 +771,6 @@ final class StudentTelegramBotService
         // Бот пишет в те же таблицы, что и кабинет, поэтому обязан гасить кэш.
         UserCache::flush($user);
 
-        $this->clearWizard($user);
-
         // Кнопка отмены — на случай, если урок добавили по ошибке (из бота удалить иначе негде).
         $keyboard = [
             [
@@ -780,7 +778,7 @@ final class StudentTelegramBotService
             ],
         ];
 
-        $this->sendMessage($chatId, lng('telegram.lesson_added', [
+        $text = lng('telegram.lesson_added', [
             'name'     => $student->name,
             'subject'  => $subject->localizedName(),
             'date'     => $date->format('d.m.Y'),
@@ -789,7 +787,44 @@ final class StudentTelegramBotService
             'duration' => $duration,
             'paid'     => $isPaid ? "\n" . lng('telegram.lesson_paid_yes') : '',
             'comment'  => $comment !== '' ? "\n📝 " . $comment : '',
-        ]), $keyboard);
+        ]);
+
+        if ($this->sendMessage($chatId, $text, $keyboard)) {
+            $this->clearWizard($user);
+
+            return;
+        }
+
+        // Ответ не ушёл (сеть до Telegram): вместо потери подтверждения оставляем
+        // черновик-«квитанцию», чтобы повторное нажатие кнопки переотправило
+        // подтверждение, а не создало второй урок.
+        $wizard['step'] = 'created';
+        $wizard['lesson_id'] = (int) $lesson->id;
+        $wizard['text'] = $text;
+        $wizard['keyboard'] = $keyboard;
+        $this->saveWizard($user, $wizard);
+    }
+
+    /**
+     * Повторная отправка подтверждения по уже созданному уроку (дубля не будет).
+     *
+     * @param  array<string, mixed>  $wizard
+     */
+    private function resendCreated(User $user, string $chatId, array $wizard): void
+    {
+        $text = (string) ($wizard['text'] ?? '');
+        $keyboard = is_array($wizard['keyboard'] ?? null) ? $wizard['keyboard'] : [];
+
+        if ($text === '') {
+            $this->clearWizard($user);
+            $this->sendMessage($chatId, lng('telegram.lesson_wizard_expired'));
+
+            return;
+        }
+
+        if ($this->sendMessage($chatId, $text, $keyboard)) {
+            $this->clearWizard($user);
+        }
     }
 
     /**
@@ -804,6 +839,12 @@ final class StudentTelegramBotService
         }
 
         switch ((string) ($wizard['step'] ?? '')) {
+            // Урок уже создан, подтверждение не ушло — переотправляем его.
+            case 'created':
+                $this->resendCreated($user, $chatId, $wizard);
+
+                return true;
+
             case 'datetime':
                 [$date, $time] = $this->parseDateTimeInput($text);
 
@@ -926,6 +967,13 @@ final class StudentTelegramBotService
 
         if ($wizard === null) {
             $this->sendMessage($chatId, lng('telegram.lesson_wizard_expired'));
+
+            return;
+        }
+
+        // Урок уже создан, а подтверждение не ушло — повторяем отправку.
+        if (($wizard['step'] ?? '') === 'created') {
+            $this->resendCreated($user, $chatId, $wizard);
 
             return;
         }
@@ -1258,6 +1306,7 @@ final class StudentTelegramBotService
         for ($attempt = 1; $attempt <= self::API_ATTEMPTS; $attempt++) {
             try {
                 $response = Http::asJson()
+                    ->withOptions($this->proxyOptions())
                     ->connectTimeout(self::CONNECT_TIMEOUT)
                     ->timeout(10)
                     ->post($url, $payload);
@@ -1775,5 +1824,21 @@ final class StudentTelegramBotService
     private function token(): string
     {
         return (string) config('services.telegram_students.bot_token');
+    }
+
+    /**
+     * Опции Guzzle для запроса к Telegram.
+     *
+     * Прокси не задан — опция не передаётся вовсе: соединение идёт напрямую
+     * ровно так же, как до появления прокси (и не перебивает переменные
+     * окружения хостинга вроде HTTPS_PROXY, которые читает сам Guzzle).
+     *
+     * @return array<string, mixed>
+     */
+    private function proxyOptions(): array
+    {
+        $proxy = trim((string) config('services.telegram_students.proxy'));
+
+        return $proxy !== '' ? ['proxy' => $proxy] : [];
     }
 }

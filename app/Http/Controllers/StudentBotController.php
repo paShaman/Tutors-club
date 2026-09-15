@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Services\StudentTelegramBotService;
+use App\Support\CacheKeys;
 use App\Support\LogScrubber;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
@@ -39,6 +41,12 @@ final class StudentBotController extends Controller
             return response()->json(['ok' => true]);
         }
 
+        // Telegram повторяет апдейт, если ответ не успел уйти: обрабатываем каждый
+        // update_id ровно один раз, иначе повторная доставка создаст дубликаты.
+        if (! $this->markHandled($request)) {
+            return response()->json(['ok' => true]);
+        }
+
         try {
             $this->bot->handleUpdate($request->all());
         } catch (Throwable $e) {
@@ -51,5 +59,23 @@ final class StudentBotController extends Controller
         }
 
         return response()->json(['ok' => true]);
+    }
+
+    /**
+     * Отмечает апдейт обработанным. false — он уже приходил (повтор доставки).
+     */
+    private function markHandled(Request $request): bool
+    {
+        $updateId = (int) $request->input('update_id');
+
+        if ($updateId <= 0) {
+            return true;
+        }
+
+        return Cache::add(
+            CacheKeys::telegramUpdate('students', $updateId),
+            true,
+            now()->addMinutes(CacheKeys::TTL_TELEGRAM_UPDATE_MINUTES),
+        );
     }
 }

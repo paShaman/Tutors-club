@@ -63,6 +63,9 @@ return [
         'chat_id'        => env('TELEGRAM_CHAT_ID'),
         'bot_username'   => env('TELEGRAM_BOT_USERNAME'),
         'webhook_secret' => env('TELEGRAM_WEBHOOK_SECRET'),
+        // Прокси для исходящих запросов: с части хостингов api.telegram.org
+        // недоступен. Формат: http://user:pass@host:port или socks5h://host:port.
+        'proxy'          => env('TELEGRAM_PROXY'),
     ],
 
     // Отдельный бот управления учениками (личный кабинет прямо в Telegram).
@@ -70,6 +73,7 @@ return [
         'bot_token'      => env('TELEGRAM_STUDENTS_BOT_TOKEN'),
         'bot_username'   => env('TELEGRAM_STUDENTS_BOT_USERNAME'),
         'webhook_secret' => env('TELEGRAM_STUDENTS_WEBHOOK_SECRET'),
+        'proxy'          => env('TELEGRAM_STUDENTS_PROXY', env('TELEGRAM_PROXY')),
     ],
 
     'max' => [
@@ -77,6 +81,7 @@ return [
         'owner_id'       => env('MAX_OWNER_ID'),
         'bot_username'   => env('MAX_BOT_USERNAME'),
         'webhook_secret' => env('MAX_WEBHOOK_SECRET'),
+        'proxy'          => env('MAX_PROXY'),
     ],
 
     // Основной бот обратной связи: telegram (по умолчанию) или max.

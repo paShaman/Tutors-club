@@ -150,9 +150,12 @@ final class FeedbackBotService
         $token = $this->telegramToken();
 
         try {
-            $response = Http::timeout(10)->get("https://api.telegram.org/bot{$token}/getFile", [
-                'file_id' => $fileId,
-            ]);
+            $response = Http::withOptions($this->telegramProxyOptions())
+                ->connectTimeout(5)
+                ->timeout(10)
+                ->get("https://api.telegram.org/bot{$token}/getFile", [
+                    'file_id' => $fileId,
+                ]);
 
             $path = $response->json('result.file_path');
 
@@ -187,6 +190,7 @@ final class FeedbackBotService
 
         try {
             $response = Http::asJson()
+                ->withOptions($this->telegramProxyOptions())
                 ->connectTimeout(5)
                 ->timeout(10)
                 ->post("https://api.telegram.org/bot{$token}/sendMessage", [
@@ -207,11 +211,13 @@ final class FeedbackBotService
 
             foreach ($photos as $photo) {
                 $sent = $photo instanceof UploadedFile
-                    ? Http::connectTimeout(5)
+                    ? Http::withOptions($this->telegramProxyOptions())
+                        ->connectTimeout(5)
                         ->timeout(30)
                         ->attach('photo', (string) file_get_contents($photo->getPathname()), $photo->getClientOriginalName())
                         ->post("https://api.telegram.org/bot{$token}/sendPhoto", ['chat_id' => $chatId])
                     : Http::asJson()
+                        ->withOptions($this->telegramProxyOptions())
                         ->connectTimeout(5)
                         ->timeout(30)
                         ->post("https://api.telegram.org/bot{$token}/sendPhoto", [
@@ -303,6 +309,7 @@ final class FeedbackBotService
         for ($attempt = 1; $attempt <= $attempts; $attempt++) {
             $response = Http::withHeaders(['Authorization' => $token])
                 ->asJson()
+                ->withOptions($this->maxProxyOptions())
                 ->connectTimeout(5)
                 ->timeout(15)
                 ->post($url, $body);
@@ -336,6 +343,7 @@ final class FeedbackBotService
     private function maxUploadImage(string $token, UploadedFile $photo): ?array
     {
         $slot = Http::withHeaders(['Authorization' => $token])
+            ->withOptions($this->maxProxyOptions())
             ->connectTimeout(5)
             ->timeout(15)
             ->post(self::MAX_API . '/uploads?type=image');
@@ -351,7 +359,9 @@ final class FeedbackBotService
             return null;
         }
 
-        $uploaded = Http::timeout(30)
+        $uploaded = Http::withOptions($this->maxProxyOptions())
+            ->connectTimeout(5)
+            ->timeout(30)
             ->attach('data', (string) file_get_contents($photo->getPathname()), $photo->getClientOriginalName())
             ->post($uploadUrl);
 
@@ -371,6 +381,40 @@ final class FeedbackBotService
     private function telegramToken(): string
     {
         return (string) config('services.telegram.bot_token');
+    }
+
+    /**
+     * Опции Guzzle для api.telegram.org.
+     *
+     * Прокси не задан — опция не передаётся вовсе: соединение идёт напрямую
+     * ровно так же, как до появления прокси (и не перебивает переменные
+     * окружения хостинга вроде HTTPS_PROXY, которые читает сам Guzzle).
+     *
+     * @return array<string, mixed>
+     */
+    private function telegramProxyOptions(): array
+    {
+        return $this->proxyOptions('services.telegram.proxy');
+    }
+
+    /**
+     * Опции Guzzle для MAX. По умолчанию пусто: MAX обычно доступен напрямую.
+     *
+     * @return array<string, mixed>
+     */
+    private function maxProxyOptions(): array
+    {
+        return $this->proxyOptions('services.max.proxy');
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function proxyOptions(string $key): array
+    {
+        $proxy = trim((string) config($key));
+
+        return $proxy !== '' ? ['proxy' => $proxy] : [];
     }
 
     private function maxToken(): string

@@ -26,6 +26,9 @@ final class CacheKeys
     /** Сколько минут живут тяжёлые страницы. */
     public const TTL_PAGE_MINUTES = 10;
 
+    /** Сколько минут помним обработанный апдейт Telegram (защита от повторов). */
+    public const TTL_TELEGRAM_UPDATE_MINUTES = 30;
+
     // ─── Справочник предметов ───────────────────────────────────────────
 
     public static function subjectCodes(): string
@@ -203,5 +206,16 @@ final class CacheKeys
     public static function telegramFile(string $fileId): string
     {
         return 'tg.file.' . md5($fileId);
+    }
+
+    /**
+     * Отметка «апдейт Telegram уже обработан».
+     *
+     * Telegram шлёт апдейт повторно, если вебхук не успел ответить: без такой
+     * отметки повторная доставка выполнит команду второй раз (дубликаты).
+     */
+    public static function telegramUpdate(string $bot, int $updateId): string
+    {
+        return 'tg.update.' . $bot . '.' . $updateId;
     }
 }
