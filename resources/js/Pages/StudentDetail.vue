@@ -15,7 +15,7 @@ import StudentFormPopup from '@/components/popups/StudentFormPopup.vue'
 import type { StudentFormData } from '@/components/popups/StudentFormPopup.vue'
 import ConfirmDialog from '@/components/popups/ConfirmDialog.vue'
 import { useToast } from '@/lib/toast'
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { cn } from '@/lib/utils'
 import { useI18n } from '@/lib/i18n'
 import {
@@ -120,7 +120,7 @@ interface TopicState {
   last_review_comment: string | null
 }
 
-const page = usePage<{
+type StudentDetailPageProps = {
   student: StudentDetailData
   summary: Summary
   sortedLessons: Record<number, YearGroup>
@@ -128,7 +128,9 @@ const page = usePage<{
   subjectNames: Record<string, string>
   topicsBySubject: Record<string, TopicNode[]>
   topicStates: TopicState[]
-}>()
+}
+
+const page = usePage<StudentDetailPageProps>()
 
 const toast = useToast()
 const { t, tp, intlLocale } = useI18n()
@@ -260,6 +262,17 @@ const subjects = computed<string[]>(() => page.props.subjects ?? [])
 
 const topicsSubject = ref<string>(page.props.subjects?.[0] ?? '')
 
+// При мгновенном переходе компонент монтируется с пустыми subjects, поэтому
+// первую вкладку выбираем, когда список предметов реально приехал.
+watch(
+  () => page.props.subjects,
+  (subjects) => {
+    if (!topicsSubject.value && subjects?.length) {
+      topicsSubject.value = subjects[0]
+    }
+  },
+)
+
 const stateMap = computed<Record<number, TopicState>>(() => {
   const map: Record<number, TopicState> = {}
   for (const state of page.props.topicStates ?? []) {
@@ -337,6 +350,67 @@ const topicsProgress = computed(() => {
   return { total, done }
 })
 
+function pad2(value: number): string {
+  return String(value).padStart(2, '0')
+}
+
+function todayAsDate(): string {
+  const now = new Date()
+  return `${now.getFullYear()}-${pad2(now.getMonth() + 1)}-${pad2(now.getDate())}`
+}
+
+/** Дата освоения по правилам PlanningController::setStatus. */
+function masteredAtFor(status: string, current: string | null, provided?: string): string | null {
+  if (status === 'mastered') {
+    return provided || current || todayAsDate()
+  }
+
+  if (status === 'not_started') {
+    return null
+  }
+
+  return current
+}
+
+/**
+ * Оптимистичная смена статуса темы: правит только topicStates, из которых
+ * страница строит stateMap; остальные пропсы от статуса не зависят.
+ */
+function applyTopicStatus(
+  props: StudentDetailPageProps,
+  topicId: number,
+  status: string,
+  masteredAt?: string,
+): Partial<StudentDetailPageProps> {
+  const states = props.topicStates ?? []
+  const index = states.findIndex((state) => state.topic_id === topicId)
+
+  if (index === -1) {
+    return {
+      topicStates: [
+        ...states,
+        {
+          topic_id: topicId,
+          status,
+          mastered_at: masteredAtFor(status, null, masteredAt),
+          last_reviewed_at: null,
+          reviews_count: 0,
+          last_review_comment: null,
+        },
+      ],
+    }
+  }
+
+  const next = [...states]
+  next[index] = {
+    ...next[index],
+    status,
+    mastered_at: masteredAtFor(status, next[index].mastered_at, masteredAt),
+  }
+
+  return { topicStates: next }
+}
+
 function setStatus(topicId: number, status: string): void {
   router.post('/student-topics/status', {
     student_id: student.value.id,
@@ -344,6 +418,7 @@ function setStatus(topicId: number, status: string): void {
     status,
   }, {
     preserveScroll: true,
+    optimistic: (props) => applyTopicStatus(props as unknown as StudentDetailPageProps, topicId, status),
     onError: () => toast.error(t('error.set_topic_status')),
   })
 }
@@ -358,6 +433,7 @@ function setMasteredAt(topicId: number, date: string): void {
     mastered_at: date,
   }, {
     preserveScroll: true,
+    optimistic: (props) => applyTopicStatus(props as unknown as StudentDetailPageProps, topicId, 'mastered', date),
     onError: () => toast.error(t('error.set_topic_status')),
   })
 }

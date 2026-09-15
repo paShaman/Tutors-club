@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { Camera, Loader2, Upload, Trash2 } from 'lucide-vue-next'
+import { useHttp } from '@inertiajs/vue3'
 import { cn } from '@/lib/utils'
-import { uploadAvatar } from '@/lib/upload'
 import UserAvatar from '@/components/ui/UserAvatar.vue'
 import ImageCropper from '@/components/ui/ImageCropper.vue'
 import { useI18n } from '@/lib/i18n'
@@ -27,10 +27,49 @@ const emit = defineEmits<{
   'update:modelValue': [value: string | null]
 }>()
 
+const MAX_FILE_SIZE = 5 * 1024 * 1024
+
+interface AvatarUploadResponse {
+  success: boolean
+  data: unknown
+}
+
+type AvatarForm = { avatar: File | null }
+
+// Загрузка идёт через встроенный клиент Inertia (useHttp): multipart, CSRF и
+// обработка 419 — на его стороне. Эндпоинт отвечает 200 и при ошибках валидации,
+// поэтому неуспех разбираем в onSuccess.
+const upload = useHttp<AvatarForm, AvatarUploadResponse>({ avatar: null })
+
 const inputRef = ref<HTMLInputElement | null>(null)
-const busy = ref(false)
+const busy = computed(() => upload.processing)
 const error = ref('')
 const cropSrc = ref<string | null>(null)
+
+function avatarUrlFrom(data: AvatarUploadResponse): string | null {
+  const raw = data?.data
+  if (raw && typeof raw === 'object' && typeof (raw as { avatar?: unknown }).avatar === 'string') {
+    return (raw as { avatar: string }).avatar
+  }
+  return null
+}
+
+function uploadErrorMessage(data: AvatarUploadResponse): string {
+  const raw = data?.data
+  if (typeof raw === 'string') {
+    return raw
+  }
+  if (raw && typeof raw === 'object') {
+    const messages = Object.values(raw as Record<string, unknown>)
+      .flatMap((value) => (Array.isArray(value) ? value : [value]))
+      .filter((value): value is string => typeof value === 'string')
+
+    if (messages.length) {
+      return messages.join('\n')
+    }
+  }
+  return t('ui.upload.failed')
+}
 
 const displaySrc = computed(() => (cropSrc.value ? null : props.modelValue) || null)
 
@@ -72,22 +111,39 @@ function onCropCancel() {
   cropSrc.value = null
 }
 
-async function onCropApply(blob: Blob) {
+function onCropApply(blob: Blob) {
   if (cropSrc.value) {
     URL.revokeObjectURL(cropSrc.value)
   }
   cropSrc.value = null
 
-  busy.value = true
   error.value = ''
-  try {
-    const url = await uploadAvatar(blob, 'avatar.jpg')
-    emit('update:modelValue', url)
-  } catch (err) {
-    error.value = err instanceof Error ? err.message : t('ui.avatar.upload_error')
-  } finally {
-    busy.value = false
+
+  if (blob.size > MAX_FILE_SIZE) {
+    error.value = t('ui.upload.too_large')
+    return
   }
+
+  upload.avatar = new File([blob], 'avatar.jpg', { type: blob.type || 'image/jpeg' })
+
+  upload.post('/avatar/upload', {
+    onSuccess: (data) => {
+      const url = avatarUrlFrom(data)
+
+      if (url) {
+        emit('update:modelValue', url)
+        return
+      }
+
+      error.value = uploadErrorMessage(data)
+    },
+    onHttpException: (response) => {
+      error.value = response.status === 419 ? t('ui.upload.session_expired') : t('ui.upload.failed')
+    },
+    onNetworkError: () => {
+      error.value = t('ui.upload.network')
+    },
+  })
 }
 </script>
 

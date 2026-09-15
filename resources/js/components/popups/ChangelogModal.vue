@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { X, GitFork, ChevronDown, Loader2 } from 'lucide-vue-next'
+import { useHttp } from '@inertiajs/vue3'
 import Button from '@/components/ui/Button.vue'
 import { useI18n } from '@/lib/i18n'
 import { useScrollLock } from '@/lib/scrollLock'
@@ -28,9 +29,17 @@ interface ChangelogVersion {
   categories: ChangelogCategory[]
 }
 
-const versions = ref<ChangelogVersion[]>([])
+interface ChangelogResponse {
+  changelog: ChangelogVersion[]
+}
+
+// Запрос к JSON-эндпоинту мимо page-visit: встроенный клиент Inertia сам
+// добавляет X-Requested-With и обрабатывает ошибки.
+const http = useHttp<Record<string, never>, ChangelogResponse>({})
+
+const versions = computed<ChangelogVersion[]>(() => http.response?.changelog ?? [])
 const openVersions = ref<Set<string>>(new Set())
-const loading = ref(false)
+const loading = computed(() => http.processing)
 const error = ref('')
 const loaded = ref(false)
 
@@ -41,36 +50,29 @@ const latestDateLabel = computed(() => {
   return v ? `${formatDate(v.date)}` : ''
 })
 
-async function loadChangelog() {
+function loadChangelog() {
   if (loading.value) {
     return
   }
 
-  loading.value = true
   error.value = ''
-  try {
-    const response = await fetch('/changelog', {
-      headers: {
-        Accept: 'application/json',
-        'X-Requested-With': 'XMLHttpRequest',
-      },
-    })
 
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`)
-    }
-
-    const data = await response.json()
-    versions.value = data.changelog ?? []
-    loaded.value = true
-    const first = versions.value[0]
-    openVersions.value = new Set(first ? [first.version] : [])
-  } catch (e: any) {
-    error.value = t('ui.changelog.load_error')
-    console.error(e)
-  } finally {
-    loading.value = false
-  }
+  http.get('/changelog', {
+    onSuccess: (data) => {
+      loaded.value = true
+      const first = data?.changelog?.[0]
+      openVersions.value = new Set(first ? [first.version] : [])
+    },
+    onError: () => {
+      error.value = t('ui.changelog.load_error')
+    },
+    onHttpException: () => {
+      error.value = t('ui.changelog.load_error')
+    },
+    onNetworkError: () => {
+      error.value = t('ui.changelog.load_error')
+    },
+  })
 }
 
 function isOpen(version: string): boolean {

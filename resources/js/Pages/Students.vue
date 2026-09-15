@@ -102,8 +102,41 @@ function openAddModal() {
   showAddModal.value = true
 }
 
+/**
+ * Пропсы-заглушки для мгновенного перехода в карточку ученика: страница сразу
+ * рисует шапку профиля, а статистика и дерево тем приезжают с ответом сервера.
+ */
+function instantStudentProps(student: any, shared: Record<string, unknown>): Record<string, unknown> {
+  return {
+    ...shared,
+    student: {
+      ...student,
+      description: student.description ?? null,
+      created_at: null,
+    },
+    summary: {
+      total_lessons: 0,
+      paid_lessons: 0,
+      earned: 0,
+      debt: 0,
+      total_minutes: 0,
+      first_lesson_date: null,
+      last_lesson_date: null,
+      lessons_planned: 0,
+    },
+    sortedLessons: {},
+    subjects: [],
+    subjectNames: {},
+    topicsBySubject: {},
+    topicStates: [],
+  }
+}
+
 function openStudent(student: any) {
-  router.get(`/students/${student.slug}`)
+  router.visit(`/students/${student.slug}`, {
+    component: 'StudentDetail',
+    pageProps: (_current, shared) => instantStudentProps(student, shared),
+  })
 }
 
 function openEditModal(student: any) {

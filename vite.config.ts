@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import laravel from 'laravel-vite-plugin'
+import inertia from '@inertiajs/vite'
 import tailwindcss from '@tailwindcss/vite'
 import path from 'path'
 
@@ -13,6 +14,9 @@ export default defineConfig({
             publicDirectory: 'public_html',
             refresh: true,
         }),
+        // Резолв страниц берёт на себя плагин (см. `pages` в resources/js/app.ts);
+        // SSR выключен и на сервере (config/inertia.php), и здесь.
+        inertia({ ssr: false }),
         vue({
             template: {
                 transformAssetUrls: {

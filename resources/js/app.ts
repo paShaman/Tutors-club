@@ -15,13 +15,14 @@ if (metrikaId) {
 }
 
 createInertiaApp({
+    // Резолв страниц генерирует @inertiajs/vite: ленивая загрузка по чанкам
+    pages: './Pages',
     title: (title) => (title ? `${title} — ${appName}` : appName),
-    resolve: (name) => {
-        const pages = import.meta.glob('./Pages/**/*.vue', { eager: true });
-        const page = pages[`./Pages/${name}.vue`] as any;
-        return page.default;
-    },
     setup({ el, App, props, plugin }) {
+        if (!el) {
+            return;
+        }
+
         createApp({ render: () => [h(App, props), h(Toaster)] })
             .use(plugin)
             .mount(el);

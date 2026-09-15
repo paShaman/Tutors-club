@@ -39,7 +39,7 @@ Monetization: there are two **tariff plans** — free "Free" (full functionality
 | Layer | Technology |
 |---|---|
 | Backend | PHP `^8.5`, Laravel `^13.0` (declarative `bootstrap/app.php`), Inertia Laravel v3 |
-| Frontend | Vue 3 (`<script setup>`), TypeScript, Inertia Vue v3 |
+| Frontend | Vue 3 (`<script setup>`), TypeScript, Inertia Vue v3 (+ `@inertiajs/vite`) |
 | Build | Vite (`laravel-vite-plugin`, `@vitejs/plugin-vue`, `@tailwindcss/vite`), output goes to `public_html/build` (gitignored) |
 | Styling | Tailwind CSS v4 with `@theme` design tokens defined in `resources/css/app.css` (shadcn-like tokens, glass utilities); fonts Geist/Inter |
 | UI kit | Local `resources/js/components/ui/*` built on radix-vue, `class-variance-authority`, `clsx`, `tailwind-merge`, `cn()` from `@/lib/utils`; icons from `lucide-vue-next` |
@@ -99,8 +99,9 @@ resources/
     │   │                      # PromoFormPopup, AdminSubscriptionPopup
     │   ├── uikit/             # UiKitSection + CodeBlock (helpers for the /admin/uikit page)
     │   └── social/            # SocialAuth, VkIdAuth, YandexAuth
-    ├── lib/                   # utils.ts (cn), upload.ts (avatar upload), social.ts,
-    │                          # toast.ts (useToast — global toasts)
+    ├── lib/                   # i18n.ts (useI18n), utils.ts (cn), toast.ts (useToast),
+    │                          # social.ts, scrollLock.ts, studentColors.ts,
+    │                          # iconDraw.ts, useMediaQuery.ts
     └── types/index.ts         # SharedProps + InertiaConfig.sharedPageProps augmentation
 public_html/                   # web root (Laravel public dir via usePublicPath)
 ```
@@ -121,6 +122,10 @@ public_html/                   # web root (Laravel public dir via usePublicPath)
 
 - A **page** = `resources/js/Pages/<Name>.vue`, referenced by the controller's `Inertia::render('<Name>', ...)`. Layout opt-in: `defineOptions({ layout: AppLayout })`. Set page title with `<Head :title="t('ui....')"/>`.
 - **Inertia v3 specifics.** The server adapter (`inertiajs/inertia-laravel`) and the client adapter (`@inertiajs/vue3`) must always be bumped **together** — they share the initial-page payload format (a `<script type="application/json" data-page="app">` element, no longer a `data-page` attribute). Blade `<head>` elements that Inertia should manage need the `data-inertia` attribute (the v2 `inertia` attribute is ignored, which produces duplicate `<title>`/`<meta>`); rendering the root view has not changed otherwise (`@inertia`/`@inertiaHead` rows still work, `resources/views/app.blade.php`). Shared-prop typing is declared in `resources/js/types/index.ts` as `declare module '@inertiajs/core' { interface InertiaConfig { sharedPageProps: SharedProps } }` — `@inertiajs/vue3` no longer exports `PageProps`. The `config/inertia.php` keys live under `pages.*` (`paths`, `extensions`, `ensure_pages_exist`).
+- **Page resolution is generated, not hand-written.** `resources/js/app.ts` passes `pages: './Pages'` and the `@inertiajs/vite` plugin (see `vite.config.ts`, `ssr: false`) rewrites it into a lazy `import.meta.glob` resolver — pages are code-split per route. Adding a page needs no registration anywhere; just create `Pages/<Name>.vue`. Do not re-add a manual `resolve`/eager glob (it puts every page into the entry bundle).
+- **Standalone requests use `useHttp`** (`@inertiajs/vue3`): it builds multipart for `File`/`Blob`, adds CSRF/`X-Requested-With` itself, and exposes `processing`/`errors` plus lifecycle callbacks. Never hand-roll `fetch` + `XSRF-TOKEN` parsing, and never import `axios`/`qs`/`lodash-es` (none are installed).
+- **Optimistic updates**: `router.post(url, payload, { optimistic: (props) => … })`, or `.optimistic()` on `useForm`/`useHttp`. The callback returns only the changed top-level props; Inertia rolls them back automatically on 4xx/5xx. When the change touches server-computed aggregates (e.g. `Lessons` sums/counters), mirror the controller's arithmetic exactly, or the UI will contradict the response.
+- **Instant visits** (`component` on `Link`/`router.visit`, plus `pageProps` placeholders) only help when the target component differs — e.g. `/students/{slug}` → `StudentDetail`; same-component filter links gain nothing. The target must render from shared props alone, so pass `pageProps` in the exact shape it expects (`Students.vue` → `instantStudentProps`).
 - Use `<script setup lang="ts">`. Type props with `defineProps<{...}>()`; typing is **pragmatic** — an occasional local `any` is acceptable, but keep shared/global types in `types/index.ts`.
 - Import with the `@/` alias for `Layouts/`, `components/`, `lib/`; use relative paths within a directory.
 - **Reuse existing UI**, don't restyle components: `components/ui/*` (Button + `IconButton`, Checkbox, Radio, Select, Card/CardHeader/CardTitle, UserAvatar, Toaster), `components/popups/*` (ConfirmDialog, form popups). Buttons are `Button` (compact icon actions — `IconButton`); forms live in popups bound to local refs. **Check the UI-kit reference page `/admin/uikit` (`Pages/UiKit.vue` + `components/uikit/*`) before styling anything** and keep it up to date when a component/token changes. The subtle hover **lift is reserved for `IconButton`** — regular `Button` does not lift; disable it on a specific icon button with `:lift="false"` (e.g. inside a highlighted row where it would stick out).
@@ -141,12 +146,12 @@ public_html/                   # web root (Laravel public dir via usePublicPath)
 - Page GET endpoints (e.g. `GET /students`, `GET /lessons`, `GET /calendar`, `GET /planning`, `GET /`) return an Inertia page with props computed server-side.
 - Navigation and list **filtering** use Inertia with pretty slug URLs (no query params): `/students/{student-slug}`, `/lessons/students/{student-slug}`, `/lessons/subjects/{subject-slug}`, `/lessons/students/{student-slug}/subjects/{subject-slug}`, `/planning/{subject-slug}` — `<Link>` or `router.get(url)` (server re-renders the page with filtered props; models bind by slug via `{model:slug}`).
 - **Mutations are Inertia-native (post → redirect → get).** Student/lesson/planning create/edit/delete/pay/status/review submit with `router.post('/students/edit', payload, { preserveScroll: true, onSuccess, onError })`; the controller returns `back()->with('success'|'error', lng(...))`, or on validation failure `back()->withErrors($validator)->withInput()`. The resulting Inertia visit refreshes the page props (`students`, `sortedLessons`, …) and shows the success/error **toast** (via the global `Toaster`, see §6) **without any browser reload**. `router.post` defaults to `preserveState: true`, so local component state (expanded groups, FullCalendar view) is preserved. Inertia handles CSRF automatically — no manual `X-XSRF-TOKEN`/`_token`. `payLesson` is a toggle and returns a bare `back()` (no flash).
-- **Form payload types must be `type` aliases, not `interface`** (e.g. `LessonFormData`/`StudentFormData` in `components/popups/*`); TS interfaces lack the implicit index signature Inertia's `RequestPayload` (`Record<string, FormDataConvertible>`) requires.
+- **Form payload types must be `type` aliases, not `interface`** (e.g. `LessonFormData`/`StudentFormData` in `components/popups/*`); TS interfaces lack the implicit index signature Inertia's `RequestPayload` (`Record<string, FormDataConvertible>`) requires. The same applies to page-props types passed to `usePage<...>()` — they must satisfy `PageProps`, i.e. carry an index signature (`PageProps = { [key: string]: unknown }`).
 
 **Remaining JSON endpoints (intentional).**
 - `GET /calendar/events` — FullCalendar's events feed (`CalendarController::getEvents`); after a lesson mutation the calendar calls `calendarApi.refetchEvents()`.
-- `POST /avatar/upload` — `uploadAvatar()` in `resources/js/lib/upload.ts`, the canonical raw-`fetch` helper (send `Accept: application/json`, `X-Requested-With: XMLHttpRequest`, `X-XSRF-TOKEN` decrypted from the `XSRF-TOKEN` cookie; treat HTTP `419` as an expired session; never send `_token` from a raw string). Uses `ControllerHelper` `{ success, data }`. Inertia v3 ships `useHttp` (standalone request, no page visit, CSRF/interceptors handled) — prefer it for **new** standalone requests and migrate `uploadAvatar()`/`ChangelogModal` to it when you touch them.
-- `GET /changelog` — hardcoded changelog array (see §10).
+- `POST /avatar/upload` — `AvatarPicker.vue` posts it with `useHttp`; multipart, CSRF and `X-Requested-With` come from the client. The endpoint answers **200 even for validation failures** (`ControllerHelper` `{ success, data }`), so the failure branch is parsed inside `onSuccess`, while `onHttpException` (419 and other non-2xx) and `onNetworkError` are handled separately.
+- `GET /changelog` — hardcoded changelog array (see §10), fetched with `useHttp` in `ChangelogModal.vue`.
 
 **Rules.**
 - Do **not** add new `fetch()` JSON endpoints or new `window.location.reload()` calls; keep mutations Inertia-native.

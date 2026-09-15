@@ -96,7 +96,7 @@ interface YearGroup {
   cnt_all: number
 }
 
-const page = usePage<{
+type LessonsPageProps = {
   sortedLessons: Record<number, YearGroup>
   students: StudentData[]
   selectedStudentId: number | null
@@ -111,7 +111,9 @@ const page = usePage<{
   defaultDuration: number
   defaultDate: string
   tariff: TariffInfo | null
-}>()
+}
+
+const page = usePage<LessonsPageProps>()
 
 const toast = useToast()
 const { t, tp, intlLocale } = useI18n()
@@ -382,9 +384,115 @@ function deleteLesson(lessonId: number) {
   })
 }
 
+function pad2(value: number): string {
+  return String(value).padStart(2, '0')
+}
+
+/** Текущий момент в том же формате, что отдаёт сервер в date_payed. */
+function nowAsDateTime(): string {
+  const now = new Date()
+  return `${now.getFullYear()}-${pad2(now.getMonth() + 1)}-${pad2(now.getDate())} ` +
+    `${pad2(now.getHours())}:${pad2(now.getMinutes())}:${pad2(now.getSeconds())}`
+}
+
+/**
+ * Оптимистичная отметка «оплачен»: правит урок и те же суммы/счётчики, что
+ * считает LessonController (будущие уроки и специальные ученики в суммы не входят).
+ */
+function markLessonPaid(props: LessonsPageProps, lessonId: number): Partial<LessonsPageProps> {
+  const paidAt = nowAsDateTime()
+  let changed = false
+
+  const tree: Record<number, YearGroup> = {}
+
+  for (const [yearKey, year] of Object.entries(props.sortedLessons ?? {})) {
+    let yearSum = year.sum
+    let yearSumNotPayed = year.sum_not_payed
+    let yearCnt = year.cnt
+    let yearCntNotPayed = year.cnt_not_payed
+
+    const months: Record<number, MonthGroup> = {}
+
+    for (const [monthKey, month] of Object.entries(year.months ?? {})) {
+      let monthSum = month.sum
+      let monthSumNotPayed = month.sum_not_payed
+      let monthCnt = month.cnt
+      let monthCntNotPayed = month.cnt_not_payed
+
+      const students: Record<number, StudentGroup> = {}
+
+      for (const [studentKey, group] of Object.entries(month.students ?? {})) {
+        const index = group.lessons.findIndex((lesson) => lesson.id === lessonId)
+
+        if (index === -1) {
+          students[Number(studentKey)] = group
+          continue
+        }
+
+        const lesson = group.lessons[index]
+        const lessons = [...group.lessons]
+        lessons[index] = { ...lesson, is_payed: 1, date_payed: paidAt }
+
+        let sum = group.sum
+        let sumNotPayed = group.sum_not_payed
+        let cnt = group.cnt
+        let cntNotPayed = group.cnt_not_payed
+
+        if (!lesson.is_future && !group.student.type) {
+          sum += lesson.price
+          cnt += 1
+          sumNotPayed -= lesson.price
+          cntNotPayed -= 1
+
+          monthSum += lesson.price
+          monthCnt += 1
+          monthSumNotPayed -= lesson.price
+          monthCntNotPayed -= 1
+
+          yearSum += lesson.price
+          yearCnt += 1
+          yearSumNotPayed -= lesson.price
+          yearCntNotPayed -= 1
+        }
+
+        students[Number(studentKey)] = {
+          ...group,
+          lessons,
+          sum,
+          sum_not_payed: sumNotPayed,
+          cnt,
+          cnt_not_payed: cntNotPayed,
+        }
+        changed = true
+      }
+
+      months[Number(monthKey)] = {
+        ...month,
+        students,
+        sum: monthSum,
+        sum_not_payed: monthSumNotPayed,
+        cnt: monthCnt,
+        cnt_not_payed: monthCntNotPayed,
+      }
+    }
+
+    tree[Number(yearKey)] = {
+      ...year,
+      months,
+      sum: yearSum,
+      sum_not_payed: yearSumNotPayed,
+      cnt: yearCnt,
+      cnt_not_payed: yearCntNotPayed,
+    }
+  }
+
+  return changed ? { sortedLessons: tree } : {}
+}
+
 function togglePayLesson(lessonId: number) {
   router.post('/lessons/pay', { lesson_id: lessonId }, {
     preserveScroll: true,
+    optimistic: (props) => markLessonPaid(props as unknown as LessonsPageProps, lessonId),
     onError: (errors) => toast.error(Object.values(errors).join('\n')),
   })
 }
