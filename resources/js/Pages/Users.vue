@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, type Component } from 'vue'
 import { Head, usePage, router } from '@inertiajs/vue3'
 import {
   UsersRound,
@@ -12,6 +12,8 @@ import {
 } from 'lucide-vue-next'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import Card from '@/components/ui/Card.vue'
+import StatCard from '@/components/ui/StatCard.vue'
+import type { StatTone } from '@/components/ui/StatCard.vue'
 import Table from '@/components/ui/Table.vue'
 import TableHeader from '@/components/ui/TableHeader.vue'
 import TableBody from '@/components/ui/TableBody.vue'
@@ -80,11 +82,19 @@ const roles = computed(() => page.props.roles ?? [])
 const plans = computed(() => page.props.plans ?? [])
 const periods = computed(() => page.props.periods ?? [])
 
-const summary = computed(() => [
-  { key: 'users', label: t('ui.users.summary.users'), value: stats.value.users, icon: UsersRound },
-  { key: 'paid', label: t('ui.users.summary.paid'), value: stats.value.paid, icon: BadgeCheck },
-  { key: 'students', label: t('ui.users.summary.students'), value: stats.value.students, icon: GraduationCap },
-  { key: 'lessons', label: t('ui.users.summary.lessons'), value: stats.value.lessons, icon: CalendarCheck },
+interface SummaryItem {
+  key: string
+  label: string
+  value: number
+  icon: Component
+  tone: StatTone
+}
+
+const summary = computed<SummaryItem[]>(() => [
+  { key: 'users', label: t('ui.users.summary.users'), value: stats.value.users, icon: UsersRound, tone: 'primary' },
+  { key: 'paid', label: t('ui.users.summary.paid'), value: stats.value.paid, icon: BadgeCheck, tone: 'emerald' },
+  { key: 'students', label: t('ui.users.summary.students'), value: stats.value.students, icon: GraduationCap, tone: 'blue' },
+  { key: 'lessons', label: t('ui.users.summary.lessons'), value: stats.value.lessons, icon: CalendarCheck, tone: 'amber' },
 ])
 
 const showSubscription = ref(false)
@@ -196,18 +206,15 @@ function cancelCancelSubscription(): void {
       <p class="mt-1 text-sm text-muted-foreground">{{ t('ui.users.subtitle') }}</p>
     </div>
 
-    <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
-      <Card v-for="item in summary" :key="item.key" class="p-4">
-        <div class="flex items-center gap-3">
-          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-            <component :is="item.icon" class="h-5 w-5" />
-          </div>
-          <div class="min-w-0">
-            <p class="text-2xl font-semibold leading-tight text-foreground">{{ item.value }}</p>
-            <p class="truncate text-xs text-muted-foreground">{{ item.label }}</p>
-          </div>
-        </div>
-      </Card>
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <StatCard
+        v-for="item in summary"
+        :key="item.key"
+        :label="item.label"
+        :value="item.value"
+        :tone="item.tone"
+        :icon="item.icon"
+      />
     </div>
 
     <Card v-if="users.length" class="overflow-hidden p-0">

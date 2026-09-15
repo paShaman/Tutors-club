@@ -5,8 +5,8 @@ import { cn } from '@/lib/utils'
 import { useCountUp } from '@/lib/useCountUp'
 import { useI18n } from '@/lib/i18n'
 
-type StatTone = 'primary' | 'emerald' | 'blue' | 'red' | 'amber' | 'violet'
-type StatFormat = 'number' | 'money' | 'percent'
+export type StatTone = 'primary' | 'emerald' | 'blue' | 'red' | 'amber' | 'violet'
+export type StatFormat = 'number' | 'money' | 'percent'
 
 interface Props {
   label: string
