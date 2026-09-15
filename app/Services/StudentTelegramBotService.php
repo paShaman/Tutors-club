@@ -29,6 +29,7 @@ final class StudentTelegramBotService
     private const LINK_TTL_MINUTES = 15;
     private const WIZARD_TTL_MINUTES = 30;
     private const UNPAID_LIMIT = 8;
+    private const PAID_LIMIT = 5;
     private const UPCOMING_LIMIT = 15;
     private const DURATION_OPTIONS = [45, 60, 90];
 
@@ -331,6 +332,7 @@ final class StudentTelegramBotService
         $debt = 0;
         $last = null;
         $unpaid = [];
+        $paidLessons = [];
 
         foreach ($lessons as $lesson) {
             if (! empty($lesson->is_future)) {
@@ -344,6 +346,7 @@ final class StudentTelegramBotService
             if (! empty($lesson->is_payed)) {
                 $paid++;
                 $earned += $price;
+                $paidLessons[] = $lesson;
             } else {
                 $debt += $price;
                 $unpaid[] = $lesson;
@@ -379,11 +382,20 @@ final class StudentTelegramBotService
             $lines[] = lng('telegram.finance_debts_title');
 
             foreach (array_slice($unpaid, -self::UNPAID_LIMIT) as $lesson) {
-                $label = ($lesson->date ? Carbon::parse($lesson->date)->format('d.m') : '—')
-                    . ' · ' . $this->money((int) $lesson->price);
-
                 $keyboard[] = [
-                    ['text' => '✅ ' . $label, 'callback_data' => 'pay:' . $lesson->id],
+                    ['text' => '✅ ' . $this->lessonLabel($lesson), 'callback_data' => 'pay:' . $lesson->id],
+                ];
+            }
+        }
+
+        // Оплаченные уроки показываем отдельным блоком, иначе снять оплату из бота негде.
+        if ($paidLessons !== []) {
+            $lines[] = '';
+            $lines[] = lng('telegram.finance_paid_title');
+
+            foreach (array_slice($paidLessons, -self::PAID_LIMIT) as $lesson) {
+                $keyboard[] = [
+                    ['text' => '↩️ ' . $this->lessonLabel($lesson), 'callback_data' => 'unpay:' . $lesson->id],
                 ];
             }
         }
@@ -583,6 +595,7 @@ final class StudentTelegramBotService
             [
                 ['text' => lng('telegram.lesson_custom_time_button'), 'callback_data' => 'w:q:custom'],
             ],
+            [$this->paidToggle($wizard)],
             [
                 ['text' => lng('telegram.lesson_comment_button'), 'callback_data' => 'w:q:comment'],
                 ['text' => lng('telegram.lesson_edit_button'), 'callback_data' => 'w:e'],
@@ -595,6 +608,7 @@ final class StudentTelegramBotService
             'subject'  => $subject?->localizedName() ?? '—',
             'price'    => $this->money((int) ($wizard['price'] ?? 0)),
             'duration' => (int) ($wizard['duration'] ?? 0),
+            'paid'     => $this->paidLine($wizard),
             'comment'  => $comment !== '' ? "\n📝 " . $comment : '',
         ]), $keyboard);
     }
@@ -667,6 +681,7 @@ final class StudentTelegramBotService
             'time'     => (string) ($wizard['time'] ?? '—'),
             'price'    => $this->money((int) ($wizard['price'] ?? 0)),
             'duration' => (int) ($wizard['duration'] ?? 0),
+            'paid'     => $this->paidLine($wizard),
             'comment'  => $comment !== '' ? "\n📝 " . $comment : '',
         ]);
 
@@ -674,6 +689,7 @@ final class StudentTelegramBotService
             [
                 ['text' => lng('telegram.lesson_confirm_button'), 'callback_data' => 'w:c'],
             ],
+            [$this->paidToggle($wizard)],
             [
                 ['text' => lng('telegram.lesson_comment_button'), 'callback_data' => 'w:cm'],
                 ['text' => lng('telegram.lesson_cancel_button'), 'callback_data' => 'w:x'],
@@ -715,6 +731,7 @@ final class StudentTelegramBotService
 
         $time = (string) ($wizard['time'] ?? '00:00');
         $comment = mb_substr(trim((string) ($wizard['comment'] ?? '')), 0, 500);
+        $isPaid = ! empty($wizard['is_payed']);
 
         $lesson = new Lesson([
             'subject_id' => $subject->id,
@@ -722,7 +739,8 @@ final class StudentTelegramBotService
             'duration'   => $duration,
             'date'       => $date->toDateString(),
             'time'       => $time,
-            'is_payed'   => 0,
+            'is_payed'   => $isPaid ? 1 : 0,
+            'date_payed' => $isPaid ? Carbon::now() : null,
             // Запланированным считаем только урок на будущую дату: урок на сегодня
             // бот добавляет уже по факту, иначе он навсегда выпадет из статистики.
             'is_future'  => $date->gt(Carbon::today()) ? 1 : 0,
@@ -751,6 +769,7 @@ final class StudentTelegramBotService
             'time'     => $time,
             'price'    => $this->money($price),
             'duration' => $duration,
+            'paid'     => $isPaid ? "\n" . lng('telegram.lesson_paid_yes') : '',
             'comment'  => $comment !== '' ? "\n📝 " . $comment : '',
         ]), $keyboard);
     }
@@ -963,6 +982,18 @@ final class StudentTelegramBotService
                 }
                 break;
 
+            // Переключатель «оплачен»: перерисовываем тот экран, где он нажат.
+            case 'y':
+                $wizard['is_payed'] = empty($wizard['is_payed']);
+                $this->saveWizard($user, $wizard);
+
+                if (($wizard['step'] ?? '') === 'confirm') {
+                    $this->askConfirm($user, $chatId);
+                } else {
+                    $this->askQuick($user, $chatId);
+                }
+                break;
+
             // Полный режим: подставляем параметры вручную.
             case 'e':
                 $wizard['step'] = 'subject';
@@ -1065,6 +1096,10 @@ final class StudentTelegramBotService
                 $this->payLesson($user, $chatId, (int) $value, $callbackId, $messageId);
                 break;
 
+            case 'unpay':
+                $this->payLesson($user, $chatId, (int) $value, $callbackId, $messageId, false);
+                break;
+
             case 'w':
                 $this->answerCallback($callbackId);
                 $this->handleWizardCallback($user, $chatId, $value);
@@ -1101,12 +1136,13 @@ final class StudentTelegramBotService
         $this->finance($user, $chatId, $student, $messageId);
     }
 
-    private function payLesson(User $user, string $chatId, int $lessonId, string $callbackId, ?int $messageId): void
+    /**
+     * Отметка оплаты урока. $paid = false снимает оплату — тоже явно, чтобы
+     * повторное нажатие не «перещёлкивало» статус.
+     */
+    private function payLesson(User $user, string $chatId, int $lessonId, string $callbackId, ?int $messageId, bool $paid = true): void
     {
-        $lesson = Lesson::where('id', $lessonId)
-            ->where('is_deleted', 0)
-            ->whereIn('student_id', $user->students()->select('students.id'))
-            ->first();
+        $lesson = $this->ownedLesson($user, $lessonId);
 
         if ($lesson === null) {
             $this->answerCallback($callbackId, lng('telegram.lesson_not_found'));
@@ -1114,8 +1150,8 @@ final class StudentTelegramBotService
             return;
         }
 
-        $lesson->is_payed = $lesson->is_payed ? 0 : 1;
-        $lesson->date_payed = $lesson->is_payed ? Carbon::now() : null;
+        $lesson->is_payed = $paid ? 1 : 0;
+        $lesson->date_payed = $paid ? Carbon::now() : null;
         $lesson->save();
 
         UserCache::flush($user);
@@ -1123,7 +1159,7 @@ final class StudentTelegramBotService
         $date = $lesson->date ? Carbon::parse($lesson->date)->format('d.m.Y') : '';
 
         $this->answerCallback($callbackId, lng(
-            $lesson->is_payed ? 'telegram.lesson_paid' : 'telegram.lesson_unpaid',
+            $paid ? 'telegram.lesson_paid' : 'telegram.lesson_unpaid',
             ['date' => $date],
         ));
 
@@ -1355,6 +1391,30 @@ final class StudentTelegramBotService
     {
         return [
             ['text' => lng('telegram.lesson_cancel_button'), 'callback_data' => 'w:x'],
+        ];
+    }
+
+    /**
+     * Строка со статусом оплаты черновика урока.
+     *
+     * @param  array<string, mixed>  $wizard
+     */
+    private function paidLine(array $wizard): string
+    {
+        return lng(! empty($wizard['is_payed']) ? 'telegram.lesson_paid_yes' : 'telegram.lesson_paid_no');
+    }
+
+    /**
+     * Кнопка-переключатель «оплачен» на экранах мастера урока.
+     *
+     * @param  array<string, mixed>  $wizard
+     * @return array{text: string, callback_data: string}
+     */
+    private function paidToggle(array $wizard): array
+    {
+        return [
+            'text'          => lng(! empty($wizard['is_payed']) ? 'telegram.lesson_unpay_button' : 'telegram.lesson_pay_button'),
+            'callback_data' => 'w:y',
         ];
     }
 
@@ -1593,10 +1653,7 @@ final class StudentTelegramBotService
 
     private function undoLesson(User $user, string $chatId, int $lessonId): void
     {
-        $lesson = Lesson::where('id', $lessonId)
-            ->where('is_deleted', 0)
-            ->whereIn('student_id', $user->students()->select('students.id'))
-            ->first();
+        $lesson = $this->ownedLesson($user, $lessonId);
 
         if ($lesson === null) {
             $this->sendMessage($chatId, lng('telegram.lesson_not_found'));
@@ -1610,6 +1667,26 @@ final class StudentTelegramBotService
         UserCache::flush($user);
 
         $this->sendMessage($chatId, lng('telegram.lesson_undone'));
+    }
+
+    /**
+     * Урок текущего пользователя (иначе null) — общая проверка владения для бота.
+     */
+    private function ownedLesson(User $user, int $lessonId): ?Lesson
+    {
+        return Lesson::where('id', $lessonId)
+            ->where('is_deleted', 0)
+            ->whereIn('student_id', $user->students()->select('students.id'))
+            ->first();
+    }
+
+    /**
+     * Подпись урока в списке финансов: дата и цена.
+     */
+    private function lessonLabel(Lesson $lesson): string
+    {
+        return ($lesson->date ? Carbon::parse($lesson->date)->format('d.m') : '—')
+            . ' · ' . $this->money((int) $lesson->price);
     }
 
     private function token(): string
