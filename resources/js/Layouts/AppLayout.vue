@@ -27,6 +27,7 @@ import FeedbackWidget from '@/components/FeedbackWidget.vue'
 import PromoBanners from '@/components/PromoBanners.vue'
 import { cn } from '@/lib/utils'
 import { useI18n } from '@/lib/i18n'
+import { vIconDraw } from '@/lib/iconDraw'
 
 const { t, intlLocale } = useI18n()
 
@@ -288,7 +289,14 @@ onUnmounted(() => {
                   : 'text-muted-foreground hover:bg-accent hover:text-foreground cursor-pointer',
               )"
             >
-              <component :is="item.icon" class="h-5 w-5 shrink-0" />
+              <component
+                :is="item.icon"
+                v-icon-draw
+                :class="cn(
+                  'nav-icon-draw h-5 w-5 shrink-0',
+                  isActive(item.activeRoute) && 'nav-icon-draw--active',
+                )"
+              />
               <span
                 :class="cn(
                   'whitespace-nowrap transition-opacity duration-200',
