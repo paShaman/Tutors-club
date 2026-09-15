@@ -19,7 +19,13 @@ use App\Http\Controllers\TelegramController;
 use App\Http\Controllers\PromoController;
 use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\UiKitController;
+use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\SetLocale;
+use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
+use Illuminate\Cookie\Middleware\EncryptCookies;
+use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Route;
+use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 // ─── Pages ──────────────────────────────────────────────────
 Route::get('/', [DashboardController::class, 'index'])
@@ -84,11 +90,31 @@ Route::get('/changelog', [ChangelogController::class, 'getChangelog'])
 
 // ─── Feedback ───────────────────────────────────────────────
 Route::post('/feedback', [FeedbackController::class, 'send'])->middleware('auth');
-Route::post('/telegram/webhook', [FeedbackController::class, 'webhook'])->name('telegram.webhook');
-Route::post('/max/webhook', [FeedbackController::class, 'maxWebhook'])->name('max.webhook');
+
+// Вебхуки ботов идут без сессии, куки и Inertia: Telegram/MAX не шлют cookie,
+// поэтому каждый апдейт создавал мусорную сессию в Redis, а падение Redis
+// роняло вебхук до кода бота. Секрет заголовка и 200-ответ остаются ниже.
+$botWebhookMiddleware = [
+    EncryptCookies::class,
+    AddQueuedCookiesToResponse::class,
+    StartSession::class,
+    ShareErrorsFromSession::class,
+    SetLocale::class,
+    HandleInertiaRequests::class,
+];
+
+Route::post('/telegram/webhook', [FeedbackController::class, 'webhook'])
+    ->name('telegram.webhook')
+    ->withoutMiddleware($botWebhookMiddleware);
+
+Route::post('/max/webhook', [FeedbackController::class, 'maxWebhook'])
+    ->name('max.webhook')
+    ->withoutMiddleware($botWebhookMiddleware);
 
 // ─── Telegram-бот управления учениками ──────────────────────
-Route::post('/telegram/students/webhook', [StudentBotController::class, 'webhook'])->name('telegram.students.webhook');
+Route::post('/telegram/students/webhook', [StudentBotController::class, 'webhook'])
+    ->name('telegram.students.webhook')
+    ->withoutMiddleware($botWebhookMiddleware);
 
 // ─── Admin ──────────────────────────────────────────────────
 Route::get('/admin/users', [AdminUserController::class, 'index'])

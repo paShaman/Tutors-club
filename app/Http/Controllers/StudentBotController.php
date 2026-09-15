@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Services\StudentTelegramBotService;
+use App\Support\LogScrubber;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Log;
 use Throwable;
 
 final class StudentBotController extends Controller
@@ -32,13 +34,20 @@ final class StudentBotController extends Controller
 
         // Отвечаем 200, чтобы Telegram не зацикливал доставку при сбое конфигурации.
         if (! $this->bot->configured()) {
+            Log::warning('Telegram-бот учеников не настроен (токен или username), апдейт пропущен');
+
             return response()->json(['ok' => true]);
         }
 
         try {
             $this->bot->handleUpdate($request->all());
-        } catch (Throwable) {
-            // Игнорируем: повторная доставка от Telegram создаст дубли.
+        } catch (Throwable $e) {
+            // Повторную доставку не просим, но сбой обязан попасть в лог:
+            // иначе «бот молчит» невозможно отличить от сетевой задержки.
+            // Текст прогоняем через LogScrubber: в URL Telegram есть токен.
+            Log::error('Обработка апдейта Telegram-бота учеников упала', [
+                'error' => LogScrubber::scrub($e->getMessage()),
+            ]);
         }
 
         return response()->json(['ok' => true]);

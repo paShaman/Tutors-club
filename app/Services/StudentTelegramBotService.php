@@ -8,11 +8,14 @@ use App\Model\Lesson;
 use App\Model\Student;
 use App\Model\Subject;
 use App\Model\User;
+use App\Support\LogScrubber;
 use App\Support\UserCache;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Throwable;
 
@@ -32,6 +35,9 @@ final class StudentTelegramBotService
     private const PAID_LIMIT = 5;
     private const UPCOMING_LIMIT = 15;
     private const DURATION_OPTIONS = [45, 60, 90];
+    private const API_ATTEMPTS = 3;
+    private const CONNECTION_ATTEMPTS = 2;
+    private const CONNECT_TIMEOUT = 5;
 
     public function configured(): bool
     {
@@ -451,15 +457,27 @@ final class StudentTelegramBotService
     private function sendDebts(User $user, string $chatId): void
     {
         $students = $this->activeStudents($user);
+
+        if ($students->isEmpty()) {
+            $this->sendMessage($chatId, lng('telegram.debts_empty'));
+
+            return;
+        }
+
+        // Один групповой запрос вместо запроса на каждого ученика.
+        $debts = Lesson::whereIn('student_id', $students->pluck('id'))
+            ->where('is_deleted', 0)
+            ->where('is_future', 0)
+            ->where('is_payed', 0)
+            ->groupBy('student_id')
+            ->selectRaw('student_id, SUM(price) as debt')
+            ->pluck('debt', 'student_id');
+
         $lines = [lng('telegram.debts_title'), ''];
         $total = 0;
 
         foreach ($students as $student) {
-            $debt = (int) Lesson::where('student_id', $student->id)
-                ->where('is_deleted', 0)
-                ->where('is_future', 0)
-                ->where('is_payed', 0)
-                ->sum('price');
+            $debt = (int) ($debts[$student->id] ?? 0);
 
             if ($debt <= 0) {
                 continue;
@@ -1150,18 +1168,19 @@ final class StudentTelegramBotService
             return;
         }
 
+        $date = $lesson->date ? Carbon::parse($lesson->date)->format('d.m.Y') : '';
+
+        // Отвечаем на нажатие до записи и перерисовки: иначе на кнопке крутятся «часики».
+        $this->answerCallback($callbackId, lng(
+            $paid ? 'telegram.lesson_paid' : 'telegram.lesson_unpaid',
+            ['date' => $date],
+        ));
+
         $lesson->is_payed = $paid ? 1 : 0;
         $lesson->date_payed = $paid ? Carbon::now() : null;
         $lesson->save();
 
         UserCache::flush($user);
-
-        $date = $lesson->date ? Carbon::parse($lesson->date)->format('d.m.Y') : '';
-
-        $this->answerCallback($callbackId, lng(
-            $paid ? 'telegram.lesson_paid' : 'telegram.lesson_unpaid',
-            ['date' => $date],
-        ));
 
         $student = $this->studentById($user, (int) $lesson->student_id);
 
@@ -1234,14 +1253,78 @@ final class StudentTelegramBotService
      */
     private function call(string $method, array $payload): bool
     {
-        try {
-            return Http::asJson()
-                ->timeout(10)
-                ->post(self::API . $this->token() . '/' . $method, $payload)
-                ->successful();
-        } catch (Throwable) {
-            return false;
+        $url = self::API . $this->token() . '/' . $method;
+
+        for ($attempt = 1; $attempt <= self::API_ATTEMPTS; $attempt++) {
+            try {
+                $response = Http::asJson()
+                    ->connectTimeout(self::CONNECT_TIMEOUT)
+                    ->timeout(10)
+                    ->post($url, $payload);
+            } catch (ConnectionException $e) {
+                Log::error('Telegram API ' . $method . ': нет соединения с api.telegram.org', [
+                    'attempt' => $attempt,
+                    'error'   => LogScrubber::scrub($e->getMessage()),
+                ]);
+
+                // Обрыв соединения — это недоступность Telegram с хостинга, а не
+                // наша ошибка: пробуем ещё раз и сдаёмся, чтобы не держать вебхук
+                // (иначе ответы на кнопки успевают устареть).
+                if ($attempt >= self::CONNECTION_ATTEMPTS) {
+                    return false;
+                }
+
+                $this->waitBeforeRetry($attempt);
+
+                continue;
+            } catch (Throwable $e) {
+                Log::error('Telegram API ' . $method . ': запрос не выполнен', [
+                    'attempt' => $attempt,
+                    'error'   => LogScrubber::scrub($e->getMessage()),
+                ]);
+
+                return false;
+            }
+
+            if ($response->successful()) {
+                return true;
+            }
+
+            Log::error('Telegram API ' . $method . ': ошибка ответа', [
+                'attempt'     => $attempt,
+                'status'      => $response->status(),
+                'error_code'  => $response->json('error_code'),
+                'description' => $response->json('description'),
+            ]);
+
+            // Повторяем только лимиты (429) и сбои на стороне Telegram (5xx):
+            // 4xx — это наша ошибка в запросе, повтор её не исправит.
+            if ($attempt === self::API_ATTEMPTS || ! $this->retryable($response->status())) {
+                return false;
+            }
+
+            $retryAfter = (int) $response->json('parameters.retry_after');
+
+            $this->waitBeforeRetry($attempt, $retryAfter > 0 ? $retryAfter : null);
         }
+
+        return false;
+    }
+
+    private function retryable(int $status): bool
+    {
+        return $status === 429 || $status >= 500;
+    }
+
+    /**
+     * Пауза перед повтором. Для 429 Telegram сам присылает retry_after, но ждать
+     * дольше пары секунд нельзя: Telegram в это время ждёт ответ на вебхук.
+     */
+    private function waitBeforeRetry(int $attempt, ?int $retryAfter = null): void
+    {
+        $seconds = $retryAfter !== null ? min($retryAfter, 2) : $attempt;
+
+        usleep($seconds * 1_000_000);
     }
 
     // ─── Данные и разбор ───────────────────────────────────────

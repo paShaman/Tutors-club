@@ -6,9 +6,11 @@ namespace App\Services;
 
 use App\Model\User;
 use App\Support\CacheKeys;
+use App\Support\LogScrubber;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Throwable;
 
 /**
@@ -155,6 +157,11 @@ final class FeedbackBotService
             $path = $response->json('result.file_path');
 
             if (! $response->successful() || ! is_string($path) || $path === '') {
+                Log::error('Telegram getFile: не удалось получить файл', [
+                    'status'      => $response->status(),
+                    'description' => $response->json('description'),
+                ]);
+
                 return null;
             }
 
@@ -163,7 +170,9 @@ final class FeedbackBotService
             Cache::put(CacheKeys::telegramFile($fileId), $url, now()->addHour());
 
             return $url;
-        } catch (Throwable) {
+        } catch (Throwable $e) {
+            Log::error('Telegram getFile: запрос не выполнен', ['error' => LogScrubber::scrub($e->getMessage())]);
+
             return null;
         }
     }
@@ -178,6 +187,7 @@ final class FeedbackBotService
 
         try {
             $response = Http::asJson()
+                ->connectTimeout(5)
                 ->timeout(10)
                 ->post("https://api.telegram.org/bot{$token}/sendMessage", [
                     'chat_id'                  => $chatId,
@@ -186,6 +196,12 @@ final class FeedbackBotService
                 ]);
 
             if (! $response->successful()) {
+                Log::error('Telegram sendMessage: сообщение не отправлено', [
+                    'status'      => $response->status(),
+                    'error_code'  => $response->json('error_code'),
+                    'description' => $response->json('description'),
+                ]);
+
                 return false;
             }
 
@@ -202,10 +218,17 @@ final class FeedbackBotService
                         ]);
 
                 if (! $sent->successful()) {
+                    Log::error('Telegram sendPhoto: фото не отправлено', [
+                        'status'      => $sent->status(),
+                        'description' => $sent->json('description'),
+                    ]);
+
                     return false;
                 }
             }
-        } catch (Throwable) {
+        } catch (Throwable $e) {
+            Log::error('Telegram sendMessage: запрос не выполнен', ['error' => LogScrubber::scrub($e->getMessage())]);
+
             return false;
         }
 
@@ -234,7 +257,9 @@ final class FeedbackBotService
 
             // Если вложение так и не обработалось — доставляем хотя бы текст.
             return $attachments === [] || $this->maxPost($token, $ownerId, ['text' => $text]);
-        } catch (Throwable) {
+        } catch (Throwable $e) {
+            Log::error('MAX sendMessage: запрос не выполнен', ['error' => LogScrubber::scrub($e->getMessage())]);
+
             return false;
         }
     }
@@ -286,6 +311,13 @@ final class FeedbackBotService
             $notReady = $response->json('code') === 'attachment.not.ready';
 
             if (! $retryOnNotReady || ! $notReady || $attempt === $attempts) {
+                Log::error('MAX sendMessage: сообщение не отправлено', [
+                    'attempt' => $attempt,
+                    'status'  => $response->status(),
+                    'code'    => $response->json('code'),
+                    'message' => $response->json('message'),
+                ]);
+
                 return false;
             }
 
@@ -307,6 +339,11 @@ final class FeedbackBotService
         $uploadUrl = $slot->json('url');
 
         if (! $slot->successful() || ! is_string($uploadUrl) || $uploadUrl === '') {
+            Log::error('MAX uploads: не удалось получить слот для загрузки', [
+                'status'  => $slot->status(),
+                'message' => $slot->json('message'),
+            ]);
+
             return null;
         }
 
@@ -317,6 +354,10 @@ final class FeedbackBotService
         $attachmentToken = $uploaded->json('token');
 
         if (! is_string($attachmentToken) || $attachmentToken === '') {
+            Log::error('MAX uploads: файл не загружен', [
+                'status' => $uploaded->status(),
+            ]);
+
             return null;
         }
 

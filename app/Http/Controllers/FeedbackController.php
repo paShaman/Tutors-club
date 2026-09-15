@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Services\FeedbackBotService;
+use App\Support\LogScrubber;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Log;
 use Throwable;
 
 final class FeedbackController extends Controller
@@ -46,6 +48,10 @@ final class FeedbackController extends Controller
             $request->file('photos') ?? [],
         );
 
+        if (! $sent) {
+            Log::error('Обращение из кабинета не доставлено', ['bot' => $bot]);
+        }
+
         return $sent
             ? back()->with('success', lng('success.feedback_sent'))
             : back()->with('error', lng('error.feedback_sent'));
@@ -76,6 +82,8 @@ final class FeedbackController extends Controller
 
         // Отвечаем 200, чтобы Telegram не зацикливал доставку при сбое конфигурации.
         if ($bot === null) {
+            Log::warning('Telegram-вебхук: бот обратной связи не настроен, сообщение потеряно');
+
             return response()->json(['ok' => true]);
         }
 
@@ -87,8 +95,11 @@ final class FeedbackController extends Controller
 
         try {
             $this->forwardTelegramMessage($bot, $message);
-        } catch (Throwable) {
-            // Игнорируем: повторная доставка от Telegram создаст дубли.
+        } catch (Throwable $e) {
+            // Повторную доставку не просим (иначе будут дубли), но сбой пишем в лог.
+            Log::error('Пересылка сообщения из Telegram упала', [
+                'error' => LogScrubber::scrub($e->getMessage()),
+            ]);
         }
 
         return response()->json(['ok' => true]);
@@ -120,6 +131,8 @@ final class FeedbackController extends Controller
         $bot = $this->bots->deliveryBot();
 
         if ($bot === null) {
+            Log::warning('MAX-вебхук: бот обратной связи не настроен, сообщение потеряно');
+
             return response()->json(['ok' => true]);
         }
 
@@ -135,8 +148,11 @@ final class FeedbackController extends Controller
 
         try {
             $this->forwardMaxMessage($bot, $message);
-        } catch (Throwable) {
-            // Игнорируем: повторная доставка от MAX создаст дубли.
+        } catch (Throwable $e) {
+            // Повторную доставку не просим (иначе будут дубли), но сбой пишем в лог.
+            Log::error('Пересылка сообщения из MAX упала', [
+                'error' => LogScrubber::scrub($e->getMessage()),
+            ]);
         }
 
         return response()->json(['ok' => true]);
