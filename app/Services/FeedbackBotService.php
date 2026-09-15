@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Model\User;
 use App\Support\CacheKeys;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Cache;
@@ -11,7 +12,7 @@ use Illuminate\Support\Facades\Http;
 use Throwable;
 
 /**
- * Доставка обращений владельцу в Telegram и MAX.
+ * Доставка обращений и системных уведомлений владельцу в Telegram и MAX.
  *
  * Какой бот основной, задаёт FEEDBACK_PRIMARY_BOT (по умолчанию telegram):
  * в него уходят сообщения из формы кабинета и в него же пересылаются
@@ -100,6 +101,39 @@ final class FeedbackBotService
         return $bot === self::MAX
             ? $this->sendToMax($text, $photos)
             : $this->sendToTelegram($text, $photos);
+    }
+
+    /**
+     * Уведомляет владельца о регистрации нового пользователя.
+     *
+     * @param  string|null  $source  источник регистрации (сайт или название соцсети)
+     */
+    public function notifyRegistration(User $user, ?string $source = null): bool
+    {
+        $bot = $this->deliveryBot();
+
+        if ($bot === null) {
+            return false;
+        }
+
+        $name = (string) $user->name;
+
+        $lines = [
+            '🆕 Новый пользователь',
+            '',
+            '👤 Имя: ' . ($name !== '' ? $name : '—'),
+            '📧 Email: ' . ($user->email ?: '—'),
+            '🆔 ID: ' . $user->id,
+        ];
+
+        if ($source !== null && $source !== '') {
+            $lines[] = '📍 Источник: ' . $source;
+        }
+
+        $lines[] = '';
+        $lines[] = '🕒 ' . now()->format('Y-m-d H:i');
+
+        return $this->send($bot, mb_substr(implode("\n", $lines), 0, 4000));
     }
 
     /** Прямая ссылка на файл Telegram — нужна, чтобы переслать фото в MAX. */

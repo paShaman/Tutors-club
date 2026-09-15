@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Model\User;
+use App\Services\FeedbackBotService;
 use App\Services\SocialAccountService;
 use App\Services\SocialOAuthProvider;
 use App\Services\VkIdService;
@@ -62,6 +63,8 @@ class AuthController extends Controller
         }
 
         event(new Registered($user));
+
+        $this->notifyRegistration($user, 'сайт');
 
         Auth::login($user, true);
 
@@ -240,6 +243,8 @@ class AuthController extends Controller
 
         $user = $socials->findUser($provider, $socialId, $email);
 
+        $registered = false;
+
         if ($user === null) {
             if (!$allowRegister) {
                 return $this->socialFail($failRoute, lng('error.social_not_registered', ['provider' => $label]));
@@ -251,6 +256,7 @@ class AuthController extends Controller
 
             try {
                 $user = $socials->createUser($provider, $socialId, $profile);
+                $registered = true;
             } catch (\Exception $e) {
                 return $this->socialFail($failRoute, lng('error.register'));
             }
@@ -259,6 +265,10 @@ class AuthController extends Controller
         }
 
         $socials->linkToUser($user->id, $provider, $socialId);
+
+        if ($registered) {
+            $this->notifyRegistration($user, $label);
+        }
 
         Auth::login($user, true);
         $request->session()->regenerate();
@@ -303,6 +313,20 @@ class AuthController extends Controller
         }
 
         return redirect()->back()->with('error', $message);
+    }
+
+    /**
+     * Сообщение владельцу в основной бот обратной связи о новом пользователе.
+     *
+     * Сбой отправки не должен мешать регистрации.
+     */
+    private function notifyRegistration(User $user, string $source): void
+    {
+        try {
+            app(FeedbackBotService::class)->notifyRegistration($user, $source);
+        } catch (\Throwable) {
+            // Игнорируем: уведомление второстепенно по отношению к регистрации.
+        }
     }
 
     private function verifySmartCaptcha(string $token, string $ip): bool
