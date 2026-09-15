@@ -28,24 +28,43 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Pages
+    |--------------------------------------------------------------------------
+    |
+    | Set `ensure_pages_exist` to true if you want to enforce that Inertia page
+    | components exist on disk when rendering a page. This is useful for
+    | catching missing or misnamed components.
+    |
+    | The `paths` and `extensions` options define where to look for page
+    | components and which file extensions to consider.
+    |
+    */
+
+    'pages' => [
+        'ensure_pages_exist' => false,
+
+        'paths' => [
+            resource_path('js/Pages'),
+        ],
+
+        'extensions' => [
+            'vue',
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Testing
     |--------------------------------------------------------------------------
     |
-    | The values described here are used to locate Inertia components on the
-    | filesystem. For instance, when using `assertInertia`, the assertion
-    | attempts to locate the component as a file relative to any of the
-    | paths AND with any of the extensions specified here.
+    | When using `assertInertia`, the assertion attempts to locate the
+    | component as a file relative to the `pages.paths` AND with any of the
+    | `pages.extensions` specified above.
     |
     */
 
     'testing' => [
         'ensure_pages_exist' => true,
-        'page_paths' => [
-            resource_path('js/Pages'),
-        ],
-        'page_extensions' => [
-            'vue',
-        ],
     ],
 
 ];

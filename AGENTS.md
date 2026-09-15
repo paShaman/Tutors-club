@@ -24,7 +24,7 @@ Monetization: there are two **tariff plans** — free "Free" (full functionality
 - **Never touch `.env`, and never log/print secrets** (DB credentials, `APP_KEY`, `VK_ID_*`, `YANDEX_*`, `SMARTCAPTCHA_*`). There is no `.env.example` in the repo.
 - **There is no access to production.** The app runs on a shared host (docroot = `public_html`) with MySQL. Do not run any artisan/CLI command against production, and do not assume production has artisan/Node available.
 - **Never run `php artisan migrate` / `db:seed` / config or cache commands** — even locally — without an explicit user request. Propose the migration/change and let the user apply it.
-- **Do not install new Composer or npm packages** without asking first. Note: `axios` is **not** declared in `package.json`; it only exists transitively (via `@inertiajs/core`). Do not add new code that imports it directly (ChangelogModal currently does) unless you first add it as a real dependency.
+- **Do not install new Composer or npm packages** without asking first. Note: `axios`, `qs` and `lodash-es` are **not** dependencies anymore — Inertia v3 dropped them in favour of a built-in XHR client and `es-toolkit`. Never import them; for a standalone request that must not trigger a page visit use `useHttp` from `@inertiajs/vue3` (see §7).
 - **Do not write tests.** There is no `tests/` directory, no test script, and tests are intentionally not part of the workflow yet. Do not scaffold PHPUnit/Pest/component-test infrastructure.
 - **The UI-kit is the source of truth for styling.** Before writing any CSS/markup, creating a component, or restyling a page, consult the admin-only reference page at `/admin/uikit` (controller `UiKitController`, source `resources/js/Pages/UiKit.vue`, helpers in `resources/js/components/uikit/*`). It documents every `components/ui/*` + `components/popups/*` component, the `@theme` tokens, form-field classes, toasts and popups. Reuse them instead of inventing new styles; when you add or change a UI primitive, extend the UI-kit page in the same change.
 - **Form controls and icon actions are mandatory components — do not use native ones.** Use `components/ui/Select.vue` (never a raw `<select>`), `Checkbox.vue` (never `<input type="checkbox">`), `Radio.vue` (never `<input type="radio">`) and `IconButton.vue` for compact icon actions (edit/delete/restore/show). Only `field`-styled `input`/`textarea` (text, number, date, time, search) stay native.
@@ -38,8 +38,8 @@ Monetization: there are two **tariff plans** — free "Free" (full functionality
 
 | Layer | Technology |
 |---|---|
-| Backend | PHP `^8.5`, Laravel `^13.0` (declarative `bootstrap/app.php`), Inertia Laravel v2 |
-| Frontend | Vue 3 (`<script setup>`), TypeScript, Inertia Vue v2 |
+| Backend | PHP `^8.5`, Laravel `^13.0` (declarative `bootstrap/app.php`), Inertia Laravel v3 |
+| Frontend | Vue 3 (`<script setup>`), TypeScript, Inertia Vue v3 |
 | Build | Vite (`laravel-vite-plugin`, `@vitejs/plugin-vue`, `@tailwindcss/vite`), output goes to `public_html/build` (gitignored) |
 | Styling | Tailwind CSS v4 with `@theme` design tokens defined in `resources/css/app.css` (shadcn-like tokens, glass utilities); fonts Geist/Inter |
 | UI kit | Local `resources/js/components/ui/*` built on radix-vue, `class-variance-authority`, `clsx`, `tailwind-merge`, `cn()` from `@/lib/utils`; icons from `lucide-vue-next` |
@@ -101,7 +101,7 @@ resources/
     │   └── social/            # SocialAuth, VkIdAuth, YandexAuth
     ├── lib/                   # utils.ts (cn), upload.ts (avatar upload), social.ts,
     │                          # toast.ts (useToast — global toasts)
-    └── types/index.ts         # SharedProps + PageProps augmentation
+    └── types/index.ts         # SharedProps + InertiaConfig.sharedPageProps augmentation
 public_html/                   # web root (Laravel public dir via usePublicPath)
 ```
 
@@ -120,6 +120,7 @@ public_html/                   # web root (Laravel public dir via usePublicPath)
 ## 6. Frontend conventions (Vue/TS)
 
 - A **page** = `resources/js/Pages/<Name>.vue`, referenced by the controller's `Inertia::render('<Name>', ...)`. Layout opt-in: `defineOptions({ layout: AppLayout })`. Set page title with `<Head :title="t('ui....')"/>`.
+- **Inertia v3 specifics.** The server adapter (`inertiajs/inertia-laravel`) and the client adapter (`@inertiajs/vue3`) must always be bumped **together** — they share the initial-page payload format (a `<script type="application/json" data-page="app">` element, no longer a `data-page` attribute). Blade `<head>` elements that Inertia should manage need the `data-inertia` attribute (the v2 `inertia` attribute is ignored, which produces duplicate `<title>`/`<meta>`); rendering the root view has not changed otherwise (`@inertia`/`@inertiaHead` rows still work, `resources/views/app.blade.php`). Shared-prop typing is declared in `resources/js/types/index.ts` as `declare module '@inertiajs/core' { interface InertiaConfig { sharedPageProps: SharedProps } }` — `@inertiajs/vue3` no longer exports `PageProps`. The `config/inertia.php` keys live under `pages.*` (`paths`, `extensions`, `ensure_pages_exist`).
 - Use `<script setup lang="ts">`. Type props with `defineProps<{...}>()`; typing is **pragmatic** — an occasional local `any` is acceptable, but keep shared/global types in `types/index.ts`.
 - Import with the `@/` alias for `Layouts/`, `components/`, `lib/`; use relative paths within a directory.
 - **Reuse existing UI**, don't restyle components: `components/ui/*` (Button + `IconButton`, Checkbox, Radio, Select, Card/CardHeader/CardTitle, UserAvatar, Toaster), `components/popups/*` (ConfirmDialog, form popups). Buttons are `Button` (compact icon actions — `IconButton`); forms live in popups bound to local refs. **Check the UI-kit reference page `/admin/uikit` (`Pages/UiKit.vue` + `components/uikit/*`) before styling anything** and keep it up to date when a component/token changes. The subtle hover **lift is reserved for `IconButton`** — regular `Button` does not lift; disable it on a specific icon button with `:lift="false"` (e.g. inside a highlighted row where it would stick out).
@@ -144,7 +145,7 @@ public_html/                   # web root (Laravel public dir via usePublicPath)
 
 **Remaining JSON endpoints (intentional).**
 - `GET /calendar/events` — FullCalendar's events feed (`CalendarController::getEvents`); after a lesson mutation the calendar calls `calendarApi.refetchEvents()`.
-- `POST /avatar/upload` — `uploadAvatar()` in `resources/js/lib/upload.ts`, the canonical raw-`fetch` helper (send `Accept: application/json`, `X-Requested-With: XMLHttpRequest`, `X-XSRF-TOKEN` decrypted from the `XSRF-TOKEN` cookie; treat HTTP `419` as an expired session; never send `_token` from a raw string). Uses `ControllerHelper` `{ success, data }`.
+- `POST /avatar/upload` — `uploadAvatar()` in `resources/js/lib/upload.ts`, the canonical raw-`fetch` helper (send `Accept: application/json`, `X-Requested-With: XMLHttpRequest`, `X-XSRF-TOKEN` decrypted from the `XSRF-TOKEN` cookie; treat HTTP `419` as an expired session; never send `_token` from a raw string). Uses `ControllerHelper` `{ success, data }`. Inertia v3 ships `useHttp` (standalone request, no page visit, CSRF/interceptors handled) — prefer it for **new** standalone requests and migrate `uploadAvatar()`/`ChangelogModal` to it when you touch them.
 - `GET /changelog` — hardcoded changelog array (see §10).
 
 **Rules.**

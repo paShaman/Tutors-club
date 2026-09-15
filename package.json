@@ -12,7 +12,7 @@
     "@fullcalendar/interaction": "^6.1.20",
     "@fullcalendar/timegrid": "^6.1.20",
     "@fullcalendar/vue3": "^6.1.20",
-    "@inertiajs/vue3": "^2.3.23",
+    "@inertiajs/vue3": "^3.0",
     "@vkid/sdk": "^2.6.8",
     "chart.js": "^4.5.1",
     "class-variance-authority": "^0.7.0",

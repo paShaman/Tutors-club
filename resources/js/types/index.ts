@@ -107,6 +107,8 @@ export interface SharedProps {
   translations: Record<string, unknown>
 }
 
-declare module '@inertiajs/vue3' {
-  interface PageProps extends SharedProps {}
+declare module '@inertiajs/core' {
+  interface InertiaConfig {
+    sharedPageProps: SharedProps
+  }
 }
