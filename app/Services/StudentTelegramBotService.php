@@ -19,13 +19,16 @@ use Throwable;
  *
  * Читает и изменяет только данные владельца чата; привязка идёт по одноразовой
  * ссылке из настроек (таблица users: telegram_chat_id / telegram_link_code).
+ * Добавление урока — пошаговый мастер, черновик хранится в users.telegram_state.
  */
 final class StudentTelegramBotService
 {
     private const API = 'https://api.telegram.org/bot';
     private const LINK_TTL_MINUTES = 15;
+    private const WIZARD_TTL_MINUTES = 30;
     private const UNPAID_LIMIT = 8;
     private const UPCOMING_LIMIT = 15;
+    private const DURATION_OPTIONS = [45, 60, 90];
 
     public function configured(): bool
     {
@@ -78,6 +81,7 @@ final class StudentTelegramBotService
         $user->telegram_linked_at = null;
         $user->telegram_link_code = null;
         $user->telegram_link_code_expires_at = null;
+        $user->telegram_state = null;
         $user->save();
     }
 
@@ -152,7 +156,28 @@ final class StudentTelegramBotService
         }
 
         $this->applyLocale($user);
-        $this->dispatch($user, $chatId, $command, $args);
+
+        // Команда сбрасывает незавершённый черновик урока и выполняется как обычно.
+        if (str_starts_with($text, '/')) {
+            $this->clearWizard($user);
+
+            if ($command === 'cancel') {
+                $this->sendMessage($chatId, lng('telegram.lesson_cancelled'));
+
+                return;
+            }
+
+            $this->dispatch($user, $chatId, $command, $args);
+
+            return;
+        }
+
+        // Обычный текст — это ответ в мастере добавления урока.
+        if ($this->handleWizardInput($user, $chatId, $text)) {
+            return;
+        }
+
+        $this->sendMessage($chatId, lng('telegram.unknown_command', ['help' => lng('telegram.help')]));
     }
 
     private function handleStart(string $chatId, string $args, ?string $username): void
@@ -209,10 +234,7 @@ final class StudentTelegramBotService
             'finance'          => $this->sendFinance($user, $chatId, $args),
             'lessons'          => $this->sendUpcoming($user, $chatId),
             'debts'            => $this->sendDebts($user, $chatId),
-            'rename'           => $this->renameStudent($user, $chatId, $args),
-            'class'            => $this->classStudent($user, $chatId, $args),
-            'desc'             => $this->describeStudent($user, $chatId, $args),
-            'lesson'           => $this->addLesson($user, $chatId, $args),
+            'lesson'           => $this->startLessonWizard($user, $chatId, $args),
             default            => $this->sendMessage($chatId, lng('telegram.unknown_command', ['help' => lng('telegram.help')])),
         };
     }
@@ -443,144 +465,190 @@ final class StudentTelegramBotService
         $this->sendMessage($chatId, implode("\n", $lines));
     }
 
-    // ─── Запись ────────────────────────────────────────────────
+    // ─── Мастер добавления урока ───────────────────────────────
 
-    private function renameStudent(User $user, string $chatId, string $args): void
+    private function startLessonWizard(User $user, string $chatId, string $args): void
     {
-        [$index, $value] = $this->splitIndex($args);
-        $student = $this->studentByIndex($user, $index);
+        $wizard = ['step' => 'student', 'ts' => time()];
+        $index = trim($args);
 
-        if ($student === null) {
-            $this->sendMessage($chatId, lng('telegram.student_not_found'));
+        if (ctype_digit($index)) {
+            $student = $this->studentByIndex($user, $index);
+
+            if ($student !== null) {
+                $wizard['student_id'] = (int) $student->id;
+                $wizard['step'] = 'subject';
+            }
+        }
+
+        $this->saveWizard($user, $wizard);
+
+        if ($wizard['step'] === 'subject') {
+            $this->askSubject($user, $chatId);
 
             return;
         }
 
-        if ($value === '') {
-            $this->sendMessage($chatId, lng('telegram.edit_usage', ['format' => '/rename <номер> <новое имя>']));
-
-            return;
-        }
-
-        $student->name = $value;
-        $student->save();
-
-        $this->sendMessage($chatId, lng('telegram.rename_success', ['name' => $student->name]));
+        $this->askStudent($user, $chatId);
     }
 
-    private function classStudent(User $user, string $chatId, string $args): void
+    private function askStudent(User $user, string $chatId): void
     {
-        [$index, $value] = $this->splitIndex($args);
-        $student = $this->studentByIndex($user, $index);
+        $students = $this->activeStudents($user);
 
-        if ($student === null) {
-            $this->sendMessage($chatId, lng('telegram.student_not_found'));
-
-            return;
-        }
-
-        if ($value === '') {
-            $this->sendMessage($chatId, lng('telegram.edit_usage', ['format' => '/class <номер> <класс>']));
+        if ($students->isEmpty()) {
+            $this->sendMessage($chatId, lng('telegram.students_empty'));
 
             return;
         }
 
-        $student->class = $value;
-        $student->save();
+        $keyboard = [];
 
-        $this->sendMessage($chatId, lng('telegram.class_success', [
-            'class' => $student->current_class !== '' ? $student->current_class : $value,
-        ]));
+        foreach ($students as $student) {
+            $keyboard[] = [[
+                'text'          => mb_substr($student->name, 0, 30),
+                'callback_data' => 'w:s:' . $student->id,
+            ]];
+        }
+
+        $keyboard[] = $this->cancelRow();
+
+        $this->sendMessage($chatId, lng('telegram.lesson_choose_student'), $keyboard);
     }
 
-    private function describeStudent(User $user, string $chatId, string $args): void
+    private function askSubject(User $user, string $chatId): void
     {
-        [$index, $value] = $this->splitIndex($args);
-        $student = $this->studentByIndex($user, $index);
+        $subjects = Subject::active();
 
-        if ($student === null) {
-            $this->sendMessage($chatId, lng('telegram.student_not_found'));
-
-            return;
-        }
-
-        if ($value === '') {
-            $this->sendMessage($chatId, lng('telegram.edit_usage', ['format' => '/desc <номер> <описание>']));
+        if ($subjects->isEmpty()) {
+            $this->sendMessage($chatId, lng('telegram.subject_not_found', ['subjects' => '—']));
 
             return;
         }
 
-        $student->description = $value;
-        $student->save();
+        $keyboard = [];
 
-        $this->sendMessage($chatId, lng('telegram.desc_success'));
+        foreach ($subjects as $subject) {
+            $keyboard[] = [[
+                'text'          => mb_substr($subject->localizedName(), 0, 30),
+                'callback_data' => 'w:b:' . $subject->id,
+            ]];
+        }
+
+        $keyboard[] = $this->cancelRow();
+
+        $this->sendMessage($chatId, lng('telegram.lesson_choose_subject', [
+            'name' => $this->studentNameFromWizard($user) ?? '—',
+        ]), $keyboard);
     }
 
-    private function addLesson(User $user, string $chatId, string $args): void
+    private function askDatetime(User $user, string $chatId): void
     {
-        $parts = preg_split('/\s+/u', trim($args)) ?: [];
+        $subject = $this->subjectFromWizard($this->wizard($user));
+        $keyboard = [
+            [
+                ['text' => lng('telegram.lesson_today_button'), 'callback_data' => 'w:d:today'],
+                ['text' => lng('telegram.lesson_tomorrow_button'), 'callback_data' => 'w:d:tomorrow'],
+            ],
+            $this->cancelRow(),
+        ];
 
-        if (count($parts) < 5) {
-            $this->sendMessage($chatId, lng('telegram.lesson_usage'));
+        $this->sendMessage($chatId, lng('telegram.lesson_ask_datetime', [
+            'name'    => $this->studentNameFromWizard($user) ?? '—',
+            'subject' => $subject?->localizedName() ?? '—',
+        ]), $keyboard);
+    }
+
+    private function askPrice(User $user, string $chatId): void
+    {
+        $wizard = $this->wizard($user) ?? [];
+        $suggested = $this->suggestedPrice((int) ($wizard['student_id'] ?? 0));
+
+        $keyboard = [
+            [
+                [
+                    'text'          => lng('telegram.lesson_price_button', ['price' => $this->money($suggested)]),
+                    'callback_data' => 'w:p:' . $suggested,
+                ],
+            ],
+            [
+                ['text' => lng('telegram.lesson_price_custom_button'), 'callback_data' => 'w:p:c'],
+            ],
+            $this->cancelRow(),
+        ];
+
+        $this->sendMessage($chatId, lng('telegram.lesson_ask_price'), $keyboard);
+    }
+
+    private function askDuration(User $user, string $chatId): void
+    {
+        $row = [];
+
+        foreach (self::DURATION_OPTIONS as $minutes) {
+            $row[] = [
+                'text'          => lng('telegram.lesson_minutes', ['minutes' => $minutes]),
+                'callback_data' => 'w:u:' . $minutes,
+            ];
+        }
+
+        $this->sendMessage($chatId, lng('telegram.lesson_ask_duration'), [$row, $this->cancelRow()]);
+    }
+
+    private function askConfirm(User $user, string $chatId): void
+    {
+        $wizard = $this->wizard($user) ?? [];
+        $subject = $this->subjectFromWizard($wizard);
+
+        $text = lng('telegram.lesson_confirm', [
+            'name'     => $this->studentNameFromWizard($user) ?? '—',
+            'subject'  => $subject?->localizedName() ?? '—',
+            'date'     => $wizard['date'] ? Carbon::parse((string) $wizard['date'])->format('d.m.Y') : '—',
+            'time'     => (string) ($wizard['time'] ?? '—'),
+            'price'    => $this->money((int) ($wizard['price'] ?? 0)),
+            'duration' => (int) ($wizard['duration'] ?? 0),
+        ]);
+
+        $keyboard = [
+            [
+                ['text' => lng('telegram.lesson_confirm_button'), 'callback_data' => 'w:c'],
+            ],
+            $this->cancelRow(),
+        ];
+
+        $this->sendMessage($chatId, $text, $keyboard);
+    }
+
+    /**
+     * @param  array<string, mixed>  $wizard
+     */
+    private function createWizardLesson(User $user, string $chatId, array $wizard): void
+    {
+        $student = $this->studentById($user, (int) ($wizard['student_id'] ?? 0));
+        $subject = $this->subjectFromWizard($wizard);
+        $date = isset($wizard['date']) ? $this->parseDate((string) $wizard['date']) : null;
+        $price = (int) ($wizard['price'] ?? 0);
+
+        if ($student === null || $subject === null || $date === null || $price <= 0) {
+            $this->clearWizard($user);
+            $this->sendMessage($chatId, lng('telegram.lesson_wizard_expired'));
 
             return;
         }
 
-        $student = $this->studentByIndex($user, (string) array_shift($parts));
-
-        if ($student === null) {
-            $this->sendMessage($chatId, lng('telegram.student_not_found'));
-
-            return;
-        }
-
-        $subjectQuery = array_shift($parts);
-        $subject = $this->findSubject((string) $subjectQuery);
-
-        if ($subject === null) {
-            $this->sendMessage($chatId, lng('telegram.subject_not_found', [
-                'subjects' => implode(', ', Subject::nameMap()),
-            ]));
+        if (! app(TariffService::class)->canUse($user, 'lessons')) {
+            $this->clearWizard($user);
+            $this->sendMessage($chatId, lng('telegram.tariff_limit'));
 
             return;
         }
 
-        $date = $this->parseDate((string) array_shift($parts));
-
-        if ($date === null) {
-            $this->sendMessage($chatId, lng('telegram.date_invalid'));
-
-            return;
-        }
-
-        $time = $this->parseTime((string) array_shift($parts));
-
-        if ($time === null) {
-            $this->sendMessage($chatId, lng('telegram.time_invalid'));
-
-            return;
-        }
-
-        $priceRaw = (string) array_shift($parts);
-        $price = (int) preg_replace('/\D/', '', $priceRaw);
-
-        if ($price <= 0) {
-            $this->sendMessage($chatId, lng('telegram.price_invalid'));
-
-            return;
-        }
-
-        $duration = (int) preg_replace('/\D/', '', (string) ($parts[0] ?? ''));
+        $duration = (int) ($wizard['duration'] ?? 0);
 
         if ($duration <= 0) {
             $duration = (int) config('lesson.default_duration', 60);
         }
 
-        if (! app(TariffService::class)->canUse($user, 'lessons')) {
-            $this->sendMessage($chatId, lng('telegram.tariff_limit'));
-
-            return;
-        }
+        $time = (string) ($wizard['time'] ?? '00:00');
 
         $lesson = new Lesson([
             'subject_id' => $subject->id,
@@ -596,6 +664,8 @@ final class StudentTelegramBotService
 
         $student->lessons()->save($lesson);
 
+        $this->clearWizard($user);
+
         $this->sendMessage($chatId, lng('telegram.lesson_added', [
             'name'     => $student->name,
             'subject'  => $subject->localizedName(),
@@ -605,6 +675,172 @@ final class StudentTelegramBotService
             'duration' => $duration,
         ]));
     }
+
+    /**
+     * Текстовый ввод в мастере. Возвращает true, если сообщение обработано.
+     */
+    private function handleWizardInput(User $user, string $chatId, string $text): bool
+    {
+        $wizard = $this->wizard($user);
+
+        if ($wizard === null) {
+            return false;
+        }
+
+        switch ((string) ($wizard['step'] ?? '')) {
+            case 'datetime':
+                [$date, $time] = $this->parseDateTimeInput($text);
+
+                if ($date === null || $time === null) {
+                    $this->sendMessage($chatId, lng('telegram.lesson_datetime_invalid'));
+
+                    return true;
+                }
+
+                $wizard['date'] = $date->toDateString();
+                $wizard['time'] = $time;
+                $wizard['step'] = 'price';
+                $this->saveWizard($user, $wizard);
+                $this->askPrice($user, $chatId);
+
+                return true;
+
+            case 'price_custom':
+                $price = (int) preg_replace('/\D/', '', $text);
+
+                if ($price <= 0) {
+                    $this->sendMessage($chatId, lng('telegram.price_invalid'));
+
+                    return true;
+                }
+
+                $wizard['price'] = $price;
+                $wizard['step'] = 'duration';
+                $this->saveWizard($user, $wizard);
+                $this->askDuration($user, $chatId);
+
+                return true;
+
+            case 'student':
+                $this->askStudent($user, $chatId);
+
+                return true;
+
+            case 'subject':
+                $this->askSubject($user, $chatId);
+
+                return true;
+
+            case 'price':
+                $this->askPrice($user, $chatId);
+
+                return true;
+
+            case 'duration':
+                $this->askDuration($user, $chatId);
+
+                return true;
+
+            case 'confirm':
+                $this->askConfirm($user, $chatId);
+
+                return true;
+        }
+
+        return true;
+    }
+
+    private function handleWizardCallback(User $user, string $chatId, string $value): void
+    {
+        [$action, $arg] = array_pad(explode(':', $value, 2), 2, '');
+
+        if ($action === 'x') {
+            $this->clearWizard($user);
+            $this->sendMessage($chatId, lng('telegram.lesson_cancelled'));
+
+            return;
+        }
+
+        $wizard = $this->wizard($user);
+
+        if ($wizard === null) {
+            $this->sendMessage($chatId, lng('telegram.lesson_wizard_expired'));
+
+            return;
+        }
+
+        switch ($action) {
+            case 's':
+                $student = $this->studentById($user, (int) $arg);
+
+                if ($student === null) {
+                    $this->sendMessage($chatId, lng('telegram.student_not_found'));
+
+                    return;
+                }
+
+                $wizard['student_id'] = (int) $student->id;
+                $wizard['step'] = 'subject';
+                $this->saveWizard($user, $wizard);
+                $this->askSubject($user, $chatId);
+                break;
+
+            case 'b':
+                $subject = Subject::where('id', (int) $arg)->where('is_deleted', 0)->first();
+
+                if ($subject === null) {
+                    $this->sendMessage($chatId, lng('telegram.subject_not_found', [
+                        'subjects' => implode(', ', Subject::nameMap()),
+                    ]));
+
+                    return;
+                }
+
+                $wizard['subject_id'] = (int) $subject->id;
+                $wizard['step'] = 'datetime';
+                $this->saveWizard($user, $wizard);
+                $this->askDatetime($user, $chatId);
+                break;
+
+            case 'd':
+                $date = $arg === 'tomorrow' ? Carbon::tomorrow() : Carbon::today();
+
+                $wizard['date'] = $date->toDateString();
+                $wizard['time'] = '15:00';
+                $wizard['step'] = 'price';
+                $this->saveWizard($user, $wizard);
+                $this->askPrice($user, $chatId);
+                break;
+
+            case 'p':
+                if ($arg === 'c') {
+                    $wizard['step'] = 'price_custom';
+                    $this->saveWizard($user, $wizard);
+                    $this->sendMessage($chatId, lng('telegram.lesson_price_custom'));
+
+                    return;
+                }
+
+                $wizard['price'] = (int) preg_replace('/\D/', '', $arg);
+                $wizard['step'] = 'duration';
+                $this->saveWizard($user, $wizard);
+                $this->askDuration($user, $chatId);
+                break;
+
+            case 'u':
+                $wizard['duration'] = (int) $arg;
+                $wizard['step'] = 'confirm';
+                $this->saveWizard($user, $wizard);
+                $this->askConfirm($user, $chatId);
+                break;
+
+            case 'c':
+                $this->createWizardLesson($user, $chatId, $wizard);
+                break;
+        }
+    }
+
+    // ─── Telegram API ──────────────────────────────────────────
 
     /**
      * @param  array<string, mixed>  $callback
@@ -663,6 +899,11 @@ final class StudentTelegramBotService
 
             case 'pay':
                 $this->payLesson($user, $chatId, (int) $value, $callbackId, $messageId);
+                break;
+
+            case 'w':
+                $this->answerCallback($callbackId);
+                $this->handleWizardCallback($user, $chatId, $value);
                 break;
 
             default:
@@ -726,8 +967,6 @@ final class StudentTelegramBotService
             $this->finance($user, $chatId, $student, $messageId);
         }
     }
-
-    // ─── Telegram API ──────────────────────────────────────────
 
     /**
      * @param  array<int, array<int, array<string, string>>>  $keyboard
@@ -934,6 +1173,16 @@ final class StudentTelegramBotService
     }
 
     /**
+     * @return array<int, array<int, array<string, string>>>
+     */
+    private function cancelRow(): array
+    {
+        return [
+            ['text' => lng('telegram.lesson_cancel_button'), 'callback_data' => 'w:x'],
+        ];
+    }
+
+    /**
      * @return array{0: string, 1: string}  команда без слэша и остаток строки
      */
     private function parseCommand(string $text): array
@@ -953,40 +1202,17 @@ final class StudentTelegramBotService
     }
 
     /**
-     * @return array{0: string, 1: string}  первый токен и остаток
+     * @return array{0: ?Carbon, 1: ?string}
      */
-    private function splitIndex(string $args): array
+    private function parseDateTimeInput(string $text): array
     {
-        $parts = preg_split('/\s+/u', trim($args), 2) ?: [];
+        $parts = preg_split('/\s+/u', trim($text)) ?: [];
 
-        return [(string) ($parts[0] ?? ''), trim((string) ($parts[1] ?? ''))];
-    }
-
-    private function findSubject(string $query): ?Subject
-    {
-        $needle = mb_strtolower(trim($query));
-
-        if ($needle === '') {
-            return null;
+        if (count($parts) < 2) {
+            return [null, null];
         }
 
-        $matches = Subject::active()->filter(function (Subject $subject) use ($needle): bool {
-            $names = is_array($subject->name) ? $subject->name : [];
-            $haystack = array_merge(
-                [(string) $subject->code, (string) $subject->slug],
-                array_map('strval', array_values($names)),
-            );
-
-            foreach ($haystack as $value) {
-                if ($value !== '' && mb_strpos(mb_strtolower($value), $needle) !== false) {
-                    return true;
-                }
-            }
-
-            return false;
-        });
-
-        return $matches->count() === 1 ? $matches->first() : null;
+        return [$this->parseDate($parts[0]), $this->parseTime($parts[1])];
     }
 
     private function parseDate(string $value): ?Carbon
@@ -1051,6 +1277,97 @@ final class StudentTelegramBotService
     private function money(int $value): string
     {
         return number_format($value, 0, ',', ' ') . ' ₽';
+    }
+
+    // ─── Черновик урока (users.telegram_state) ─────────────────
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function wizard(User $user): ?array
+    {
+        $raw = (string) $user->telegram_state;
+
+        if ($raw === '') {
+            return null;
+        }
+
+        $decoded = json_decode($raw, true);
+
+        if (! is_array($decoded)) {
+            return null;
+        }
+
+        $updatedAt = (int) ($decoded['ts'] ?? 0);
+
+        if ($updatedAt > 0 && $updatedAt < time() - self::WIZARD_TTL_MINUTES * 60) {
+            $this->clearWizard($user);
+
+            return null;
+        }
+
+        return $decoded;
+    }
+
+    /**
+     * @param  array<string, mixed>  $wizard
+     */
+    private function saveWizard(User $user, array $wizard): void
+    {
+        $wizard['ts'] = time();
+        $user->telegram_state = json_encode($wizard, JSON_UNESCAPED_UNICODE);
+        $user->save();
+    }
+
+    private function clearWizard(User $user): void
+    {
+        if ((string) $user->telegram_state === '') {
+            return;
+        }
+
+        $user->telegram_state = null;
+        $user->save();
+    }
+
+    private function studentNameFromWizard(User $user): ?string
+    {
+        $wizard = $this->wizard($user);
+
+        if ($wizard === null) {
+            return null;
+        }
+
+        return $this->studentById($user, (int) ($wizard['student_id'] ?? 0))?->name;
+    }
+
+    /**
+     * @param  array<string, mixed>|null  $wizard
+     */
+    private function subjectFromWizard(?array $wizard): ?Subject
+    {
+        $subjectId = (int) ($wizard['subject_id'] ?? 0);
+
+        if ($subjectId <= 0) {
+            return null;
+        }
+
+        return Subject::where('id', $subjectId)->where('is_deleted', 0)->first();
+    }
+
+    /**
+     * Последняя цена урока ученика или цена по умолчанию — подсказка в мастере.
+     */
+    private function suggestedPrice(int $studentId): int
+    {
+        $last = Lesson::where('student_id', $studentId)
+            ->where('is_deleted', 0)
+            ->orderByDesc('date')
+            ->orderByDesc('id')
+            ->value('price');
+
+        $price = (int) $last;
+
+        return $price > 0 ? $price : (int) config('lesson.default_price', 3000);
     }
 
     private function token(): string

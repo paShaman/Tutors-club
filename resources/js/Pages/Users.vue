@@ -17,6 +17,7 @@ import TableRow from '@/components/ui/TableRow.vue'
 import TableHead from '@/components/ui/TableHead.vue'
 import TableCell from '@/components/ui/TableCell.vue'
 import UserAvatar from '@/components/ui/UserAvatar.vue'
+import TelegramIcon from '@/components/social/TelegramIcon.vue'
 import { useI18n } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 
@@ -31,6 +32,8 @@ interface UserRow {
   is_admin: boolean
   plan: string
   plan_until: string | null
+  telegram_linked: boolean
+  telegram_username: string | null
   students_count: number
   lessons_count: number
   topics_count: number
@@ -69,6 +72,11 @@ function formatDate(value: string | null): string {
 function planLabel(plan: string): string {
   return t(`ui.tariff.plans.${plan}`)
 }
+
+function telegramLabel(user: UserRow): string {
+  if (!user.telegram_linked) return t('ui.users.telegram_not_linked')
+  return user.telegram_username ? `@${user.telegram_username}` : t('ui.users.telegram_linked')
+}
 </script>
 
 <template>
@@ -100,6 +108,7 @@ function planLabel(plan: string): string {
           <TableRow>
             <TableHead>{{ t('ui.users.table.user') }}</TableHead>
             <TableHead>{{ t('ui.users.table.plan') }}</TableHead>
+            <TableHead>{{ t('ui.users.table.telegram') }}</TableHead>
             <TableHead>{{ t('ui.users.table.registered') }}</TableHead>
             <TableHead>{{ t('ui.users.table.students') }}</TableHead>
             <TableHead>{{ t('ui.users.table.lessons') }}</TableHead>
@@ -145,6 +154,20 @@ function planLabel(plan: string): string {
                   {{ t('ui.users.until', { date: formatDate(user.plan_until) }) }}
                 </p>
               </div>
+            </TableCell>
+            <TableCell>
+              <span
+                :class="cn(
+                  'pill inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-medium',
+                  user.telegram_linked
+                    ? 'bg-[#229ED9]/10 text-[#229ED9]'
+                    : 'bg-muted text-muted-foreground',
+                )"
+                :title="user.telegram_linked ? t('ui.users.telegram_linked') : t('ui.users.telegram_not_linked')"
+              >
+                <TelegramIcon class="h-3.5 w-3.5" />
+                <span class="whitespace-nowrap">{{ telegramLabel(user) }}</span>
+              </span>
             </TableCell>
             <TableCell class="whitespace-nowrap text-muted-foreground">{{ formatDate(user.registered_at) }}</TableCell>
             <TableCell class="text-center text-foreground">{{ user.students_count }}</TableCell>

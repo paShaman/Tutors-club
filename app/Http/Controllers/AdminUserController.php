@@ -48,6 +48,8 @@ final class AdminUserController extends Controller
                 'is_admin'       => $user->roles->contains('title', Role::ADMIN),
                 'plan'           => $tariff->plan($user),
                 'plan_until'     => $tariff->activeSubscription($user)?->expires_at?->toDateString(),
+                'telegram_linked'   => (string) $user->telegram_chat_id !== '',
+                'telegram_username' => $user->telegram_username,
                 'students_count' => (int) $user->students_count,
                 'lessons_count'  => (int) ($stat?->lessons_count ?? 0),
                 'topics_count'   => (int) $user->topics_count,
