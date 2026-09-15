@@ -12,7 +12,7 @@ return [
         'student_name'          => 'Название',
         'student_class'         => 'Класс',
         'smart-token'           => 'Капча',
-        'contact'               => 'Контакт для ответа',
+        'contact'               => 'Контакт для ответа',
         'message'               => 'Сообщение',
         'title'                 => 'Заголовок',
         'button_text'           => 'Текст кнопки',
@@ -23,5 +23,5 @@ return [
     ],
     'required'  => 'Обязательное поле ":attribute"',
     'email'     => 'Некорректный email',
-    'same'      => 'Поля ":attribute" и ":other" не совпадают',
+    'same'      => 'Поля ":attribute" и ":other" не совпадают',
 ];

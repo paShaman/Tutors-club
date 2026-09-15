@@ -12,7 +12,7 @@ return [
         'student_name'          => 'Title',
         'student_class'         => 'Class',
         'smart-token'           => 'Captcha',
-        'contact'               => 'Contact for a reply',
+        'contact'               => 'Contact for a reply',
         'message'               => 'Message',
         'title'                 => 'Heading',
         'button_text'           => 'Button text',
@@ -21,7 +21,7 @@ return [
         'ends_at'               => 'End date',
         'dismiss_days'          => 'Dismiss days',
     ],
-    'required'  => 'The ":attribute" field is required',
+    'required'  => 'The ":attribute" field is required',
     'email'     => 'Invalid email',
-    'same'      => 'The ":attribute" and ":other" fields do not match',
+    'same'      => 'The ":attribute" and ":other" fields do not match',
 ];
