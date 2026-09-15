@@ -4,17 +4,21 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Services\FeedbackBotService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use Illuminate\Support\Facades\Http;
 use Throwable;
 
 final class FeedbackController extends Controller
 {
+    public function __construct(private readonly FeedbackBotService $bots)
+    {
+    }
+
     /**
-     * Пересылает обращение из кабинета в Telegram владельца.
+     * Пересылает обращение из кабинета владельцу в основной бот обратной связи.
      */
     public function send(Request $request): RedirectResponse
     {
@@ -30,42 +34,21 @@ final class FeedbackController extends Controller
             'photos.*.max'   => lng('error.feedback_photo_too_large'),
         ]);
 
-        $token  = (string) config('services.telegram.bot_token');
-        $chatId = (string) config('services.telegram.chat_id');
+        $bot = $this->bots->deliveryBot();
 
-        if ($token === '' || $chatId === '') {
+        if ($bot === null) {
             return back()->with('error', lng('error.feedback_not_configured'));
         }
 
-        try {
-            $response = Http::asJson()
-                ->timeout(10)
-                ->post("https://api.telegram.org/bot{$token}/sendMessage", [
-                    'chat_id'                  => $chatId,
-                    'text'                     => $this->buildText($request, $data),
-                    'disable_web_page_preview' => true,
-                ]);
+        $sent = $this->bots->send(
+            $bot,
+            $this->buildText($request, $data),
+            $request->file('photos') ?? [],
+        );
 
-            if (! $response->successful()) {
-                return back()->with('error', lng('error.feedback_sent'));
-            }
-
-            foreach ($request->file('photos') ?? [] as $photo) {
-                $sent = Http::timeout(30)
-                    ->attach('photo', (string) file_get_contents($photo->getPathname()), $photo->getClientOriginalName())
-                    ->post("https://api.telegram.org/bot{$token}/sendPhoto", [
-                        'chat_id' => $chatId,
-                    ]);
-
-                if (! $sent->successful()) {
-                    return back()->with('error', lng('error.feedback_sent'));
-                }
-            }
-        } catch (Throwable) {
-            return back()->with('error', lng('error.feedback_sent'));
-        }
-
-        return back()->with('success', lng('success.feedback_sent'));
+        return $sent
+            ? back()->with('success', lng('success.feedback_sent'))
+            : back()->with('error', lng('error.feedback_sent'));
     }
 
     /**
@@ -89,11 +72,10 @@ final class FeedbackController extends Controller
             return response()->json(['ok' => false], 403);
         }
 
-        $token  = (string) config('services.telegram.bot_token');
-        $chatId = (string) config('services.telegram.chat_id');
+        $bot = $this->bots->deliveryBot();
 
         // Отвечаем 200, чтобы Telegram не зацикливал доставку при сбое конфигурации.
-        if ($token === '' || $chatId === '') {
+        if ($bot === null) {
             return response()->json(['ok' => true]);
         }
 
@@ -104,7 +86,7 @@ final class FeedbackController extends Controller
         }
 
         try {
-            $this->forwardToOwner($token, $chatId, $message);
+            $this->forwardTelegramMessage($bot, $message);
         } catch (Throwable) {
             // Игнорируем: повторная доставка от Telegram создаст дубли.
         }
@@ -113,10 +95,59 @@ final class FeedbackController extends Controller
     }
 
     /**
+     * Принимает апдейты MAX и пересылает сообщения, написанные боту, владельцу.
+     *
+     * Endpoint: POST /max/webhook (без auth и CSRF, см. bootstrap/app.php).
+     * Защита — секрет в заголовке X-Max-Bot-Api-Secret.
+     *
+     * Настройка (выполняется вручную, один раз — доступа к проду нет):
+     *   1. В .env задать MAX_BOT_TOKEN, MAX_OWNER_ID (ID владельца в MAX) и
+     *      MAX_WEBHOOK_SECRET=<случайная_строка>.
+     *   2. Подписаться на события боевым токеном:
+     *      POST https://platform-api2.max.ru/subscriptions
+     *      Authorization: <MAX_BOT_TOKEN>
+     *      {"url":"https://<домен>/max/webhook","update_types":["message_created"],"secret":"<SECRET>"}
+     *   3. Владелец должен сам начать диалог с ботом, а его user_id — попасть в MAX_OWNER_ID.
+     */
+    public function maxWebhook(Request $request): JsonResponse
+    {
+        $secret = (string) config('services.max.webhook_secret');
+
+        if ($secret !== '' && $request->header('X-Max-Bot-Api-Secret') !== $secret) {
+            return response()->json(['ok' => false], 403);
+        }
+
+        $bot = $this->bots->deliveryBot();
+
+        if ($bot === null) {
+            return response()->json(['ok' => true]);
+        }
+
+        if (! in_array($request->input('update_type'), ['message_created', 'message_edited'], true)) {
+            return response()->json(['ok' => true]);
+        }
+
+        $message = $request->input('message');
+
+        if (! is_array($message)) {
+            return response()->json(['ok' => true]);
+        }
+
+        try {
+            $this->forwardMaxMessage($bot, $message);
+        } catch (Throwable) {
+            // Игнорируем: повторная доставка от MAX создаст дубли.
+        }
+
+        return response()->json(['ok' => true]);
+    }
+
+    /**
      * @param  array<string, mixed>  $message
      */
-    private function forwardToOwner(string $token, string $chatId, array $message): void
+    private function forwardTelegramMessage(string $bot, array $message): void
     {
+        $chatId = $this->bots->telegramChatId();
         $senderChatId = (string) (is_array($message['chat'] ?? null) ? ($message['chat']['id'] ?? '') : '');
 
         // Сообщение из чата самого владельца пересылать не нужно.
@@ -130,7 +161,9 @@ final class FeedbackController extends Controller
         $text     = trim((string) ($message['text'] ?? $message['caption'] ?? ''));
 
         $lines = [
-            '💬 Новое сообщение в боте',
+            '💬 Новое сообщение',
+            '',
+            '📍 Источник: Telegram',
             '',
             '👤 Имя: ' . ($name !== '' ? $name : '—'),
             '🔗 Username: ' . $username,
@@ -147,25 +180,63 @@ final class FeedbackController extends Controller
             ? ($photos[array_key_last($photos)]['file_id'] ?? null)
             : null;
 
-        if ($fileId !== null) {
-            Http::asJson()
-                ->timeout(15)
-                ->post("https://api.telegram.org/bot{$token}/sendPhoto", [
-                    'chat_id' => $chatId,
-                    'photo'   => $fileId,
-                    'caption' => mb_substr(implode("\n", $lines), 0, 1024),
-                ]);
+        $attachments = [];
 
+        if (is_string($fileId) && $fileId !== '') {
+            $url = $this->bots->telegramPhotoUrl($fileId);
+
+            if ($url !== null) {
+                $attachments[] = $url;
+            }
+        }
+
+        $this->bots->send($bot, mb_substr(implode("\n", $lines), 0, 4000), $attachments);
+    }
+
+    /**
+     * @param  array<string, mixed>  $message
+     */
+    private function forwardMaxMessage(string $bot, array $message): void
+    {
+        $sender   = is_array($message['sender'] ?? null) ? $message['sender'] : [];
+        $senderId = $sender['user_id'] ?? null;
+
+        // Сообщение самого владельца пересылать не нужно.
+        if ($senderId !== null && (string) $senderId === $this->bots->maxOwnerId()) {
             return;
         }
 
-        Http::asJson()
-            ->timeout(15)
-            ->post("https://api.telegram.org/bot{$token}/sendMessage", [
-                'chat_id'                  => $chatId,
-                'text'                     => mb_substr(implode("\n", $lines), 0, 4096),
-                'disable_web_page_preview' => true,
-            ]);
+        $name     = trim(($sender['first_name'] ?? '') . ' ' . ($sender['last_name'] ?? ''));
+        $username = isset($sender['username']) && $sender['username'] !== null ? '@' . $sender['username'] : '—';
+        $body     = is_array($message['body'] ?? null) ? $message['body'] : [];
+        $text     = trim((string) ($body['text'] ?? ''));
+
+        $lines = [
+            '💬 Новое сообщение',
+            '',
+            '📍 Источник: MAX',
+            '',
+            '👤 Имя: ' . ($name !== '' ? $name : '—'),
+            '🔗 Username: ' . $username,
+            '🆔 ID: ' . ($senderId ?? '—'),
+            '',
+            '📝 Сообщение:',
+            $text !== '' ? $text : '—',
+            '',
+            '🕒 ' . now()->format('Y-m-d H:i'),
+        ];
+
+        $attachments = [];
+
+        foreach ($body['attachments'] ?? [] as $attachment) {
+            $url = $attachment['payload']['url'] ?? null;
+
+            if (($attachment['type'] ?? null) === 'image' && is_string($url) && $url !== '') {
+                $attachments[] = $url;
+            }
+        }
+
+        $this->bots->send($bot, mb_substr(implode("\n", $lines), 0, 4000), $attachments);
     }
 
     /**
@@ -178,7 +249,9 @@ final class FeedbackController extends Controller
         $name = $user?->name ?: trim(($user->last_name ?? '') . ' ' . ($user->first_name ?? ''));
 
         $lines = [
-            '💬 Новое сообщение из кабинета',
+            '💬 Новое сообщение',
+            '',
+            '📍 Источник: сайт',
             '',
             '👤 Имя: ' . ($name !== '' ? $name : '—'),
             '📧 Email: ' . ($user?->email ?: '—'),
@@ -200,6 +273,6 @@ final class FeedbackController extends Controller
         $lines[] = '';
         $lines[] = '🕒 ' . now()->format('Y-m-d H:i');
 
-        return mb_substr(implode("\n", $lines), 0, 4096);
+        return mb_substr(implode("\n", $lines), 0, 4000);
     }
 }

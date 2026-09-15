@@ -81,6 +81,7 @@ Route::get('/changelog', [ChangelogController::class, 'getChangelog'])
 // ─── Feedback ───────────────────────────────────────────────
 Route::post('/feedback', [FeedbackController::class, 'send'])->middleware('auth');
 Route::post('/telegram/webhook', [FeedbackController::class, 'webhook'])->name('telegram.webhook');
+Route::post('/max/webhook', [FeedbackController::class, 'maxWebhook'])->name('max.webhook');
 
 // ─── Admin ──────────────────────────────────────────────────
 Route::get('/admin/users', [AdminUserController::class, 'index'])

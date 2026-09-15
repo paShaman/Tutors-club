@@ -46,8 +46,18 @@ export interface LocaleOption {
   label: string
 }
 
-export interface TelegramInfo {
-  bot_url: string | null
+export type FeedbackBotKey = 'telegram' | 'max'
+
+export interface FeedbackBotInfo {
+  key: FeedbackBotKey
+  url: string | null
+  configured: boolean
+  primary: boolean
+}
+
+export interface FeedbackInfo {
+  primary: FeedbackBotKey
+  bots: FeedbackBotInfo[]
 }
 
 export type TariffFeature = 'students' | 'lessons' | 'topics'
@@ -89,7 +99,7 @@ export interface SharedProps {
   social: SocialProviderConfig[]
   agreements: AgreementDocument[]
   requisites: CompanyRequisites
-  telegram: TelegramInfo
+  feedback: FeedbackInfo
   tariff: TariffInfo | null
   promoBanners: PromoBannerInfo[]
   locale: string

@@ -65,4 +65,16 @@ return [
         'webhook_secret' => env('TELEGRAM_WEBHOOK_SECRET'),
     ],
 
+    'max' => [
+        'bot_token'      => env('MAX_BOT_TOKEN'),
+        'owner_id'       => env('MAX_OWNER_ID'),
+        'bot_username'   => env('MAX_BOT_USERNAME'),
+        'webhook_secret' => env('MAX_WEBHOOK_SECRET'),
+    ],
+
+    // Основной бот обратной связи: telegram (по умолчанию) или max.
+    'feedback' => [
+        'primary' => env('FEEDBACK_PRIMARY_BOT', 'telegram'),
+    ],
+
 ];

@@ -618,8 +618,11 @@ return [
             'photo_too_large'      => 'Photo is larger than 10 MB',
             'remove_photo'         => 'Remove photo',
             'submit'               => 'Send',
-            'telegram_hint'        => 'You can also write to us directly on Telegram',
-            'telegram_open'        => 'Open the bot',
+            'bots_hint'            => 'You can also write to us directly in a messenger',
+            'open_bot'             => 'Open the bot',
+            'primary'              => 'Primary',
+            'bot_telegram'         => 'Telegram',
+            'bot_max'              => 'MAX',
         ],
         'documents' => [
             'privacy_policy' => [

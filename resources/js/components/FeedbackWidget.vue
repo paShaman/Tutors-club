@@ -4,7 +4,9 @@ import { usePage, useForm } from '@inertiajs/vue3'
 import { ImagePlus, Send, X } from 'lucide-vue-next'
 import Button from '@/components/ui/Button.vue'
 import Card from '@/components/ui/Card.vue'
-import type { SharedProps } from '@/types'
+import TelegramIcon from '@/components/icons/TelegramIcon.vue'
+import MaxIcon from '@/components/icons/MaxIcon.vue'
+import type { FeedbackBotInfo, SharedProps } from '@/types'
 import { useI18n } from '@/lib/i18n'
 import { useToast } from '@/lib/toast'
 import { useScrollLock } from '@/lib/scrollLock'
@@ -29,7 +31,20 @@ const page = usePage<SharedProps>()
 const { t } = useI18n()
 const toast = useToast()
 
-const botUrl = computed<string | null>(() => page.props.telegram?.bot_url ?? null)
+type FeedbackBotLink = FeedbackBotInfo & { url: string }
+
+const bots = computed<FeedbackBotLink[]>(() =>
+  (page.props.feedback?.bots ?? []).filter((bot): bot is FeedbackBotLink => bot.url !== null),
+)
+
+const BOT_LABEL_KEYS: Record<string, string> = {
+  telegram: 'ui.feedback.bot_telegram',
+  max: 'ui.feedback.bot_max',
+}
+
+function botLabel(key: string): string {
+  return t(BOT_LABEL_KEYS[key] ?? key)
+}
 
 const MAX_PHOTOS = 3
 const MAX_PHOTO_SIZE = 10 * 1024 * 1024
@@ -145,20 +160,34 @@ function submit(): void {
             </h2>
             <p class="mb-5 text-sm text-muted-foreground">{{ t('ui.feedback.hint') }}</p>
 
-            <div
-              v-if="botUrl"
-              class="mb-5 flex items-center justify-between gap-3 rounded-xl border border-border bg-primary/5 px-3.5 py-2.5"
-            >
-              <span class="text-xs text-muted-foreground">{{ t('ui.feedback.telegram_hint') }}</span>
-              <a
-                :href="botUrl"
-                target="_blank"
-                rel="noopener"
-                class="inline-flex shrink-0 items-center gap-1.5 text-xs font-medium text-primary hover:underline"
+            <div v-if="bots.length" class="mb-5 space-y-2">
+              <p class="text-xs text-muted-foreground">{{ t('ui.feedback.bots_hint') }}</p>
+              <div
+                v-for="bot in bots"
+                :key="bot.key"
+                class="flex items-center justify-between gap-3 rounded-xl border border-border bg-primary/5 px-3.5 py-2.5"
               >
-                <Send class="h-3.5 w-3.5" />
-                {{ t('ui.feedback.telegram_open') }}
-              </a>
+                <span class="flex min-w-0 items-center gap-2.5">
+                  <TelegramIcon v-if="bot.key === 'telegram'" class="h-6 w-6 shrink-0" />
+                  <MaxIcon v-else class="h-6 w-6 shrink-0" />
+                  <span class="truncate text-sm font-medium text-foreground">{{ botLabel(bot.key) }}</span>
+                  <span
+                    v-if="bot.primary"
+                    class="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-primary"
+                  >
+                    {{ t('ui.feedback.primary') }}
+                  </span>
+                </span>
+                <a
+                  :href="bot.url"
+                  target="_blank"
+                  rel="noopener"
+                  class="inline-flex shrink-0 items-center gap-1.5 text-xs font-medium text-primary hover:underline"
+                >
+                  <Send class="h-3.5 w-3.5" />
+                  {{ t('ui.feedback.open_bot') }}
+                </a>
+              </div>
             </div>
 
             <form class="space-y-4" @submit.prevent="submit">

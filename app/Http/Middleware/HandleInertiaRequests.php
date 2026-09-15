@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Middleware;
 
 use App\Model\PromoBanner;
+use App\Services\FeedbackBotService;
 use App\Services\VkIdService;
 use App\Services\YandexIdService;
 use Illuminate\Http\Request;
@@ -28,7 +29,8 @@ final class HandleInertiaRequests extends Middleware
         $vkConfigured = (int) config('services.vkid.app_id') > 0
             && (string) config('services.vkid.redirect_url') !== '';
 
-        $botUsername = ltrim((string) config('services.telegram.bot_username'), '@');
+        $feedbackBots = app(FeedbackBotService::class);
+        $primaryBot   = $feedbackBots->primary();
 
         return [
             ...parent::share($request),
@@ -51,8 +53,22 @@ final class HandleInertiaRequests extends Middleware
             ],
             'agreements' => config('agreements.documents', []),
             'requisites' => config('company.requisites', []),
-            'telegram'   => [
-                'bot_url' => $botUsername !== '' ? 'https://t.me/' . $botUsername : null,
+            'feedback'   => [
+                'primary' => $primaryBot,
+                'bots'    => [
+                    [
+                        'key'        => FeedbackBotService::TELEGRAM,
+                        'url'        => $feedbackBots->telegramBotUrl(),
+                        'configured' => $feedbackBots->telegramConfigured(),
+                        'primary'    => $primaryBot === FeedbackBotService::TELEGRAM,
+                    ],
+                    [
+                        'key'        => FeedbackBotService::MAX,
+                        'url'        => $feedbackBots->maxBotUrl(),
+                        'configured' => $feedbackBots->maxConfigured(),
+                        'primary'    => $primaryBot === FeedbackBotService::MAX,
+                    ],
+                ],
             ],
             'tariff' => fn (): ?array => $request->user()
                 ? app(\App\Services\TariffService::class)->payload($request->user())
